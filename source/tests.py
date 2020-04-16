@@ -59,9 +59,8 @@ class Test(unittest.TestCase):
         teacher_exact.teach(student_exact)
         self.assertTrue(dfa == student_exact.dfa)
 
-        for i in range(10):
-            print(i)
-            dfa_rand = random_dfa(["a", "b", "c", "d", "e"], min_states=10, max_states=100, min_final=1,
+        for i in range(2):
+            dfa_rand = random_dfa(["a", "b", "c", "d", "e"], min_states=500, max_states=501, min_final=1,
                                   max_final=10)
             teacher_exact = ExactTeacher(dfa_rand)
             student_exact = DecisionTreeLearner(teacher_exact)
@@ -74,7 +73,7 @@ class Test(unittest.TestCase):
             teacher_pac = PACTeacher(dfa_rand)
             student_pac = DecisionTreeLearner(teacher_pac)
 
-            count = 0
+            count = -1
             init_time = time.time()
             while dfa_rand != student_pac.dfa:
                 count = count + 1

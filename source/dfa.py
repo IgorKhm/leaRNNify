@@ -98,7 +98,7 @@ class DFA:
         return str(len(self.states)) + " states, " + str(len(self.final_states)) + " final states and " + \
                str(len(self.transitions)) + " transitions."
 
-    # Stole the following from lstar algo: https://github.com/tech-srl/lstar_extraction
+    # Stole the following function(draw_nicely) from lstar algo: https://github.com/tech-srl/lstar_extraction
     def draw_nicely(self, force=False, maximum=60,
                     name=""):  # todo: if two edges are identical except for letter, merge them
         # and note both the letters
@@ -235,3 +235,17 @@ def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=1
     # dfa = DFA(1, {1}, {1: {"a": 2, "b": 1, "c": 1},
     #                    2: {"a": 3, "b": 1, "c": 3},
     #                    3: {"a": 3, "b": 3, "c": 3}})
+
+def load_dfa(filename):
+    states = []
+
+    with open(filename, "r") as file:
+        for line in file.readlines():
+            if "__start0" in line:
+                break
+        #reading states:
+        for line in file.readlines():
+            if "__start0" in line:
+                initial_state = line.split(" -> ")[1]
+                break
+

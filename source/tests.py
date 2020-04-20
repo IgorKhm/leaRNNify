@@ -57,10 +57,11 @@ class Test(unittest.TestCase):
         teacher_exact = ExactTeacher(dfa2)
         student_exact = DecisionTreeLearner(teacher_exact)
         teacher_exact.teach(student_exact)
+        student_exact._root.draw("img/tree")
         self.assertTrue(dfa == student_exact.dfa)
 
-        for i in range(2):
-            dfa_rand = random_dfa(["a", "b", "c", "d", "e"], min_states=500, max_states=501, min_final=1,
+        for i in range(10):
+            dfa_rand = random_dfa(["a", "b", "c", "d", "e"], min_states=10, max_states=40, min_final=1,
                                   max_final=10)
             teacher_exact = ExactTeacher(dfa_rand)
             student_exact = DecisionTreeLearner(teacher_exact)

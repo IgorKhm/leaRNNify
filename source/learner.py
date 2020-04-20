@@ -1,5 +1,4 @@
 from teacher import Teacher
-from tulip.transys import automata
 from abc import ABC, abstractmethod
 
 

@@ -236,16 +236,49 @@ def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=1
     #                    2: {"a": 3, "b": 1, "c": 3},
     #                    3: {"a": 3, "b": 3, "c": 3}})
 
+
 def load_dfa(filename):
+    mode = "init"
+    transitions = {}
     states = []
+    final_states = []
 
     with open(filename, "r") as file:
         for line in file.readlines():
-            if "__start0" in line:
-                break
-        #reading states:
-        for line in file.readlines():
-            if "__start0" in line:
-                initial_state = line.split(" -> ")[1]
-                break
+            if mode == "init":
+                if "__start0" in line:
+                    mode = "states"
+                    continue
+            elif mode == "states":
+                # reading states:
+                if "__start0" in line:
+                    initial_state = line.split(" -> ")[1]
+                    initial_state = initial_state[:len(initial_state) - 1]
+                    mode = "transitions"
+                    continue
+                new_state = line.split(" ")[0]
+                transitions.update({new_state: {}})
+                states.append(new_state)
+                if "doublecircle" in line:
+                    final_states.append(new_state)
+            elif mode == "transitions":
+                if line == '}\n':
+                    break
+                line = line.replace(" -> ", ";")
+                line = line.replace('[label="', ";")
+                line = line.replace('"]\n', "")
+                split = line.split(";")
+                t = transitions[split[0]]
+                t.update({split[2]: split[1]})
+    print(transitions)
+    dfa = DFA(initial_state,final_states,transitions)
+    dfa.draw_nicely(name="upload")
+    print("Ads")
 
+
+#
+#                               {1: {"a": 2, "b": 5, "c": 5},
+#                                2: {"a": 3, "b": 1, "c": 3},
+#                                3: {"a": 4, "b": 4, "c": 4},
+#                                4: {"a": 3, "b": 3, "c": 3},
+#                                5: {"a": 2, "b": 1, "c": 1}})

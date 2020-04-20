@@ -6,6 +6,14 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
 
 
+def word_to_nparray(word, letter_to_num, length):
+    array = np.zeros(length)
+    for i in range(len(word)):
+        array[length - i - 1] = letter_to_num[word[-i - 1]]
+
+    return array
+
+
 def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criterion=nn.BCELoss(),
           epochs=10, print_every=500):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -51,7 +59,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                                                                                                     np.mean(
                                                                                                         val_losses)))
                     valid_loss_min = np.mean(val_losses)
-                    if valid_loss_min < 0.005:
+                    if valid_loss_min < 0.001:
                         return model
     return model
 
@@ -130,19 +138,19 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         i = np.random.randint(0, len(words_list))
         test_words.append(words_list[i])
         test_label.append(label_list[i])
-        del words_list[i]
-        del label_list[i]
+        # del words_list[i]
+        # del label_list[i]
 
     # split the rest between validation and learning
-    num_val = int(len(words_list) / 2)
+    num_val = int(len(words_list) / 1)
     num_val = num_val - num_val % batch_size
     val_words, val_label = [], []
     for _ in range(num_val):
         i = np.random.randint(0, len(words_list))
         val_words.append(words_list[i])
         val_label.append(label_list[i])
-        del words_list[i]
-        del label_list[i]
+        # del words_list[i]
+        # del label_list[i]
     print(len(words_list) % batch_size)
     train_num = int(len(words_list) - len(words_list) % batch_size)
     train_words, train_label = words_list[0:train_num], label_list[0:train_num]
@@ -195,7 +203,7 @@ class LSTMLanguageClasifier:
         self._char_to_int = None
         self.alphabet = []
 
-    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=5, num_layers=1, batch_size=100):
+    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=1, batch_size=20):
         self._char_to_int = {alphahbet[i]: i + 1 for i in range(len(alphahbet))}
         self._char_to_int.update({"": 0})
         self.alphabet = alphahbet
@@ -210,9 +218,9 @@ class LSTMLanguageClasifier:
 
         self._ltsm = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5, device=device)
         train_loader, val_loader, test_loader = make_training_sets(alphahbet, target, batch_size=batch_size,
-                                                                   num_of_exm_per_lenght=100000)
+                                                                   num_of_exm_per_lenght=10000, max_length=100)
         print(len(train_loader))
-        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=20, print_every=5000)
+        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=20, print_every=500)
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
@@ -220,22 +228,55 @@ class LSTMLanguageClasifier:
         return test_loader
 
     def is_word_in(self, word):
-        h = self._initial_state
-        for l in word:
-            l = torch.from_numpy(np.array([[self._char_to_int[l]]]))
-            output, h = self._ltsm(l, h)
+        h = self._ltsm.init_hidden(1)
+        if len(word) < 100:
+            length = 100
+        else:
+            length = len(word)
+        array = np.zeros(length)
+        for i in range(len(word)):
+            array[length - i - 1] = self._char_to_int[word[-i - 1]]
+        array = np.array([array])
         if len(word) == 0:
             l = torch.from_numpy(np.array([[0]]))
             output, h = self._ltsm(l, h)
-        return output > 0.5
+        else:
+            output, h = self._ltsm(torch.from_numpy(array), h)
+        return bool(output > 0.5)
+
+        #
+        # h = self._ltsm.init_hidden(1)
+        # if len(word) == 0:
+        #     l = torch.from_numpy(np.array([[0]]))
+        #     output, h = self._ltsm(l, h)
+        # else:
+        #     for l in word:
+        #         l = torch.from_numpy(np.array([[self._char_to_int[l]]]))
+        #         output, h = self._ltsm(l, h)
+        # return bool(output > 0.5)
 
     def is_word_letter_by_letter(self, letter):
         letter = torch.from_numpy(np.array([[self._char_to_int[letter]]]))
         output, self._current_state = self._ltsm(letter, self._current_state)
-        return output > 0.5
+        return bool(output > 0.5)
 
     def reset_current_to_init(self):
-        self._current_state = self._initial_state
+        self._current_state = self._ltsm.init_hidden(1)
+
+    def save_rnn(self, dirName, force_overwrite=False):
+        if not os.path.isdir(dirName):
+            os.makedirs(dirName)
+        elif not force_overwrite:
+            if input("save exists. Enter y if you want to overwrite it.") != "y":
+                return
+        with open(dirName + "/meta", "w+") as file:
+            file.write("Metadata:\n")
+            file.write("alphabet = " + self.alphabet + "\n")
+            file.write("embedding_dim = " + str(self._ltsm.embedding_dim) + "\n")
+            file.write("hidden_dim = " + str(self._ltsm.hidden_dim) + "\n")
+            file.write("n_layers = " + str(self._ltsm.n_layers) + "\n")
+            file.write("torch_save = state_dict.pt")
+        torch.save(self._ltsm.state_dict(), dirName + "/state_dict.pt")
 
     def load_rnn(self, dir):
         # './state_dict.pt'
@@ -264,21 +305,9 @@ class LSTMLanguageClasifier:
 
         self._ltsm = LSTM(len(self.alphabet) + 1, 1, embedding_dim, hidden_dim, n_layers, drop_prob=0.5, device=device)
         self._ltsm.load_state_dict(torch.load(dir + "/" + torch_save))
+        self._ltsm.eval()
 
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
-
-    def save_rnn(self, dirName, force_overwrite=False):
-        if not os.path.isdir(dirName):
-            os.makedirs(dirName)
-        elif not force_overwrite:
-            if input("save exists. Enter y if you want to overwrite it.") != "y":
-                return
-        with open(dirName + "/meta", "w+") as file:
-            file.write("Metadata:\n")
-            file.write("alphabet = " + self.alphabet + "\n")
-            file.write("embedding_dim = " + str(self._ltsm.embedding_dim) + "\n")
-            file.write("hidden_dim = " + str(self._ltsm.hidden_dim) + "\n")
-            file.write("n_layers = " + str(self._ltsm.n_layers) + "\n")
-            file.write("torch_save = state_dict.pt")
-        torch.save(self._ltsm.state_dict(), dirName + "/state_dict.pt")
+        self._char_to_int = {self.alphabet[i]: i + 1 for i in range(len(self.alphabet))}
+        self._char_to_int.update({"": 0})

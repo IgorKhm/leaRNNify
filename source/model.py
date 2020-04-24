@@ -300,10 +300,11 @@ class LSTMLanguageClasifier:
     #
     def is_words_in_batch(self, words):
         batches = []
-        # max_len = 0
-        # for word in words:
-        #     if word is not None:
-        #         max_len = max(max_len, len(word))
+        # for i in range(len(words)/10000):
+        #     batches.append(len(words)/10000)
+        #
+        #
+        #
         max_len = len(max(words, key=lambda w: len(w)))
         for word in words:
             if max_len < self.word_traning_length:

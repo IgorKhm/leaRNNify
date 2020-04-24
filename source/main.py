@@ -12,10 +12,11 @@ from learner_decison_tree import DecisionTreeLearner
 from model import LSTMLanguageClasifier, test_rnn
 
 from pac_teacher import PACTeacher
-from random_words import confidence_interval, random_word
+from random_words import confidence_interval, random_word, confidence_interval_many
 
-from source.dfa import save_dfa_dot, save_dfa_as_part_of_model
-from source.exact_teacher import ExactTeacher
+from dfa import save_dfa_dot, save_dfa_as_part_of_model
+from exact_teacher import ExactTeacher
+from lstar.Extraction import extract
 
 
 def main():
@@ -637,7 +638,44 @@ def old_main():
     print(output > 0.5)
 
 
+def learn_dfa_and_compare_distance():
+    def target(w):
+        if len(w) == 0:
+            return True
+        return w[0] == w[-1]
+
+    class Lang:
+        def __init__(self, is_word, alphabet):
+            self.alphabet = alphabet
+            self.is_word_in = is_word
+
+    model2 = LSTMLanguageClasifier()
+    model2.load_rnn("test4")
+    lan = Lang(target, model2.alphabet)
+    # starting_examples = ["", "ab"]
+    #
+    # print(model2.is_word_in("ab"))
+    # model2.is_word_in("aabababbababaaaaaaaaaaaaabbbbbbbbbabababababaa")
+    #
+    # lstar_dfa = extract(model2, time_limit=50, initial_split_depth=20, starting_examples=starting_examples)
+    # teacher_pac = PACTeacher(model2)
+    # student_pac = DecisionTreeLearner(teacher_pac)
+    # teacher_pac.teach(student_pac)
+    c = [True, True, True]
+    d = [True, False, True]
+    print([x == y for x in c for y in d])
+
+    a, samples = confidence_interval_many([lan, model2], random_word)
+    b, samples = confidence_interval(lan, model2, random_word, samples=samples)
+
+    print("a")
+    print(a)
+    print("b")
+    print(b)
+
+
 print("blabla")
-main_train_RNNS()
+learn_dfa_and_compare_distance()
+# main_train_RNNS()
 # main()
 # cProfile.run('main()')

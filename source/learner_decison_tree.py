@@ -1,8 +1,12 @@
+import cProfile
 import sys
 import time
 
 from dfa import DFA
 from learner import Learner
+from graphviz import Digraph
+
+from pac_teacher import PACTeacher
 
 
 class TreeNode:
@@ -20,6 +24,47 @@ class TreeNode:
 
     def __repr__(self):
         return "TreeNode: name: \'" + self.name + "\', depth:" + str(self.depth)
+
+    def draw(self, filename, max_depth=200):
+        graph = Digraph('G', filename=filename)
+        front = []
+
+        if self.inLan:
+            graph.node(self.name, color="blue")
+        else:
+            graph.node(self.name, color="red")
+        if self.left is not None:
+            front.append(self.left)
+        if self.right is not None:
+            front.append(self.right)
+
+        while len(front) != 0:
+            v = front.pop(0)
+            is_leaf = True
+
+            if v.left is not None:
+                front.append(v.left)
+                is_leaf = False
+            if v.right is not None:
+                front.append(v.right)
+                is_leaf = False
+
+            if is_leaf:
+                name = v.name + "[leaf]"
+            else:
+                name = v.name
+
+            if v.inLan:
+                graph.node(name, color="blue")
+            else:
+                graph.node(name, color="red")
+
+            if v.parent.left == v:
+                graph.edge(v.parent.name, name, color="red", label="l")
+            else:
+                graph.edge(v.parent.name, name, color="blue", label="r")
+
+        graph.view()
 
 
 class DecisionTreeLearner(Learner):

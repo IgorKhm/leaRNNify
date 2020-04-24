@@ -4,7 +4,7 @@ from IPython.display import display
 import functools
 from copy import deepcopy, copy
 import itertools
-import Lstar
+import lstar.Lstar
 from random import randint, shuffle
 import random
 from time import clock
@@ -162,3 +162,6 @@ class DFA:
                 if not next_tuple in new_states and not next_state_pair in seen_states:
                     new_states.add(next_tuple)
         return res
+###Added by Igor#####
+    def is_word_in(self, word):
+        return self.classify_word(word)

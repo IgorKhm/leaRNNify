@@ -1,5 +1,5 @@
 import numpy as np
-from Helper_Functions import mean
+from lstar.Helper_Functions import mean
 from sklearn import svm
 from copy import deepcopy
 

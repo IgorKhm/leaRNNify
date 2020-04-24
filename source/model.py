@@ -391,3 +391,59 @@ class LSTMLanguageClasifier:
         self._current_state = self._initial_state
         self._char_to_int = {self.alphabet[i]: i + 1 for i in range(len(self.alphabet))}
         self._char_to_int.update({"": 0})
+        self.states = {str(self.from_state_to_list(self._ltsm.init_hidden(1))): ""}#maybe move to load? or some other place?
+
+    ######################################################
+    #                 Code For Lstar                     #
+    ######################################################
+
+    def classify_word(self, word):
+        return bool(self.is_word_in(word))
+
+    def get_first_RState(self):
+        return self.from_state_to_list(self._ltsm.init_hidden(1)), bool(self.is_word_in(""))
+
+    def get_next_RState(self, state, char):
+        # state = self.from_list_to_state(state)
+        # print(len(self.states.keys()))
+        # print(self.states.values())
+        word = self.states[str(state)] + char
+        if len(word) < 100:
+            length = 100
+        else:
+            length = len(word)
+        array = np.zeros(length)
+        for i in range(len(word)):
+            array[length - i - 1] = self._char_to_int[word[-i - 1]]
+        array = np.array([array])
+        state = self._ltsm.init_hidden(1)
+        if len(word) == 0:
+            l = torch.from_numpy(np.array([[0]]))
+            output, state = self._ltsm(l, state)
+        else:
+            output, state = self._ltsm(torch.from_numpy(array), state)
+            self.states.update({str(self.from_state_to_list(state)): word})
+
+        # print(word)
+        return self.from_state_to_list(state), bool(output > 0.5)
+
+    def from_state_to_list(self, state):
+        # hidden_dim = self._ltsm.hidden_dim
+        list_state = []
+        for i in state[0][0, 0]:
+            list_state.append(float(i))
+        for i in state[1][0, 0]:
+            list_state.append(float(i))
+
+        return list_state
+
+    def from_list_to_state(self, list_state):
+
+        hiden = torch.tensor([[list_state[self._ltsm.hidden_dim:]]])
+        cell = torch.tensor([[list_state[:self._ltsm.hidden_dim]]])
+        return (hiden, cell)
+
+        # c = self._char_to_int[char]
+        # c = torch.tensor([[c]])
+        # output, state = self._ltsm(c, state)
+        # return state, output > 0.5

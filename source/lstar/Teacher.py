@@ -1,5 +1,5 @@
-from Quantisations import SVMDecisionTreeQuantisation
-from WhiteboxRNNCounterexampleGenerator import WhiteboxRNNCounterexampleGenerator
+from lstar.Quantisations import SVMDecisionTreeQuantisation
+from lstar.WhiteboxRNNCounterexampleGenerator import WhiteboxRNNCounterexampleGenerator
 from time import clock
 
 class Teacher:

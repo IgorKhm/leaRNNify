@@ -1,3 +1,4 @@
+import os
 import string
 
 import numpy as np
@@ -232,12 +233,8 @@ def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=1
 
     return DFA(initial_state, final_states.tolist(), transitions)
 
-    # dfa = DFA(1, {1}, {1: {"a": 2, "b": 1, "c": 1},
-    #                    2: {"a": 3, "b": 1, "c": 3},
-    #                    3: {"a": 3, "b": 3, "c": 3}})
 
-
-def load_dfa(filename):
+def load_dfa_dot(filename):
     mode = "init"
     transitions = {}
     states = []
@@ -270,12 +267,38 @@ def load_dfa(filename):
                 split = line.split(";")
                 t = transitions[split[0]]
                 t.update({split[2]: split[1]})
-    print(transitions)
-    dfa = DFA(initial_state,final_states,transitions)
-    dfa.draw_nicely(name="upload")
-    print("Ads")
+    return DFA(initial_state, final_states, transitions)
+    # dfa.draw_nicely(name="upload")
 
 
+def save_dfa_as_part_of_model(dirName, dfa, force_overwrite=False):
+    if not os.path.isdir(dirName):
+        os.makedirs(dirName)
+    elif os.path.exists(dirName + "/dfa.dot") & (not force_overwrite):
+        if input("save exists. Enter y if you want to overwrite it.") != "y":
+            return
+    save_dfa_dot(dirName + "/dfa.dot", dfa)
+
+
+def save_dfa_dot(filename, dfa: DFA):
+    with open(filename, "w") as file:
+        file.write("digraph g {\n")
+        file.write('__start0 [label="" shape="none]\n')
+
+        for s in dfa.states:
+            if s in dfa.final_states:
+                shape = "doublecircle"
+            else:
+                shape = "circle"
+            file.write('{} [shape="{}" label="{}"]\n'.format(s, shape, s))
+
+        file.write('__start0 -> {}\n'.format(dfa.init_state))
+
+        for s1 in dfa.transitions.keys():
+            tran = dfa.transitions[s1]
+            for letter in tran.keys():
+                file.write('{} -> {}[label="{}"]\n'.format(s1, tran[letter], letter))
+        file.write("}\n")
 #
 #                               {1: {"a": 2, "b": 5, "c": 5},
 #                                2: {"a": 3, "b": 1, "c": 3},

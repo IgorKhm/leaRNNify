@@ -1,4 +1,5 @@
 import sys
+import time
 
 from dfa import DFA
 from learner import Learner
@@ -39,6 +40,69 @@ class DecisionTreeLearner(Learner):
             else:
                 current_node = current_node.left
 
+    # def _sift_set(self, words: []):
+    #     words_left = len(words)
+    #     current_nodes = [self._root for _ in (range(words_left))]
+    #     batch = [None for _ in words]
+    #     while True:
+    #         for i in range(len(words)):
+    #             if words[i] is not None:
+    #                 batch[i] = words[i] + current_nodes[i].name
+    #         ans = self.teacher.model.is_words_in_batch(batch)
+    #         j = 0
+    #         for i in range(len(words)):
+    #             if words[i] is not None:
+    #                 if ans[j] > 0.5:
+    #                     current_nodes[i] = current_nodes[i].right
+    #                 else:
+    #                     current_nodes[i] = current_nodes[i].left
+    #                 j = j + 1
+    #                 if current_nodes[i] in self._leafs:
+    #                     words[i] = None
+    #                     batch[i] = None
+    #                     words_left = words_left - 1
+    #         if words_left == 0:
+    #             return current_nodes
+
+    def _sift_set(self, words: []):
+        words_left = len(words)
+        current_nodes = [[self._root, i] for i in (range(words_left))]
+        final = [None for _ in words]
+        while True:
+            anwsers = self.teacher.model.is_words_in_batch([words[x[1]] + x[0].name for x in current_nodes])
+
+            for i in range(len(anwsers) - 1, -1, -1):
+                if anwsers[i] > 0.5:
+                    current_nodes[i][0] = current_nodes[i][0].right
+                else:
+                    current_nodes[i][0] = current_nodes[i][0].left
+
+                if current_nodes[i][0] in self._leafs:
+                    final[current_nodes[i][1]] = current_nodes[i][0]
+                    del (current_nodes[i])
+                    words_left = words_left - 1
+            if words_left == 0:
+                return final
+
+
+    def _produce_hypothesis_set(self):
+        transitions = {}
+        final_nodes = []
+        sl = []
+        for leaf in self._leafs:
+            if leaf.inLan:
+                final_nodes.append(leaf.name)
+            for l in self.teacher.alphabet:
+                sl.append(leaf.name + l)
+        states = self._sift_set(sl)
+        for leaf in range(len(self._leafs)):
+            tran = {}
+            for l in range(len(self.teacher.alphabet)):
+                tran.update({self.teacher.alphabet[l]: states[leaf * len(self.teacher.alphabet) + l].name})
+            transitions.update({self._leafs[leaf].name: tran})
+
+        return DFA("", final_nodes, transitions)
+
     def _produce_hypothesis(self):
         transitions = {}
         final_nodes = []
@@ -53,7 +117,7 @@ class DecisionTreeLearner(Learner):
 
         return DFA("", final_nodes, transitions)
 
-    def new_counterexample(self, w):
+    def new_counterexample(self, w, set=False):
         first_time = False
         if len(self._leafs) == 1:
             new_differencing_string, new_state_string, first_time = self._leafs[0].name, w, True
@@ -78,10 +142,10 @@ class DecisionTreeLearner(Learner):
         node_to_replace = self._sift(new_state_string)
         # try:
         if self.teacher.membership_query(node_to_replace.name + new_differencing_string):
-            node_to_replace.left = TreeNode(new_state_string, first_time^node_to_replace.inLan, node_to_replace)
+            node_to_replace.left = TreeNode(new_state_string, first_time ^ node_to_replace.inLan, node_to_replace)
             node_to_replace.right = TreeNode(node_to_replace.name, node_to_replace.inLan, node_to_replace)
         else:
-            node_to_replace.right = TreeNode(new_state_string, first_time^node_to_replace.inLan, node_to_replace)
+            node_to_replace.right = TreeNode(new_state_string, first_time ^ node_to_replace.inLan, node_to_replace)
             node_to_replace.left = TreeNode(node_to_replace.name, node_to_replace.inLan, node_to_replace)
         # except :
         #     print(sys.exc_info()[0])
@@ -89,7 +153,17 @@ class DecisionTreeLearner(Learner):
         node_to_replace.name = new_differencing_string
         self._leafs.extend([node_to_replace.right, node_to_replace.left])
 
-        self.dfa = self._produce_hypothesis()
+        t = time.time()
+        if set:
+            self.dfa = self._produce_hypothesis_set()
+        else:
+            self.dfa = self._produce_hypothesis()
+
+        # if self._produce_hypothesis_set() != self._produce_hypothesis():
+        #     raise NotImplemented
+        #     # print("check")
+
+        print(" time for prod hypothesis: {}".format(time.time() - t))
         # if self.dfa.is_word_in(prefix) != self._teacher.membership_query(prefix):
         #     print("?")
 

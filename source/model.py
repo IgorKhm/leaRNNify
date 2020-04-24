@@ -6,23 +6,30 @@ from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
 
 
-def word_to_nparray(word, letter_to_num, length):
-    array = np.zeros(length)
-    for i in range(len(word)):
-        array[length - i - 1] = letter_to_num[word[-i - 1]]
-
-    return array
-
-
-def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criterion=nn.BCELoss(),
+def teach(model, batch_size, train_loader, val_loader, device, lr=0.001, criterion=nn.BCELoss(),
           epochs=10, print_every=500):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-
+    print(optimizer)
+    print(lr)
     counter = 0
     clip = 5
     valid_loss_min = np.Inf
 
+
+    val_h = model.init_hidden(batch_size)
+    val_losses = []
+    model.eval()
+    for inp, lab in val_loader:
+        val_h = tuple([each.data for each in val_h])
+        inp, lab = inp.to(device), lab.to(device)
+        out, _ = model(inp, val_h)
+        val_loss = criterion(out.squeeze(), lab.float())
+        val_losses.append(val_loss.item())
+
     model.train()
+    epochval = np.mean(val_losses)
+    print("Initial Val Loss: {:.6f}".format(np.mean(val_losses)))
+
     for i in range(epochs):
         h = model.init_hidden(batch_size)
 
@@ -31,7 +38,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
             h = tuple([e.data for e in h])
             inputs, labels = inputs.to(device), labels.to(device)
             model.zero_grad()
-            output, h = model(inputs, h)
+            output, _ = model(inputs, h)
             loss = criterion(output.squeeze(), labels.float())
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), clip)
@@ -44,7 +51,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                 for inp, lab in val_loader:
                     val_h = tuple([each.data for each in val_h])
                     inp, lab = inp.to(device), lab.to(device)
-                    out, val_h = model(inp, val_h)
+                    out, _ = model(inp, val_h)
                     val_loss = criterion(out.squeeze(), lab.float())
                     val_losses.append(val_loss.item())
 
@@ -96,7 +103,8 @@ def from_array_to_word(int2char, array):
     return word
 
 
-def make_training_sets(alphabet, target, num_of_exm_per_lenght=2000, max_length=50, batch_size=50):
+def make_training_sets(alphabet: object, target: object, num_of_exm_per_lenght: object = 2000, max_length: object = 50,
+                       batch_size: object = 50) -> object:
     int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
     int2char.update({0: ""})
     char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
@@ -104,7 +112,7 @@ def make_training_sets(alphabet, target, num_of_exm_per_lenght=2000, max_length=
 
     words_list = []
 
-    lengths = list(range(1, 15)) + list(range(20, max_length, 5))
+    lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
     for length in lengths:
         new_list = np.unique(np.random.randint(1, len(alphabet) + 1, size=(num_of_exm_per_lenght, length)), axis=0)
         new_list = [np.pad(w, (max_length - length, 0)) for w in new_list]
@@ -122,7 +130,7 @@ def make_training_sets(alphabet, target, num_of_exm_per_lenght=2000, max_length=
     val_data = TensorDataset(torch.from_numpy(np.array(val_words)), torch.from_numpy(np.array(val_label)))
     test_data = TensorDataset(torch.from_numpy(np.array(test_words)), torch.from_numpy(np.array(test_label)))
 
-    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
+    train_loader = DataLoader(train_data, shuffle=False, batch_size=batch_size)
     val_loader = DataLoader(val_data, shuffle=True, batch_size=batch_size)
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size)
 
@@ -142,7 +150,7 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         # del label_list[i]
 
     # split the rest between validation and learning
-    num_val = int(len(words_list) / 1)
+    num_val = int(len(words_list) / 4)
     num_val = num_val - num_val % batch_size
     val_words, val_label = [], []
     for _ in range(num_val):
@@ -166,14 +174,15 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.embedding_dim = embedding_dim
 
-        self.embedding = nn.Embedding(alphabet_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, dropout=drop_prob, batch_first=True)
+        self.embedding = nn.Embedding(alphabet_size, embedding_dim).to(device=device)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, dropout=drop_prob, batch_first=True).to(device=device)
         self.dropout = nn.Dropout(0.2)
-        self.fc = nn.Linear(hidden_dim, output_size)
-        self.sigmoid = nn.Sigmoid()
+        self.fc = nn.Linear(hidden_dim, output_size).to(device=device)
+        self.sigmoid = nn.Sigmoid().to(device=device)
         self.device = device
 
     def forward(self, x, hidden):
+        # with torch.no_grad():
         batch_size = x.size(0)
         x = x.long()
         embeds = self.embedding(x)
@@ -202,8 +211,10 @@ class LSTMLanguageClasifier:
         self._current_state = None
         self._char_to_int = None
         self.alphabet = []
+        self.word_traning_length = 60
 
-    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=1, batch_size=20):
+    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
+                     num_of_exm_per_lenght=5000):
         self._char_to_int = {alphahbet[i]: i + 1 for i in range(len(alphahbet))}
         self._char_to_int.update({"": 0})
         self.alphabet = alphahbet
@@ -216,11 +227,13 @@ class LSTMLanguageClasifier:
             device = torch.device("cpu")
             print("GPU not available, CPU used")
 
-        self._ltsm = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5, device=device)
+        self._ltsm = LSTM(len(alphahbet) + 1, 1, len(alphahbet) + 1, hidden_dim, num_layers, drop_prob=0.5,
+                          device=device)
         train_loader, val_loader, test_loader = make_training_sets(alphahbet, target, batch_size=batch_size,
-                                                                   num_of_exm_per_lenght=10000, max_length=100)
+                                                                   num_of_exm_per_lenght=num_of_exm_per_lenght,
+                                                                   max_length=self.word_traning_length)
         print(len(train_loader))
-        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=20, print_every=500)
+        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=20, print_every=2000)
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
@@ -229,8 +242,8 @@ class LSTMLanguageClasifier:
 
     def is_word_in(self, word):
         h = self._ltsm.init_hidden(1)
-        if len(word) < 100:
-            length = 100
+        if len(word) < self.word_traning_length:
+            length = self.word_traning_length
         else:
             length = len(word)
         array = np.zeros(length)
@@ -239,11 +252,76 @@ class LSTMLanguageClasifier:
         array = np.array([array])
         if len(word) == 0:
             l = torch.from_numpy(np.array([[0]]))
-            output, h = self._ltsm(l, h)
+            output, h = self._ltsm(l.to(self._ltsm.device), h)
         else:
-            output, h = self._ltsm(torch.from_numpy(array), h)
+            output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), h)
         return bool(output > 0.5)
 
+    def is_word_in_test(self, word, lengthadditon):
+        h = self._ltsm.init_hidden(1)
+        if len(word) < self.word_traning_length:
+            length = self.word_traning_length + lengthadditon
+        else:
+            length = len(word) + lengthadditon
+        array = np.zeros(length)
+        for i in range(len(word)):
+            array[length - i - 1] = self._char_to_int[word[-i - 1]]
+        array = np.array([array])
+        if len(word) == 0:
+            l = torch.from_numpy(np.array([[0]]))
+            output, h = self._ltsm(l.to(self._ltsm.device), h)
+        else:
+            output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), h)
+        return bool(output > 0.5)
+
+    # def is_words_in_batch_test(self, words):
+    #     h = self._ltsm.init_hidden(len(words))
+    #     words.remove("")
+    #     batches = []
+    #     max_len = len(max(words, key=lambda w: len(w)))
+    #     for word in words:
+    #         if max_len < 100:
+    #             length = 100
+    #         else:
+    #             length = max_len
+    #         array = np.zeros(length)
+    #         for i in range(len(word)):
+    #             array[length - i - 1] = self._char_to_int[word[-i - 1]]
+    #         batches.append(array)
+    #     batch_np = np.array(batches)
+    #     batch = torch.from_numpy(batch_np)
+    #     batch = words_list = torch.nn.utils.rnn.pack_padded_sequence(batch, [len(w) for w in words],enforce_sorted=False,batch_first=True)
+    #     # if len(word) == 0:
+    #     #     l = torch.from_numpy(np.array([[0]]))
+    #     #     output, h = self._ltsm(l.to(self._ltsm.device), h)
+    #     # else:
+    #     output, _ = self._ltsm(batch.to(self._ltsm.device), h)
+    #     return output
+    #
+    def is_words_in_batch(self, words):
+        batches = []
+        # max_len = 0
+        # for word in words:
+        #     if word is not None:
+        #         max_len = max(max_len, len(word))
+        max_len = len(max(words, key=lambda w: len(w)))
+        for word in words:
+            if max_len < self.word_traning_length:
+                length = self.word_traning_length
+            else:
+                length = max_len
+            array = np.zeros(length)
+            for i in range(len(word)):
+                array[length - i - 1] = self._char_to_int[word[-i - 1]]
+            batches.append(array)
+        batch_np = np.array(batches)
+        # if len(word) == 0:
+        #     l = torch.from_numpy(np.array([[0]]))
+        #     output, h = self._ltsm(l.to(self._ltsm.device), h)
+        # else:
+        h = self._ltsm.init_hidden(len(batch_np))
+        output, _ = self._ltsm(torch.from_numpy(batch_np).to(self._ltsm.device), h)
+        return output
         #
         # h = self._ltsm.init_hidden(1)
         # if len(word) == 0:
@@ -266,7 +344,7 @@ class LSTMLanguageClasifier:
     def save_rnn(self, dirName, force_overwrite=False):
         if not os.path.isdir(dirName):
             os.makedirs(dirName)
-        elif not force_overwrite:
+        elif os.path.exists(dirName + "/meta") & (not force_overwrite):
             if input("save exists. Enter y if you want to overwrite it.") != "y":
                 return
         with open(dirName + "/meta", "w+") as file:
@@ -306,6 +384,8 @@ class LSTMLanguageClasifier:
         self._ltsm = LSTM(len(self.alphabet) + 1, 1, embedding_dim, hidden_dim, n_layers, drop_prob=0.5, device=device)
         self._ltsm.load_state_dict(torch.load(dir + "/" + torch_save))
         self._ltsm.eval()
+        # self._ltsm.fc.eval()
+        # torch.no_grad()
 
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state

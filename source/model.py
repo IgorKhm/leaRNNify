@@ -211,9 +211,9 @@ class LSTMLanguageClasifier:
         self._current_state = None
         self._char_to_int = None
         self.alphabet = []
-        self.word_traning_length = 60
+        self.word_traning_length = 150
 
-    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
+    def train_a_lstm(self, alphahbet, target, embedding_dim=6, hidden_dim=100, num_layers=2, batch_size=50,
                      num_of_exm_per_lenght=5000):
         self._char_to_int = {alphahbet[i]: i + 1 for i in range(len(alphahbet))}
         self._char_to_int.update({"": 0})
@@ -233,7 +233,7 @@ class LSTMLanguageClasifier:
                                                                    num_of_exm_per_lenght=num_of_exm_per_lenght,
                                                                    max_length=self.word_traning_length)
         print(len(train_loader))
-        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=20, print_every=2000)
+        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=100, print_every=10000)
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
@@ -409,8 +409,8 @@ class LSTMLanguageClasifier:
         # print(len(self.states.keys()))
         # print(self.states.values())
         word = self.states[str(state)] + char
-        if len(word) < 100:
-            length = 100
+        if len(word) < self.word_traning_length:
+            length = self.word_traning_length
         else:
             length = len(word)
         array = np.zeros(length)
@@ -422,7 +422,7 @@ class LSTMLanguageClasifier:
             l = torch.from_numpy(np.array([[0]]))
             output, state = self._ltsm(l, state)
         else:
-            output, state = self._ltsm(torch.from_numpy(array), state)
+            output, state = self._ltsm(torch.from_numpy(array).to(device=self._ltsm.device), state)
             self.states.update({str(self.from_state_to_list(state)): word})
 
         # print(word)

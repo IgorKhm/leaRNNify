@@ -41,12 +41,14 @@ class PACTeacher(Teacher):
     def membership_query(self, w):
         return self.model.is_word_in(w)
 
-    def teach(self, learner):
+    def teach(self, learner, timeout=900):
         learner.teacher = self
         i = 0
         t = time.time()
         t100 = t
         while True:
+            if time.time() - t > timeout:
+                return
             i = i + 1
             if i % 100 == 0:
                 print("this is the {}th round".format(i))

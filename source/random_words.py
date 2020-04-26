@@ -2,6 +2,7 @@ import string
 import sys
 
 import numpy as np
+import torch
 from IPython.display import Image
 from IPython.display import display
 
@@ -29,7 +30,7 @@ def random_word_by_letter(alphabet, p=0.01):
         yield alphabet[letter]
 
 
-def confidence_interval(language1, language2, sampler, delta=0.001, epsilon=0.005, samples=None):
+def confidence_interval(language1, language2, sampler, delta=0.001, epsilon=0.001, samples=None):
     n = np.log(2 / delta) / (2 * epsilon * epsilon)
     print(n)
     if samples is None:
@@ -38,7 +39,7 @@ def confidence_interval(language1, language2, sampler, delta=0.001, epsilon=0.00
             w = sampler(language1.alphabet)
             if w not in samples:
                 samples.add(w)
-            print(len(samples))
+            # print(len(samples))
     mistakes = 0
     print("got it")
     for w in samples:
@@ -54,7 +55,7 @@ def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, sam
         raise Exception("Need at least 2 languages to compare")
 
     n = np.log(2 / delta) / (2 * epsilon * epsilon)
-    print(n)
+    print("size of sample:" + str(int(n)))
     if samples is None:
         samples = set()
         while len(samples) <= n:
@@ -67,22 +68,39 @@ def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, sam
     in_langs_lists = []
     i = 0
     sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
+    torch.cuda.empty_cache()
     for lang in languages:
-        if lang is LSTMLanguageClasifier:
-            in_langs_lists.append(bool(lang.is_words_in_batch(samples)))
-        else:
-            in_langs_lists.append([lang.is_word_in(w) for w in samples])
+        # if isinstance(lang, LSTMLanguageClasifier):
+        #     batch = []
+        #     samplesL = list(samples)
+        #     p = int(len(samples)/100)
+        #     h = int(len(samples) / p)
+        #     print(h)
+        #     for j in range(p):
+        #         print(j)
+        #         b = lang.is_words_in_batch(samplesL[j * h: (j + 1) * h])
+        #         batch.extend(b)
+        #         torch.cuda.empty_cache()
+        #     batch.extend(lang.is_words_in_batch(samplesL[p * h: len(samples)]))
+        #     l = [bool(x > 0.5) for x in batch]
+        #     in_langs_lists.append(l)
+        #
+        # else:
+        in_langs_lists.append([lang.is_word_in(w) for w in samples])
         i = i + 1
         sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
 
-    output = [[1] * len(languages)] * len(languages)
+    output = []
+    for i in range(num_of_lan):
+        output.append([1] * num_of_lan)
 
     for lang1 in range(num_of_lan):
         for lang2 in range(num_of_lan):
             if lang1 == lang2:
                 output[lang1][lang2] = 0
             elif output[lang1][lang2] == 1:
-                output[lang1][lang2] = ([in_langs_lists[lang1][i] == in_langs_lists[lang2][i] for i in
-                                         range(len(samples))].count(False)) / n
+                output[lang1][lang2] = ([(in_langs_lists[lang1])[i] == (in_langs_lists[lang2])[i] for i in
+                                         range(len(samplesL))].count(False)) / n
 
+    print()
     return output, samples

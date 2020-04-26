@@ -1,3 +1,4 @@
+import os
 import time
 
 import numpy as np
@@ -381,9 +382,9 @@ def target(w):
 
 
 def main_train_RNNS():
-    for i in range(10):
+    for i in range(5,10):
         alphabet = "abcdef"
-        dfa_rand = random_dfa(alphabet, 40, 41, 1, 39)
+        dfa_rand = random_dfa(alphabet, 100, 120, 1, 39)
         print(dfa_rand)
         teacher_exact = ExactTeacher(dfa_rand)
         student_exact = DecisionTreeLearner(teacher_exact)
@@ -638,16 +639,24 @@ def old_main():
     print(output > 0.5)
 
 
-def learn_dfa_and_compare_distance():
-    def target(w):
-        if len(w) == 0:
-            return True
-        return w[0] == w[-1]
+def learn_dfa_and_compare_distance(dir):
+    for folder in os.walk(dir):
+        if folder[0] == dir:
+            continue
+        dfaOrigin = load_dfa_dot(folder[0] + r"\dfa.dot")
+        ltsm = LSTMLanguageClasifier()
+        ltsm.load_rnn(folder[0])
 
-    class Lang:
-        def __init__(self, is_word, alphabet):
-            self.alphabet = alphabet
-            self.is_word_in = is_word
+        # lstar_dfa = extract(ltsm,time_limit = 600, initial_split_depth=20)
+        teacher_pac = PACTeacher(ltsm)
+        student_pac = DecisionTreeLearner(teacher_pac)
+        # teacher_pac.teach(student_pac,600)
+
+        a, samples = confidence_interval_many([dfaOrigin, ltsm, student_pac], random_word,
+                                              epsilon=0.005)
+        print(a)
+
+    return
 
     model2 = LSTMLanguageClasifier()
     model2.load_rnn("test4")
@@ -675,7 +684,7 @@ def learn_dfa_and_compare_distance():
 
 
 print("blabla")
-learn_dfa_and_compare_distance()
-# main_train_RNNS()
+# learn_dfa_and_compare_distance("models2")
+main_train_RNNS()
 # main()
 # cProfile.run('main()')

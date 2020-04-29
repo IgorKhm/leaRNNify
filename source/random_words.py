@@ -63,7 +63,8 @@ def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, sam
                 sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
             w = sampler(languages[0].alphabet)
             if w not in samples:
-                samples.add(w)
+                if w != "":
+                    samples.add(w)
         sys.stdout.write('\r Creating words:  100/100 done \n')
     in_langs_lists = []
     i = 0
@@ -100,7 +101,7 @@ def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, sam
                 output[lang1][lang2] = 0
             elif output[lang1][lang2] == 1:
                 output[lang1][lang2] = ([(in_langs_lists[lang1])[i] == (in_langs_lists[lang2])[i] for i in
-                                         range(len(samplesL))].count(False)) / n
+                                         range(len(samples))].count(False)) / n
 
     print()
     return output, samples

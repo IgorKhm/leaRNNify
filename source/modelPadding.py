@@ -48,7 +48,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
             num_correct += np.sum(correct)
 
         test_acc = num_correct / len(val_loader.dataset)
-        print("Summary for after Epoch {}/{}...".format(i , epochs))
+        print("Summary for after Epoch {}/{}...".format(i, epochs))
         print("Val Loss: {:.6f}".format(np.mean(val_losses)),
               "Test accuracy: {:.3f}%".format(test_acc * 100))
 
@@ -238,7 +238,7 @@ class LSTM(nn.Module):
         out = out.view(batch_size, -1)
         # outb = torch.tensor([out[i][output_lengths[i] - 1] for i in range(20)])
         outc = out[:, -1]
-        output_lengths = output_lengths -1
+        output_lengths = output_lengths - 1
         outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
 
         return outb, hidden
@@ -262,7 +262,8 @@ class LSTMLanguageClasifier:
         self.word_traning_length = 40
 
     def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
-                     num_of_exm_per_lenght=5000, epoch=20):
+                     num_of_exm_per_lenght=5000, word_traning_length=40, epoch=20):
+        self.word_traning_length = word_traning_length
         self._char_to_int = {alphahbet[i]: i + 1 for i in range(len(alphahbet))}
         self._char_to_int.update({"": 0})
         self.alphabet = alphahbet
@@ -293,53 +294,25 @@ class LSTMLanguageClasifier:
 
     def is_word_in(self, word):
         h = self._ltsm.init_hidden(1)
-        if len(word) < self.word_traning_length:
-            length = self.word_traning_length
-        else:
-            length = len(word)
-        array = np.zeros(length)
-        for i in range(len(word)):
-            array[length - i - 1] = self._char_to_int[word[-i - 1]]
-        array = np.array([array])
-        if len(word) == 0:
-            l = torch.from_numpy(np.array([[0]]))
-            output, h = self._ltsm(l.to(self._ltsm.device), h)
-        else:
-            output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), h)
-        return bool(output > 0.5)
-
-    def is_word_in_test(self, word, lengthadditon):
-        h = self._ltsm.init_hidden(1)
-        if len(word) < self.word_traning_length:
-            length = self.word_traning_length + lengthadditon
-        else:
-            length = len(word) + lengthadditon
-        array = np.zeros(length)
-        for i in range(len(word)):
-            array[length - i - 1] = self._char_to_int[word[-i - 1]]
-        array = np.array([array])
-        if len(word) == 0:
-            l = torch.from_numpy(np.array([[0]]))
-            output, h = self._ltsm(l.to(self._ltsm.device), h)
-        else:
-            output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), h)
+        length = torch.tensor([len(word)]).to(self._ltsm.device)
+        array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)
+        output, h = self._ltsm(array, length, h)
         return bool(output > 0.5)
 
     def is_words_in_batch(self, words):
-        batches = []
-        max_len = len(max(words, key=lambda w: len(w)))
-        for word in words:
-            if max_len < self.word_traning_length:
-                length = self.word_traning_length
-            else:
-                length = max_len
-            array = np.zeros(length)
-            for i in range(len(word)):
-                array[length - i - 1] = self._char_to_int[word[-i - 1]]
-            batches.append(array)
-        batch_np = np.array(batches)
-        h = self._ltsm.init_hidden(len(batch_np))
-        output, _ = self._ltsm(torch.from_numpy(batch_np).to(self._ltsm.device), h)
+        words_torch = [torch.tensor([self._char_to_int[l] for l in word]) for word in words]
+        # for word in words:
+        #     lengths.append(len(word))
+        #     words_in_num.append([self._char_to_int[l] for l in word])
+        h = self._ltsm.init_hidden(len(words))
+        # words, lengths, _ = pad_collate((words, [0]*len(words)))
+
+        x_lens = [len(x) for x in words]
+        # y_lens = [len(y) for y in yy]
+
+        xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0)
+
+        output, _ = self._ltsm(xx_pad, x_lens, h)
         return output
 
     def is_word_letter_by_letter(self, letter):

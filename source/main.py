@@ -23,6 +23,11 @@ def target(w):
     return w[0] == w[-1]
 
 
+class lan():
+    def is_word_in(self, w):
+        return target(w)
+
+
 def learn_dfa_and_compare_distance(dir):
     for folder in os.walk(dir):
         if folder[0] == dir:
@@ -52,15 +57,21 @@ def main_train_RNNS():
         student_exact = DecisionTreeLearner(teacher_exact)
         teacher_exact.teach(student_exact)
         dfa_rand = student_exact.dfa
-
+        r = lan()
+        print(r.is_word_in("bababababb"))
         print(dfa_rand)
         dfa_rand.draw_nicely(name="_testing_stuff")
         save_dfa_as_part_of_model("models2/" + str(i), dfa_rand, True)
         starttime = time.time()
         model = LSTMLanguageClasifier()
-        model.train_a_lstm(alphabet, dfa_rand.is_word_in, hidden_dim=6, num_layers=1, embedding_dim=5,
-                           num_of_exm_per_lenght=5000, batch_size=20, epoch=20)
+        model.train_a_lstm(alphabet, target, hidden_dim=10, num_layers=1, embedding_dim=5,
+                           num_of_exm_per_lenght=20000, batch_size=20, epoch=5, word_traning_length=40)
         print("padding {}".format(time.time() - starttime))
+        print(model.is_words_in_batch(["aab", "bb", "ababababa", "dbdbd", "cccccd"]))
+
+        a, samples = confidence_interval_many([model, lan()], random_word,
+                                              epsilon=0.005)
+        print(a)
 
         model.save_rnn("models2/" + str(i))
 
@@ -70,4 +81,4 @@ print("Begin")
 # a= a[:,1]
 # a= a[:,-1]
 main_train_RNNS()
-learn_dfa_and_compare_distance("models2")
+# learn_dfa_and_compare_distance("models2")

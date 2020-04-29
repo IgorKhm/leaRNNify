@@ -27,7 +27,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
     counter = 0
     clip = 5
     valid_loss_min = np.Inf
-
+    last_loss = 1
     for i in range(epochs):
         h = model.init_hidden(batch_size)
 
@@ -48,9 +48,25 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
             num_correct += np.sum(correct)
 
         test_acc = num_correct / len(val_loader.dataset)
-        print("Summary for after Epoch {}/{}...".format(i, epochs))
+        print("Summary for after Epoch {}/{}:".format(i, epochs))
         print("Val Loss: {:.6f}".format(np.mean(val_losses)),
-              "Test accuracy: {:.3f}%".format(test_acc * 100))
+              "Test accuracy: {:.3f}%".format(test_acc * 100),
+              "Loss delta: {:.6f}".format(last_loss - np.mean(val_losses)))
+
+        print("-------------------------------------------------------")
+        print("-------------------------------------------------------")
+        print("Starting Epoch {}/{}".format(i+1, epochs))
+        if 0 < last_loss - np.mean(val_losses) < 0.005:
+            lr = lr + 0.001
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+            print("changed to learning rate: {}".format(lr))
+        if (0.01 < last_loss - np.mean(val_losses)) & (lr != 0.005):
+            lr = 0.005
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+            print("changed to learning rate: {}".format(lr))
+
+
+        last_loss = np.mean(val_losses)
 
         model.train()
         for inputs, labels, inp_len in train_loader:
@@ -161,7 +177,7 @@ def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=
 
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
 
-    print(len(words_list))
+
     test_label, test_words, train_label, train_words, val_label, val_words = \
         _split_words_to_train_val_and_test(batch_size, label_list, words_list)
 
@@ -198,7 +214,6 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         val_label.append(label_list[i])
         del words_list[i]
         del label_list[i]
-    print(len(words_list) % batch_size)
     train_num = int(len(words_list) - len(words_list) % batch_size)
     train_words, train_label = words_list[0:train_num], label_list[0:train_num]
     return test_label, test_words, train_label, train_words, val_label, val_words
@@ -238,7 +253,7 @@ class LSTM(nn.Module):
         out = out.view(batch_size, -1)
         # outb = torch.tensor([out[i][output_lengths[i] - 1] for i in range(20)])
         outc = out[:, -1]
-        output_lengths = output_lengths - 1
+        output_lengths = (output_lengths - 1).to(self.device)
         outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
 
         return outb, hidden
@@ -281,7 +296,7 @@ class LSTMLanguageClasifier:
         train_loader, val_loader, test_loader = make_training_sets(alphahbet, target, batch_size=batch_size,
                                                                    num_of_exm_per_length=num_of_exm_per_lenght,
                                                                    max_length=self.word_traning_length)
-        print(len(train_loader))
+
         # try:
         self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
         # except KeyboardInterrupt():

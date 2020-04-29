@@ -10,11 +10,12 @@ import torch
 
 from dfa import load_dfa_dot, random_dfa
 from learner_decison_tree import DecisionTreeLearner
-from model import LSTMLanguageClasifier, test_rnn
-
+from modelPadding import LSTMLanguageClasifier, test_rnn
+from model import LSTMLanguageClasifier as kl
 from pac_teacher import PACTeacher
 from random_words import confidence_interval, random_word, confidence_interval_many
 
+from models.model import LSTMLanguageClasifier as old
 from dfa import save_dfa_dot, save_dfa_as_part_of_model
 from exact_teacher import ExactTeacher
 from lstar.Extraction import extract
@@ -382,21 +383,34 @@ def target(w):
 
 
 def main_train_RNNS():
-    for i in range(5,10):
-        alphabet = "abcdef"
-        dfa_rand = random_dfa(alphabet, 100, 120, 1, 39)
+    for i in range(9, 10):
+        alphabet = "abcd"
+        dfa_rand = random_dfa(alphabet, 10, 30, 1, 10)
         print(dfa_rand)
         teacher_exact = ExactTeacher(dfa_rand)
         student_exact = DecisionTreeLearner(teacher_exact)
         teacher_exact.teach(student_exact)
         dfa_rand = student_exact.dfa
+
+        old_model = old()
+        old_model.train_a_lstm(alphabet, target)
+
+
+        starttime = time.time()
+        modelb = kl()
+        # test = modelb.train_a_lstm(alphabet, target, hidden_dim=3,num_layers=1,embedding_dim=5,
+        #                            num_of_exm_per_lenght=10000, batch_size=20, epoch=20)
+        # print("no pedding {}".format(time.time() - starttime))
+
         print(dfa_rand)
         # dfa_rand.draw_nicely(name="_testing_stuff")
-        save_dfa_as_part_of_model("models2/" + str(i), dfa_rand)
+        save_dfa_as_part_of_model("models2/" + str(i), dfa_rand, True)
+        starttime = time.time()
         model = LSTMLanguageClasifier()
-        test = model.train_a_lstm(alphabet, dfa_rand.is_word_in, hidden_dim=len(dfa_rand.states),
-                                  num_of_exm_per_lenght=20000, batch_size=50)
-        print("here")
+        test = model.train_a_lstm(alphabet, target, hidden_dim=6, num_layers=1, embedding_dim=5,
+                                  num_of_exm_per_lenght=50000, batch_size=20, epoch=20)
+        print("padding {}".format(time.time() - starttime))
+
         # test_rnn(model, test, 30, model._ltsm.device)
         model.save_rnn("models2/" + str(i))
 
@@ -548,7 +562,7 @@ def old_main():
     output_size = 1
     embedding_dim = 10
     hidden_dim = 10
-    n_layers = 2
+    n_layers = 1
 
     model = SentimentNet(vocab_size, output_size, embedding_dim, hidden_dim, n_layers)
     model.to(device)
@@ -685,6 +699,7 @@ def learn_dfa_and_compare_distance(dir):
 
 print("blabla")
 # learn_dfa_and_compare_distance("models2")
+# cProfile.run('main_train_RNNS()')
 main_train_RNNS()
 # main()
 # cProfile.run('main()')

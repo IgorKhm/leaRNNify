@@ -2,9 +2,9 @@ import os
 
 import numpy as np
 import torch
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
-from torch.utils.data import TensorDataset, DataLoader
 import torch.nn as nn
+from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 
 
@@ -23,30 +23,35 @@ class WordsDataset(Dataset):
 def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criterion=nn.BCELoss(),
           epochs=10, print_every=500):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    print(model)
-    print(optimizer)
-    print(lr)
     counter = 0
     clip = 5
     valid_loss_min = np.Inf
 
-    # val_h = model.init_hidden(batch_size)
-    # val_losses = []
-    # model.eval()
-    # for inp, lab , inp_len, lab_len in val_loader:
-    #     val_h = tuple([each.data for each in val_h])
-    #     inp, lab = inp.to(device), lab.to(device)
-    #     out, _ = model(inp, val_h)
-    #     val_loss = criterion(out.squeeze(), lab.float())
-    #     val_losses.append(val_loss.item())
-    #
-    model.train()
-    # epochval = np.mean(val_losses)
-    # print("Initial Val Loss: {:.6f}".format(np.mean(val_losses)))
-
     for i in range(epochs):
         h = model.init_hidden(batch_size)
 
+        val_h = model.init_hidden(batch_size)
+        val_losses = []
+        model.eval()
+        num_correct = 0
+        for inp, lab, inp_len in val_loader:
+            val_h = tuple([each.data for each in val_h])
+            inp, lab = inp.to(device), lab.to(device)
+            out, _ = model(inp, inp_len, val_h)
+            val_loss = criterion(out.squeeze(), lab.float())
+            val_losses.append(val_loss.item())
+
+            pred = torch.round(out.squeeze())  # rounds the output to 0/1
+            correct_tensor = pred.eq(lab.float().view_as(pred))
+            correct = np.squeeze(correct_tensor.cpu().numpy())
+            num_correct += np.sum(correct)
+
+        test_acc = num_correct / len(val_loader.dataset)
+        print("Summary for after Epoch {}/{}...".format(i , epochs))
+        print("Val Loss: {:.6f}".format(np.mean(val_losses)),
+              "Test accuracy: {:.3f}%".format(test_acc * 100))
+
+        model.train()
         for inputs, labels, inp_len in train_loader:
             counter += 1
             h = tuple([e.data for e in h])
@@ -63,7 +68,6 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                 val_h = model.init_hidden(batch_size)
                 val_losses = []
                 model.eval()
-                num_correct = 0
                 for inp, lab, inp_len in val_loader:
                     val_h = tuple([each.data for each in val_h])
                     inp, lab = inp.to(device), lab.to(device)
@@ -71,18 +75,11 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                     val_loss = criterion(out.squeeze(), lab.float())
                     val_losses.append(val_loss.item())
 
-                    pred = torch.round(output.squeeze())  # rounds the output to 0/1
-                    correct_tensor = pred.eq(labels.float().view_as(pred))
-                    correct = np.squeeze(correct_tensor.cpu().numpy())
-                    num_correct += np.sum(correct)
-
-                test_acc = num_correct / len(val_loader.dataset)
                 model.train()
                 print("Epoch: {}/{}...".format(i + 1, epochs),
                       "Step: {}...".format(counter),
                       "Loss: {:.6f}...".format(loss.item()),
                       "Val Loss: {:.6f}".format(np.mean(val_losses)))
-                print("Test accuracy: {:.3f}%".format(test_acc * 100))
                 if np.mean(val_losses) <= valid_loss_min:
                     torch.save(model.state_dict(), './state_dict.pt')
                     print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(valid_loss_min,
@@ -176,8 +173,8 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         i = np.random.randint(0, len(words_list))
         test_words.append(words_list[i])
         test_label.append(label_list[i])
-        # del words_list[i]
-        # del label_list[i]
+        del words_list[i]
+        del label_list[i]
 
     # split the rest between validation and learning
     num_val = int(len(words_list) / 4)
@@ -187,8 +184,8 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         i = np.random.randint(0, len(words_list))
         val_words.append(words_list[i])
         val_label.append(label_list[i])
-        # del words_list[i]
-        # del label_list[i]
+        del words_list[i]
+        del label_list[i]
     print(len(words_list) % batch_size)
     train_num = int(len(words_list) - len(words_list) % batch_size)
     train_words, train_label = words_list[0:train_num], label_list[0:train_num]
@@ -212,11 +209,8 @@ class LSTM(nn.Module):
         self.device = device
 
     def forward(self, x, x_lens, hidden):
-        # with torch.no_grad():
-        # self.eval()
         batch_size = x.size(0)
         x = x.long()
-        # x_paded = pad_sequence(x, batch_first=True, padding_value=0)
         x_embed = self.embedding(x)
 
         x_packed = pack_padded_sequence(x_embed, x_lens, batch_first=True, enforce_sorted=False)
@@ -313,37 +307,8 @@ class LSTMLanguageClasifier:
             output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), h)
         return bool(output > 0.5)
 
-    # def is_words_in_batch_test(self, words):
-    #     h = self._ltsm.init_hidden(len(words))
-    #     words.remove("")
-    #     batches = []
-    #     max_len = len(max(words, key=lambda w: len(w)))
-    #     for word in words:
-    #         if max_len < 100:
-    #             length = 100
-    #         else:
-    #             length = max_len
-    #         array = np.zeros(length)
-    #         for i in range(len(word)):
-    #             array[length - i - 1] = self._char_to_int[word[-i - 1]]
-    #         batches.append(array)
-    #     batch_np = np.array(batches)
-    #     batch = torch.from_numpy(batch_np)
-    #     batch = words_list = torch.nn.utils.rnn.pack_padded_sequence(batch, [len(w) for w in words],enforce_sorted=False,batch_first=True)
-    #     # if len(word) == 0:
-    #     #     l = torch.from_numpy(np.array([[0]]))
-    #     #     output, h = self._ltsm(l.to(self._ltsm.device), h)
-    #     # else:
-    #     output, _ = self._ltsm(batch.to(self._ltsm.device), h)
-    #     return output
-    #
     def is_words_in_batch(self, words):
         batches = []
-        # for i in range(len(words)/10000):
-        #     batches.append(len(words)/10000)
-        #
-        #
-        #
         max_len = len(max(words, key=lambda w: len(w)))
         for word in words:
             if max_len < self.word_traning_length:
@@ -355,23 +320,10 @@ class LSTMLanguageClasifier:
                 array[length - i - 1] = self._char_to_int[word[-i - 1]]
             batches.append(array)
         batch_np = np.array(batches)
-        # if len(word) == 0:
-        #     l = torch.from_numpy(np.array([[0]]))
-        #     output, h = self._ltsm(l.to(self._ltsm.device), h)
-        # else:
         h = self._ltsm.init_hidden(len(batch_np))
         output, _ = self._ltsm(torch.from_numpy(batch_np).to(self._ltsm.device), h)
         return output
-        #
-        # h = self._ltsm.init_hidden(1)
-        # if len(word) == 0:
-        #     l = torch.from_numpy(np.array([[0]]))
-        #     output, h = self._ltsm(l, h)
-        # else:
-        #     for l in word:
-        #         l = torch.from_numpy(np.array([[self._char_to_int[l]]]))
-        #         output, h = self._ltsm(l, h)
-        # return bool(output > 0.5)
+
 
     def is_word_letter_by_letter(self, letter):
         letter = torch.from_numpy(np.array([[self._char_to_int[letter]]]))
@@ -397,7 +349,6 @@ class LSTMLanguageClasifier:
         torch.save(self._ltsm.state_dict(), dirName + "/state_dict.pt")
 
     def load_rnn(self, dir):
-        # './state_dict.pt'
         is_cuda = torch.cuda.is_available()
         if is_cuda:
             device = torch.device("cuda")
@@ -407,7 +358,6 @@ class LSTMLanguageClasifier:
             print("GPU not available, CPU used")
 
         with open(dir + "/meta", "r") as file:
-            # lines = file.
             for line in file.readlines():
                 splitline = line.split(" = ")
                 if splitline[0] == "alphabet":
@@ -424,8 +374,7 @@ class LSTMLanguageClasifier:
         self._ltsm = LSTM(len(self.alphabet) + 1, 1, embedding_dim, hidden_dim, n_layers, drop_prob=0.5, device=device)
         self._ltsm.load_state_dict(torch.load(dir + "/" + torch_save))
         self._ltsm.eval()
-        # self._ltsm.fc.eval()
-        # torch.no_grad()
+        torch.no_grad()
 
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
@@ -465,11 +414,9 @@ class LSTMLanguageClasifier:
             output, state = self._ltsm(torch.from_numpy(array).to(device=self._ltsm.device), state)
             self.states.update({str(self.from_state_to_list(state)): word})
 
-        # print(word)
         return self.from_state_to_list(state), bool(output > 0.5)
 
     def from_state_to_list(self, state):
-        # hidden_dim = self._ltsm.hidden_dim
         list_state = []
         for i in state[0][0, 0]:
             list_state.append(float(i))
@@ -484,7 +431,3 @@ class LSTMLanguageClasifier:
         cell = torch.tensor([[list_state[:self._ltsm.hidden_dim]]])
         return (hiden, cell)
 
-        # c = self._char_to_int[char]
-        # c = torch.tensor([[c]])
-        # output, state = self._ltsm(c, state)
-        # return state, output > 0.5

@@ -95,6 +95,7 @@ def test_rnn(model, test_loader, batch_size, device, criterion=nn.BCELoss()):
         output, _ = model(inputs, h)
         test_loss = criterion(output.squeeze(), labels.float())
         test_losses.append(test_loss.item())
+
         pred = torch.round(output.squeeze())  # rounds the output to 0/1
         correct_tensor = pred.eq(labels.float().view_as(pred))
         correct = np.squeeze(correct_tensor.cpu().numpy())

@@ -3,6 +3,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.nn.functional import cross_entropy
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
@@ -35,7 +36,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
         model.eval()
         num_correct = 0
         for inp, lab, inp_len in val_loader:
-            val_h = tuple([each.data for each in val_h])
+            # val_h = tuple([each.data for each in val_h])
             inp, lab = inp.to(device), lab.to(device)
             out, _ = model(inp, inp_len, val_h)
             val_loss = criterion(out.squeeze(), lab.float())
@@ -54,13 +55,20 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
         model.train()
         for inputs, labels, inp_len in train_loader:
             counter += 1
-            h = tuple([e.data for e in h])
+            # h = tuple([e.data for e in h])
 
             inputs, labels = inputs.to(device), labels.to(device)
             model.zero_grad()
             output, _ = model(inputs, inp_len, h)
             loss = criterion(output.squeeze(), labels.float())
+            # batch_ce_loss = 0.0
+            # for i in range(output.size(0)):
+            #     j = output[i][inp_len[i] - 1]
+            #     ce_loss = cross_entropy(j, labels[i])
+            #     batch_ce_loss += ce_loss
+
             loss.backward()
+            # batch_ce_loss
             nn.utils.clip_grad_norm_(model.parameters(), clip)
             optimizer.step()
 
@@ -69,9 +77,13 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                 val_losses = []
                 model.eval()
                 for inp, lab, inp_len in val_loader:
-                    val_h = tuple([each.data for each in val_h])
+                    # val_h = tuple([each.data for each in val_h])
                     inp, lab = inp.to(device), lab.to(device)
                     out, _ = model(inp, inp_len, val_h)
+                    # batch_ce_loss = 0.0
+                    # for i in range(output.size(0)):
+                    #     ce_loss = cross_entropy(output[i][inp_len[i] - 1].squeeze(), labels[i])
+                    #     batch_ce_loss += ce_loss
                     val_loss = criterion(out.squeeze(), lab.float())
                     val_losses.append(val_loss.item())
 
@@ -224,13 +236,19 @@ class LSTM(nn.Module):
         out = self.sigmoid(out)
 
         out = out.view(batch_size, -1)
-        out = out[:, -1]
-        return out, hidden
+        # outb = torch.tensor([out[i][output_lengths[i] - 1] for i in range(20)])
+        outc = out[:, -1]
+        output_lengths = output_lengths -1
+        outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
+
+        return outb, hidden
 
     def init_hidden(self, batch_size):
-        weight = next(self.parameters()).data
-        hidden = (weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(self.device),
-                  weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(self.device))
+        # weight = next(self.parameters()).data
+        # hidden = (weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(self.device),
+        #           weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(self.device))
+        hidden = (torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device),
+                  torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device))
         return hidden
 
 
@@ -263,10 +281,10 @@ class LSTMLanguageClasifier:
                                                                    num_of_exm_per_length=num_of_exm_per_lenght,
                                                                    max_length=self.word_traning_length)
         print(len(train_loader))
-        try:
-            self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
-        except KeyboardInterrupt():
-            print("Training of the RNN was stopped by user. Continuing with the rest")
+        # try:
+        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
+        # except KeyboardInterrupt():
+        #     print("Training of the RNN was stopped by user. Continuing with the rest")
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
@@ -323,7 +341,6 @@ class LSTMLanguageClasifier:
         h = self._ltsm.init_hidden(len(batch_np))
         output, _ = self._ltsm(torch.from_numpy(batch_np).to(self._ltsm.device), h)
         return output
-
 
     def is_word_letter_by_letter(self, letter):
         letter = torch.from_numpy(np.array([[self._char_to_int[letter]]]))
@@ -430,4 +447,3 @@ class LSTMLanguageClasifier:
         hiden = torch.tensor([[list_state[self._ltsm.hidden_dim:]]])
         cell = torch.tensor([[list_state[:self._ltsm.hidden_dim]]])
         return (hiden, cell)
-

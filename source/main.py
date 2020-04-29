@@ -59,12 +59,15 @@ def main_train_RNNS():
         starttime = time.time()
         model = LSTMLanguageClasifier()
         model.train_a_lstm(alphabet, dfa_rand.is_word_in, hidden_dim=6, num_layers=1, embedding_dim=5,
-                           num_of_exm_per_lenght=50000, batch_size=20, epoch=20)
+                           num_of_exm_per_lenght=5000, batch_size=20, epoch=20)
         print("padding {}".format(time.time() - starttime))
 
         model.save_rnn("models2/" + str(i))
 
 
 print("Begin")
+# a = torch.tensor([[1,2],[2,1],[3,3]])
+# a= a[:,1]
+# a= a[:,-1]
 main_train_RNNS()
 learn_dfa_and_compare_distance("models2")

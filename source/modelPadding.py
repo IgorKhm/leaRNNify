@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 import torch
@@ -28,6 +29,9 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
     clip = 5
     valid_loss_min = np.Inf
     last_loss = 1
+    print("Num of training examples: {}".format(len(train_loader) * batch_size))
+    print("Begin training: ")
+    start_time = time.time()
     for i in range(epochs):
         h = model.init_hidden(batch_size)
 
@@ -51,21 +55,21 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
         print("Summary for after Epoch {}/{}:".format(i, epochs))
         print("Val Loss: {:.6f}".format(np.mean(val_losses)),
               "Test accuracy: {:.3f}%".format(test_acc * 100),
-              "Loss delta: {:.6f}".format(last_loss - np.mean(val_losses)))
-
+              "Loss delta: {:.6f}".format(last_loss - np.mean(val_losses)),
+              "Time: {:.0f}".format(time.time() - start_time))
+        start_time = time.time()
         print("-------------------------------------------------------")
         print("-------------------------------------------------------")
-        print("Starting Epoch {}/{}".format(i+1, epochs))
-        if 0 < last_loss - np.mean(val_losses) < 0.005:
-            lr = lr + 0.001
-            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-            print("changed to learning rate: {}".format(lr))
-        if (0.01 < last_loss - np.mean(val_losses)) & (lr != 0.005):
-            lr = 0.005
-            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-            print("changed to learning rate: {}".format(lr))
-
-
+        print("Starting Epoch {}/{}".format(i + 1, epochs))
+        # if 0 < last_loss - np.mean(val_losses) < 0.005:
+        #     lr = lr + 0.001
+        #     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        #     print("changed to learning rate: {}".format(lr))
+        # if (0.01 < last_loss - np.mean(val_losses)) & (lr != 0.005):
+        #     lr = 0.005
+        #     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        #     print("changed to learning rate: {}".format(lr))
+        #
         last_loss = np.mean(val_losses)
 
         model.train()
@@ -165,25 +169,35 @@ def pad_collate(batch):
 
 def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=50,
                        batch_size=50):
+    starttime = time.time()
     int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
     int2char.update({0: ""})
     char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
     char2int.update({"": 0})
     words_list = []
-    lengths = list(range(1, 20)) + list(range(20, max_length, 5))
+    lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
     for length in lengths:
         new_list = np.unique(np.random.randint(1, len(alphabet) + 1, size=(num_of_exm_per_length, length)), axis=0)
         words_list.extend(new_list)
 
+    round_num_batches = int(len(words_list) - len(words_list) % batch_size)
+    words_list = words_list[:round_num_batches]
+
+
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
+    # print("finished labeling")
+    # print("Splitting({:.0f})".format(time.time() - starttime))
+    # test_label, test_words, train_label, train_words, val_label, val_words = \
+    #     _split_words_to_train_val_and_test(batch_size, label_list, words_list)
+    # print("Finished splitting ({:.0f})".format(time.time() - starttime))
+    all_data = WordsDataset(words_list, label_list)
+    # val_data = WordsDataset(val_words, val_label)
+    # test_data = WordsDataset(test_words, test_label)
+    test_length = int(len(all_data) // batch_size * 0.1) * batch_size
+    test_data, all_data = torch.utils.data.random_split(all_data, [test_length, len(all_data) - test_length])
 
-
-    test_label, test_words, train_label, train_words, val_label, val_words = \
-        _split_words_to_train_val_and_test(batch_size, label_list, words_list)
-
-    train_data = WordsDataset(train_words, train_label)
-    val_data = WordsDataset(val_words, val_label)
-    test_data = WordsDataset(test_words, test_label)
+    val_length = int(len(all_data) // batch_size * 0.2) * batch_size
+    val_data, train_data = torch.utils.data.random_split(all_data, [val_length, len(all_data) - val_length])
 
     train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
     val_loader = DataLoader(val_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
@@ -203,7 +217,7 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         test_label.append(label_list[i])
         del words_list[i]
         del label_list[i]
-
+    print("split the part for test")
     # split the rest between validation and learning
     num_val = int(len(words_list) / 4)
     num_val = num_val - num_val % batch_size
@@ -212,8 +226,9 @@ def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
         i = np.random.randint(0, len(words_list))
         val_words.append(words_list[i])
         val_label.append(label_list[i])
-        del words_list[i]
-        del label_list[i]
+        # del words_list[i]
+        # del label_list[i]
+    print("split the part for val")
     train_num = int(len(words_list) - len(words_list) % batch_size)
     train_words, train_label = words_list[0:train_num], label_list[0:train_num]
     return test_label, test_words, train_label, train_words, val_label, val_words
@@ -308,6 +323,13 @@ class LSTMLanguageClasifier:
         return test_loader
 
     def is_word_in(self, word):
+        if word == '':
+            out = self._ltsm.dropout(self._ltsm.init_hidden(1)[0])
+            out = self._ltsm.fc(out)
+            out = self._ltsm.sigmoid(out)
+            # outb = torch.tensor([out[i][output_lengths[i] - 1] for i in range(20)])
+            # outc = out[:, -1]
+            return bool(out[0] > 0.5)
         h = self._ltsm.init_hidden(1)
         length = torch.tensor([len(word)]).to(self._ltsm.device)
         array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)

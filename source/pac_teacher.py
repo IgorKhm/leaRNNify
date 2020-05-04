@@ -58,6 +58,6 @@ class PACTeacher(Teacher):
             counter = self.equivalence_query(learner.dfa)
             if counter is None:
                 break
-            learner.new_counterexample(counter, True)
+            learner.new_counterexample(counter, False)
 
     # n > (log(delta) -num_round) / log(1-epsilon)

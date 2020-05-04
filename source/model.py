@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 import torch
@@ -17,31 +18,58 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
     counter = 0
     clip = 5
     valid_loss_min = np.Inf
-
-
-    val_h = model.init_hidden(batch_size)
-    val_losses = []
-    model.eval()
-    for inp, lab in val_loader:
-        val_h = tuple([each.data for each in val_h])
-        inp, lab = inp.to(device), lab.to(device)
-        out, _ = model(inp, val_h)
-        val_loss = criterion(out.squeeze(), lab.float())
-        val_losses.append(val_loss.item())
-
-    model.train()
-    epochval = np.mean(val_losses)
-    print("Initial Val Loss: {:.6f}".format(np.mean(val_losses)))
-
+    last_loss = 1
+    print("Num of training examples: {}".format(len(train_loader) * batch_size))
+    print("Begin training: ")
+    start_time = time.time()
     for i in range(epochs):
         h = model.init_hidden(batch_size)
 
-        for inputs, labels in train_loader:
+        val_h = model.init_hidden(batch_size)
+        val_losses = []
+        model.eval()
+        num_correct = 0
+        for inp, lab, inp_len in val_loader:
+            # val_h = tuple([each.data for each in val_h])
+            inp, lab = inp.to(device), lab.to(device)
+            out, _ = model(inp, inp_len, val_h)
+            val_loss = criterion(out.squeeze(), lab.float())
+            val_losses.append(val_loss.item())
+
+            pred = torch.round(out.squeeze())  # rounds the output to 0/1
+            correct_tensor = pred.eq(lab.float().view_as(pred))
+            correct = np.squeeze(correct_tensor.cpu().numpy())
+            num_correct += np.sum(correct)
+
+        test_acc = num_correct / len(val_loader.dataset)
+        print("Summary for after Epoch {}/{}:".format(i, epochs))
+        print("Val Loss: {:.6f}".format(np.mean(val_losses)),
+              "Test accuracy: {:.3f}%".format(test_acc * 100),
+              "Loss delta: {:.6f}".format(last_loss - np.mean(val_losses)),
+              "Time: {:.0f}".format(time.time() - start_time))
+        start_time = time.time()
+        print("-------------------------------------------------------")
+        print("-------------------------------------------------------")
+        print("Starting Epoch {}/{}".format(i + 1, epochs))
+        # if 0 < last_loss - np.mean(val_losses) < 0.005:
+        #     lr = lr + 0.001
+        #     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        #     print("changed to learning rate: {}".format(lr))
+        # if (0.01 < last_loss - np.mean(val_losses)) & (lr != 0.005):
+        #     lr = 0.005
+        #     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+        #     print("changed to learning rate: {}".format(lr))
+
+        last_loss = np.mean(val_losses)
+
+        model.train()
+        for inputs, labels, inp_len in train_loader:
             counter += 1
-            h = tuple([e.data for e in h])
+            # h = tuple([e.data for e in h])
+
             inputs, labels = inputs.to(device), labels.to(device)
             model.zero_grad()
-            output, _ = model(inputs, h)
+            output, _ = model(inputs, inp_len, h)
             loss = criterion(output.squeeze(), labels.float())
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), clip)
@@ -50,18 +78,18 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
             if counter % print_every == 0:
                 val_h = model.init_hidden(batch_size)
                 val_losses = []
-                num_correct = 0
+                # num_correct = 0
                 model.eval()
-                for inp, lab in val_loader:
-                    val_h = tuple([each.data for each in val_h])
+                for inp, lab, inp_len in val_loader:
+                    # val_h = tuple([each.data for each in val_h])
                     inp, lab = inp.to(device), lab.to(device)
-                    out, _ = model(inp, val_h)
+                    out, _ = model(inp, inp_len, val_h)
+                    # batch_ce_loss = 0.0
+                    # for i in range(output.size(0)):
+                    #     ce_loss = cross_entropy(output[i][inp_len[i] - 1].squeeze(), labels[i])
+                    #     batch_ce_loss += ce_loss
                     val_loss = criterion(out.squeeze(), lab.float())
                     val_losses.append(val_loss.item())
-
-
-
-
 
                 model.train()
                 print("Epoch: {}/{}...".format(i + 1, epochs),
@@ -89,10 +117,10 @@ def test_rnn(model, test_loader, batch_size, device, criterion=nn.BCELoss()):
     h = model.init_hidden(batch_size)
 
     model.eval()
-    for inputs, labels in test_loader:
+    for inputs, labels, len_inp in test_loader:
         h = tuple([each.data for each in h])
         inputs, labels = inputs.to(device), labels.to(device)
-        output, _ = model(inputs, h)
+        output, _ = model(inputs, len_inp, h)
         test_loss = criterion(output.squeeze(), labels.float())
         test_losses.append(test_loss.item())
 
@@ -113,38 +141,42 @@ def from_array_to_word(int2char, array):
     return word
 
 
-def make_training_sets(alphabet, target, num_of_exm_per_lenght = 2000, max_length = 50,
-                       batch_size = 50) :
+def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=50,
+                       batch_size=50):
     int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
     int2char.update({0: ""})
     char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
     char2int.update({"": 0})
 
-    words_list = []
+    words_list, word_lengths = [], []
 
     lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
     for length in lengths:
-        new_list = np.unique(np.random.randint(1, len(alphabet) + 1, size=(num_of_exm_per_lenght, length)), axis=0)
+        new_list = np.unique(np.random.randint(1, len(alphabet) + 1, size=(num_of_exm_per_length, length)), axis=0)
         new_list = [np.pad(w, (max_length - length, 0)) for w in new_list]
-        if words_list is None:
-            words_list = new_list
-        else:
-            words_list.extend(new_list)
+        words_list.extend(new_list)
+        word_lengths.extend([length] * len(new_list))
+
+    round_num_batches = int(len(words_list) - len(words_list) % batch_size)
+    words_list, word_lengths = words_list[:round_num_batches], word_lengths[:round_num_batches]
+
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
 
-    print(len(words_list))
-    test_label, test_words, train_label, train_words, val_label, val_words = \
-        _split_words_to_train_val_and_test(batch_size, label_list, words_list)
+    # print(len(words_list))
+    # test_label, test_words, train_label, train_words, val_label, val_words = \
+    #     _split_words_to_train_val_and_test(batch_size, label_list, words_list)
+    words_list = torch.tensor(words_list)
+    all_data = TensorDataset(torch.tensor(words_list), torch.tensor(label_list), torch.tensor(word_lengths))
 
-    train_data = TensorDataset(torch.from_numpy(np.array(train_words)), torch.from_numpy(np.array(train_label)))
-    val_data = TensorDataset(torch.from_numpy(np.array(val_words)), torch.from_numpy(np.array(val_label)))
-    test_data = TensorDataset(torch.from_numpy(np.array(test_words)), torch.from_numpy(np.array(test_label)))
+    test_length = int(len(all_data) // batch_size * 0.1) * batch_size
+    test_data, all_data = torch.utils.data.random_split(all_data, [test_length, len(all_data) - test_length])
 
-    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
-    val_loader = DataLoader(val_data, shuffle=True, batch_size=batch_size)
-    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size)
+    val_length = int(len(all_data) // batch_size * 0.2) * batch_size
+    val_data, train_data = torch.utils.data.random_split(all_data, [val_length, len(all_data) - val_length])
 
-    return train_loader, val_loader, test_loader
+    return DataLoader(train_data, shuffle=True, batch_size=batch_size), \
+           DataLoader(val_data, shuffle=True, batch_size=batch_size), \
+           DataLoader(test_data, shuffle=True, batch_size=batch_size)
 
 
 def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
@@ -185,26 +217,28 @@ class LSTM(nn.Module):
         self.embedding_dim = embedding_dim
 
         self.embedding = nn.Embedding(alphabet_size, embedding_dim).to(device=device)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True).to(device=device)
-        # self.dropout = nn.Dropout(0.2)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, dropout=drop_prob, batch_first=True).to(device=device)
+        self.dropout = nn.Dropout(0.2)
         self.fc = nn.Linear(hidden_dim, output_size).to(device=device)
-        # self.sigmoid = nn.Sigmoid().to(device=device)
+        self.sigmoid = nn.Sigmoid().to(device=device)
         self.device = device
 
-    def forward(self, x, hidden):
+    def forward(self, x, x_lens, hidden):
         batch_size = x.size(0)
         x = x.long()
         embeds = self.embedding(x)
         lstm_out, hidden = self.lstm(embeds, hidden)
         lstm_out = lstm_out.contiguous().view(-1, self.hidden_dim)
 
-        # out = self.dropout(lstm_out)
+        out = self.dropout(lstm_out)
         out = self.fc(lstm_out)
-        # out = self.sigmoid(out)
+        out = self.sigmoid(out)
 
         out = out.view(batch_size, -1)
+        output_lengths = (x_lens - 1).to(self.device)
+        outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
         out = out[:, -1]
-        return out, hidden
+        return outb, hidden
 
     def init_hidden(self, batch_size):
         weight = next(self.parameters()).data
@@ -222,8 +256,9 @@ class LSTMLanguageClasifier:
         self.alphabet = []
         self.word_traning_length = 40
 
-    def train_a_lstm(self, alphahbet, target, embedding_dim=6, hidden_dim=10, num_layers=2, batch_size=50,
-                     num_of_exm_per_lenght=5000, epoch = 10):
+    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
+                     num_of_exm_per_lenght=5000, word_traning_length=40, epoch=20):
+        self.word_traning_length = word_traning_length
         self._char_to_int = {alphahbet[i]: i + 1 for i in range(len(alphahbet))}
         self._char_to_int.update({"": 0})
         self.alphabet = alphahbet
@@ -239,13 +274,14 @@ class LSTMLanguageClasifier:
         self._ltsm = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5,
                           device=device)
         train_loader, val_loader, test_loader = make_training_sets(alphahbet, target, batch_size=batch_size,
-                                                                   num_of_exm_per_lenght=num_of_exm_per_lenght,
+                                                                   num_of_exm_per_length=num_of_exm_per_lenght,
                                                                    max_length=self.word_traning_length)
         print(len(train_loader))
-        try:
-            self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=10000)
-        except KeyboardInterrupt():
-            print("Training of the RNN was stopped by user. Continuing with the rest")
+        # try:
+        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch,
+                           print_every=1000)
+        # except KeyboardInterrupt():
+        #     print("Training of the RNN was stopped by user. Continuing with the rest")
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
@@ -254,10 +290,11 @@ class LSTMLanguageClasifier:
 
     def is_word_in(self, word):
         h = self._ltsm.init_hidden(1)
-        if len(word) < self.word_traning_length:
-            length = self.word_traning_length
-        else:
-            length = len(word)
+        lengths = []
+        # if len(word) < self.word_traning_length:
+        #     length = self.word_traning_length
+        # else:
+        length = len(word)
         array = np.zeros(length)
         for i in range(len(word)):
             array[length - i - 1] = self._char_to_int[word[-i - 1]]
@@ -266,7 +303,7 @@ class LSTMLanguageClasifier:
             l = torch.from_numpy(np.array([[0]]))
             output, h = self._ltsm(l.to(self._ltsm.device), h)
         else:
-            output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), h)
+            output, h = self._ltsm(torch.from_numpy(array).to(self._ltsm.device), torch.tensor([length]), h)
         return bool(output > 0.5)
 
     def is_word_in_test(self, word, lengthadditon):
@@ -404,7 +441,8 @@ class LSTMLanguageClasifier:
         self._current_state = self._initial_state
         self._char_to_int = {self.alphabet[i]: i + 1 for i in range(len(self.alphabet))}
         self._char_to_int.update({"": 0})
-        self.states = {str(self.from_state_to_list(self._ltsm.init_hidden(1))): ""}#maybe move to load? or some other place?
+        self.states = {
+            str(self.from_state_to_list(self._ltsm.init_hidden(1))): ""}  # maybe move to load? or some other place?
 
     ######################################################
     #                 Code For Lstar                     #

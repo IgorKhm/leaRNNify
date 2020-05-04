@@ -9,7 +9,7 @@ from IPython.display import display
 import graphviz as gv
 import functools
 
-from numpy.random._generator import default_rng
+# from numpy.random._generator import default_rng
 
 from model import LSTMLanguageClasifier
 

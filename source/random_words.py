@@ -16,11 +16,11 @@ from model import LSTMLanguageClasifier
 
 def random_word(alphabet, p=0.01):
     nums_of_letters = len(alphabet)
-    word = ""
+    word = []
     while np.random.randint(0, int(1 / p)) != 0:
         letter = np.random.randint(0, nums_of_letters)
-        word = word + alphabet[letter]
-    return word
+        word.append(alphabet[letter])
+    return tuple(word)
 
 
 def random_word_by_letter(alphabet, p=0.01):

@@ -149,9 +149,9 @@ def test_rnn(model, test_loader, batch_size, device, criterion=nn.BCELoss()):
 
 
 def from_array_to_word(int2char, array):
-    word = ""
+    word = []
     for i in array:
-        word = word + int2char[i]
+        word.append(int2char[i])
     return word
 
 
@@ -323,7 +323,7 @@ class LSTMLanguageClasifier:
         return test_loader
 
     def is_word_in(self, word):
-        if word == '':
+        if len(word) == 0:
             out = self._ltsm.dropout(self._ltsm.init_hidden(1)[0])
             out = self._ltsm.fc(out)
             out = self._ltsm.sigmoid(out)
@@ -368,7 +368,11 @@ class LSTMLanguageClasifier:
                 return
         with open(dirName + "/meta", "w+") as file:
             file.write("Metadata:\n")
-            file.write("alphabet = " + self.alphabet + "\n")
+            file.write("alphabet = ")
+            file.write(str(self.alphabet[0]))
+            for l in range(len(self.alphabet)-1):
+                file.write(","+str(self.alphabet[l+1]))
+            file.write("\n")
             file.write("embedding_dim = " + str(self._ltsm.embedding_dim) + "\n")
             file.write("hidden_dim = " + str(self._ltsm.hidden_dim) + "\n")
             file.write("n_layers = " + str(self._ltsm.n_layers) + "\n")
@@ -384,11 +388,11 @@ class LSTMLanguageClasifier:
             device = torch.device("cpu")
             print("GPU not available, CPU used")
 
-        with open(dir + "/meta", "r") as file:
+        with open(dir + r"\meta", "r") as file:
             for line in file.readlines():
                 splitline = line.split(" = ")
                 if splitline[0] == "alphabet":
-                    self.alphabet = splitline[1].rstrip('\n')
+                    self.alphabet = splitline[1].rstrip('\n').split(",")
                 elif splitline[0] == "embedding_dim":
                     embedding_dim = int(splitline[1])
                 elif splitline[0] == "hidden_dim":

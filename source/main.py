@@ -8,7 +8,7 @@ import torch.nn as nn
 import cProfile
 import torch
 
-from dfa import load_dfa_dot, random_dfa
+from dfa import DFA, load_dfa_dot, random_dfa
 from learner_decison_tree import DecisionTreeLearner
 from modelPadding import LSTMLanguageClasifier, test_rnn
 from pac_teacher import PACTeacher
@@ -104,7 +104,34 @@ def main_train_RNNS():
         # print("m1 VS m = {}".format(a[0][1]))
         # print("m1 VS a = {}".format(a[0][2]))
         # print("m  VS a = {}".format(a[1][2]))
-        model.save_rnn("models11/" + str(round), True)
+        model.save_rnn("models12/" + str(round), True)
+
+
+def learn_dfa(dfa: DFA):
+    k, i, j = 2, 3, 2
+    print('No multiplication batch = {}, hidden_dim = {}, num_layers = {}'.format(k, i, j))
+    print('batch = {}, hidden_dim = {}, num_layers = {}'.format(10 * k, i * len(
+        dfa.states), int(len(dfa.states) / 10) + j))
+    starttime = time.time()
+    model = LSTMLanguageClasifier()
+    model.train_a_lstm(dfa.alphabet, dfa.is_word_in,
+                       hidden_dim=int(i * len(dfa.states)),
+                       num_layers=int(len(dfa.states) / 10) + j,
+                       embedding_dim=10,
+                       num_of_exm_per_lenght=10000, batch_size=10 * k, epoch=10,
+                       word_traning_length=len(dfa.states) + 15
+                       )
+    print("time: {}".format(time.time() - starttime))
+    model.save_rnn("model_alternating_bit", True)
+
+
+def create_file_for_dfa():
+    dfa = DFA("s0r1", {"s0r1"}, {"s0r1": {"msg0": "s0r0", "msg1": "sink", "ack0": "sink", "ack1": "s0r1"},
+                                 "s0r0": {"msg0": "s0r0", "msg1": "sink", "ack0": "s1r0", "ack1": "sink"},
+                                 "s1r0": {"msg0": "sink", "msg1": "s1r1", "ack0": "s1r0", "ack1": "sink"},
+                                 "s1r1": {"msg0": "sink", "msg1": "s1r1", "ack0": "sink", "ack1": "s0r1"},
+                                 "sink": {"msg0": "sink", "msg1": "sink", "ack0": "sink", "ack1": "sink"}})
+    return dfa
 
 
 print("Begin")

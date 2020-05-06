@@ -3,6 +3,7 @@ import time
 from dfa import DFA
 from random_words import random_word_by_letter
 from teacher import Teacher
+from dfa_check import DFA_checker
 import numpy as np
 
 
@@ -58,6 +59,26 @@ class PACTeacher(Teacher):
             counter = self.equivalence_query(learner.dfa)
             if counter is None:
                 break
-            learner.new_counterexample(counter, False)
+            learner.new_counterexample(counter, True)
 
-    # n > (log(delta) -num_round) / log(1-epsilon)
+    def check_and_teach(self, learner, specification):
+        learner.teacher = self
+        checker = DFA_checker(learner.dfa, specification)
+        while True:
+            counter_from_spec = checker.check_for_counterexample()
+            print(counter_from_spec)
+            if counter_from_spec is None:
+                counter_from_equiv = self.equivalence_query(learner.dfa)
+                print(counter_from_equiv)
+                if counter_from_equiv is None:
+                    break
+                else:
+                    learner.new_counterexample(counter_from_equiv)
+            else:
+                if not self.model.is_word_in(counter_from_spec):
+                    print('found counter mistake in the model: ',counter_from_spec)
+                    break
+                learner.new_counterexample(counter_from_spec)
+
+            checker.model = learner.dfa
+

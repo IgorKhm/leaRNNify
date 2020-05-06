@@ -73,6 +73,34 @@ class DFA:
                     cross_states.update({(q1, q2): (l, s1, s2)})
         return None
 
+    def is_language_subset_of(self, other):
+        if self.is_word_in("") & (not other.is_word_in("")):
+            return ""
+
+        cross_states = {(self.init_state, other.init_state): ("", None)}
+        to_check = [(self.init_state, other.init_state)]
+        alphabet = self.alphabet
+
+        while len(to_check) != 0:
+            s1, s2 = to_check.pop(0)
+            for l in alphabet:
+                q1 = self.next_state_by_letter(s1, l)
+                q2 = other.next_state_by_letter(s2, l)
+
+                if (q1 in self.final_states) & (not q2 in other.final_states):
+                    counter_example = l
+                    q1, q2 = s1, s2
+
+                    while (q1 != self.init_state) | (q2 != other.init_state):
+                        l, q1, q2 = cross_states.get((q1, q2))
+                        counter_example = l + counter_example
+                    return counter_example
+
+                if cross_states.get((q1, q2)) is None:
+                    to_check.append((q1, q2))
+                    cross_states.update({(q1, q2): (l, s1, s2)})
+        return None
+
     def __eq__(self, other):
         if self.is_word_in("") != other.is_word_in(""):
             return ""
@@ -299,9 +327,20 @@ def save_dfa_dot(filename, dfa: DFA):
             for letter in tran.keys():
                 file.write('{} -> {}[label="{}"]\n'.format(s1, tran[letter], letter))
         file.write("}\n")
-#
-#                               {1: {"a": 2, "b": 5, "c": 5},
-#                                2: {"a": 3, "b": 1, "c": 3},
-#                                3: {"a": 4, "b": 4, "c": 4},
-#                                4: {"a": 3, "b": 3, "c": 3},
-#                                5: {"a": 2, "b": 1, "c": 1}})
+
+def intersection(model1: DFA, model2: DFA):
+    if model1.alphabet != model2.alphabet:
+        raise Exception("The two DFAs have different alphabets")
+
+    new_states = [(state1, state2) for state1 in model1.states for state2 in model2.states]
+    new_init_states = (model1.init_state, model2.init_state)
+    new_final_states = [(state1, state2) for state1 in model1.final_states for state2 in model2.final_states]
+    new_transitions = {}
+    for (state1, state2) in new_states:
+        new_transitions[(state1, state2)] = {
+            letter: (model1.transitions[state1][letter], model2.transitions[state2][letter]) for letter in
+            model1.alphabet}
+
+    new_dfa = DFA(new_init_states, new_final_states, new_transitions)
+
+    return new_dfa

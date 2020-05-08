@@ -158,8 +158,8 @@ def rand_benchmark(save_dir=None):
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa_inter.states) < 5:
-        dfa_rand1 = random_dfa(alphabet, min_states=5, max_states=8, min_final=2, max_final=5)
-        dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=6, min_final=1, max_final=5)
+        dfa_rand1 = random_dfa(alphabet, min_states=5, max_states=15, min_final=2, max_final=5)
+        dfa_rand2 = random_dfa(alphabet, min_states=3, max_states=8, min_final=1, max_final=3)
 
         dfa_inter = minimaize_dfa(intersection(dfa_rand1, dfa_rand2))
         dfa_spec = minimaize_dfa(dfa_rand2)

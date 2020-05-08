@@ -54,6 +54,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
         embedding_dim = len(dfa.alphabet) * 2
     if num_of_exm_per_length == -1:
         num_of_exm_per_length = 15000
+    if epoch == -1:
         epoch = 20
     if batch_size == -1:
         batch_size = 20

@@ -10,7 +10,7 @@ from pac_teacher import PACTeacher
 
 
 class TreeNode:
-    def __init__(self, name="", inLan=True, parent=None):
+    def __init__(self, name=tuple(), inLan=True, parent=None):
         self.right = None
         self.left = None
         self.name = name
@@ -70,7 +70,7 @@ class TreeNode:
 class DecisionTreeLearner(Learner):
     def __init__(self, teacher):
         self.teacher = teacher
-        self._root = TreeNode(inLan=teacher.membership_query(""))
+        self._root = TreeNode(inLan=teacher.membership_query(tuple()))
         self._leafs = [self._root]
         self.dfa = self._produce_hypothesis()
 
@@ -129,7 +129,6 @@ class DecisionTreeLearner(Learner):
             if words_left == 0:
                 return final
 
-
     def _produce_hypothesis_set(self):
         transitions = {}
         final_nodes = []
@@ -156,11 +155,11 @@ class DecisionTreeLearner(Learner):
                 final_nodes.append(leaf.name)
             tran = {}
             for l in self.teacher.alphabet:
-                state = self._sift(leaf.name + l)
+                state = self._sift(leaf.name + tuple([l]))
                 tran.update({l: state.name})
             transitions.update({leaf.name: tran})
 
-        return DFA("", final_nodes, transitions)
+        return DFA(tuple(""), tuple(final_nodes), transitions)
 
     def new_counterexample(self, w, set=False):
         first_time = False
@@ -169,9 +168,9 @@ class DecisionTreeLearner(Learner):
 
         else:
             s = self.dfa.init_state
-            prefix = ""
+            prefix = tuple()
             for l in w:
-                prefix = prefix + l
+                prefix = prefix + tuple([l])
                 n = self._sift(prefix)
                 s = self.dfa.next_state_by_letter(s, l)
                 if n.name != s:
@@ -179,7 +178,7 @@ class DecisionTreeLearner(Learner):
                         if n2.name == s:
                             break
                     n = finding_common_ancestor(n, n2)
-                    new_differencing_string = l + n.name
+                    new_differencing_string = tuple([l]) + n.name
                     break
 
             new_state_string = prefix[0:len(prefix) - 1]
@@ -198,7 +197,7 @@ class DecisionTreeLearner(Learner):
         node_to_replace.name = new_differencing_string
         self._leafs.extend([node_to_replace.right, node_to_replace.left])
 
-        t = time.time()
+        # t = time.time()
         if set:
             self.dfa = self._produce_hypothesis_set()
         else:
@@ -208,7 +207,7 @@ class DecisionTreeLearner(Learner):
         #     raise NotImplemented
         #     # print("check")
 
-        print(" time for prod hypothesis: {}".format(time.time() - t))
+        # print(" time for prod hypothesis: {}".format(time.time() - t))
         # if self.dfa.is_word_in(prefix) != self._teacher.membership_query(prefix):
         #     print("?")
 

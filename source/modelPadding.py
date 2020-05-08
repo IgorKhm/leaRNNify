@@ -51,10 +51,10 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
             correct = np.squeeze(correct_tensor.cpu().numpy())
             num_correct += np.sum(correct)
 
-        test_acc = num_correct / len(val_loader.dataset)
+        test_acc = num_correct / len(val_loader.dataset) * 100
         print("Summary for after Epoch {}/{}:".format(i, epochs))
         print("Val Loss: {:.6f}".format(np.mean(val_losses)),
-              "Test accuracy: {:.3f}%".format(test_acc * 100),
+              "Test accuracy: {:.3f}%".format(test_acc),
               "Loss delta: {:.6f}".format(last_loss - np.mean(val_losses)),
               "Time: {:.0f}".format(time.time() - start_time))
         start_time = time.time()
@@ -118,9 +118,9 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                                                                                                     np.mean(
                                                                                                         val_losses)))
                     valid_loss_min = np.mean(val_losses)
-                    if valid_loss_min < 0.001:
-                        return model
-    return model
+                    # if valid_loss_min < 0.001:
+                    #     return model
+    return test_acc
 
 
 def test_rnn(model, test_loader, batch_size, device, criterion=nn.BCELoss()):
@@ -144,8 +144,9 @@ def test_rnn(model, test_loader, batch_size, device, criterion=nn.BCELoss()):
         num_correct += np.sum(correct)
 
     print("Test loss: {:.3f}".format(np.mean(test_losses)))
-    test_acc = num_correct / len(test_loader.dataset)
+    test_acc: float = num_correct / len(test_loader.dataset)
     print("Test accuracy: {:.3f}%".format(test_acc * 100))
+    return test_acc * 100
 
 
 def from_array_to_word(int2char, array):
@@ -182,7 +183,6 @@ def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=
 
     round_num_batches = int(len(words_list) - len(words_list) % batch_size)
     words_list = words_list[:round_num_batches]
-
 
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
     # print("finished labeling")
@@ -290,6 +290,10 @@ class LSTMLanguageClasifier:
         self._char_to_int = None
         self.alphabet = []
         self.word_traning_length = 40
+        self.num_of_train = 0
+        self.num_of_test = 0
+        self.test_acc = 0
+        self.val_acc = 0
 
     def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
                      num_of_exm_per_lenght=5000, word_traning_length=40, epoch=20):
@@ -311,16 +315,16 @@ class LSTMLanguageClasifier:
         train_loader, val_loader, test_loader = make_training_sets(alphahbet, target, batch_size=batch_size,
                                                                    num_of_exm_per_length=num_of_exm_per_lenght,
                                                                    max_length=self.word_traning_length)
+        self.num_of_train, self.num_of_test = len(train_loader) * batch_size, len(test_loader) * batch_size
 
-        # try:
-        self._ltsm = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
-        # except KeyboardInterrupt():
-        #     print("Training of the RNN was stopped by user. Continuing with the rest")
+        self.val_acc = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
+
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
-        test_rnn(self._ltsm, test_loader, batch_size, device)
-        return test_loader
+
+        self.test_acc = test_rnn(self._ltsm, test_loader, batch_size, device)
+        return
 
     def is_word_in(self, word):
         if len(word) == 0:
@@ -364,14 +368,14 @@ class LSTMLanguageClasifier:
         if not os.path.isdir(dirName):
             os.makedirs(dirName)
         elif os.path.exists(dirName + "/meta") & (not force_overwrite):
-            if input("save exists. Enter y if you want to overwrite it.") != "y":
+            if input("there already exists a model in {}. Enter y if you want to overwrite it.".format(dirName)) != "y":
                 return
         with open(dirName + "/meta", "w+") as file:
             file.write("Metadata:\n")
             file.write("alphabet = ")
             file.write(str(self.alphabet[0]))
-            for l in range(len(self.alphabet)-1):
-                file.write(","+str(self.alphabet[l+1]))
+            for l in range(len(self.alphabet) - 1):
+                file.write("," + str(self.alphabet[l + 1]))
             file.write("\n")
             file.write("embedding_dim = " + str(self._ltsm.embedding_dim) + "\n")
             file.write("hidden_dim = " + str(self._ltsm.hidden_dim) + "\n")
@@ -388,7 +392,7 @@ class LSTMLanguageClasifier:
             device = torch.device("cpu")
             print("GPU not available, CPU used")
 
-        with open(dir + r"\meta", "r") as file:
+        with open(dir + "/meta", "r") as file:
             for line in file.readlines():
                 splitline = line.split(" = ")
                 if splitline[0] == "alphabet":

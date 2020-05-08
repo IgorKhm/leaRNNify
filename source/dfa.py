@@ -46,10 +46,10 @@ class DFA:
         self.current_state = self.init_state
 
     def equivalence_with_counterexample(self, other):
-        if self.is_word_in("") != other.is_word_in(""):
-            return ""
+        if self.is_word_in(tuple()) != other.is_word_in(tuple()):
+            return tuple()
 
-        cross_states = {(self.init_state, other.init_state): ("", None)}
+        cross_states = {(self.init_state, other.init_state): (tuple(), None)}
         to_check = [(self.init_state, other.init_state)]
         alphabet = self.alphabet
 
@@ -60,12 +60,12 @@ class DFA:
                 q2 = other.next_state_by_letter(s2, l)
 
                 if (q1 in self.final_states) != (q2 in other.final_states):
-                    counter_example = l
+                    counter_example = tuple([l])
                     q1, q2 = s1, s2
 
                     while (q1 != self.init_state) | (q2 != other.init_state):
                         l, q1, q2 = cross_states.get((q1, q2))
-                        counter_example = l + counter_example
+                        counter_example = tuple([l]) + counter_example
                     return counter_example
 
                 if cross_states.get((q1, q2)) is None:
@@ -74,10 +74,10 @@ class DFA:
         return None
 
     def is_language_subset_of(self, other):
-        if self.is_word_in("") & (not other.is_word_in("")):
-            return ""
+        if self.is_word_in(tuple()) & (not other.is_word_in(tuple())):
+            return tuple()
 
-        cross_states = {(self.init_state, other.init_state): ("", None)}
+        cross_states = {(self.init_state, other.init_state): (tuple(), None)}
         to_check = [(self.init_state, other.init_state)]
         alphabet = self.alphabet
 
@@ -88,12 +88,12 @@ class DFA:
                 q2 = other.next_state_by_letter(s2, l)
 
                 if (q1 in self.final_states) & (not q2 in other.final_states):
-                    counter_example = l
+                    counter_example = tuple([l])
                     q1, q2 = s1, s2
 
                     while (q1 != self.init_state) | (q2 != other.init_state):
                         l, q1, q2 = cross_states.get((q1, q2))
-                        counter_example = l + counter_example
+                        counter_example = tuple([l]) + counter_example
                     return counter_example
 
                 if cross_states.get((q1, q2)) is None:
@@ -129,7 +129,7 @@ class DFA:
 
     # Stole the following function(draw_nicely) from lstar algo: https://github.com/tech-srl/lstar_extraction
     def draw_nicely(self, force=False, maximum=60,
-                    name=""):  # todo: if two edges are identical except for letter, merge them
+                    name="dfa",save_dir="img/"):  # todo: if two edges are identical except for letter, merge them
         # and note both the letters
         if (not force) and len(self.transitions) > maximum:
             return
@@ -241,7 +241,7 @@ class DFA:
         #                  for a in self.alphabet for state in self.Q])
         # display(Image(filename=g.render(filename='img/automaton')))
 
-        g.render(filename='img/automaton' + name)
+        g.render(filename=save_dir+"/"+name)
 
 
 def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=10):
@@ -299,13 +299,13 @@ def load_dfa_dot(filename):
     # dfa.draw_nicely(name="upload")
 
 
-def save_dfa_as_part_of_model(dirName, dfa, force_overwrite=False):
-    if not os.path.isdir(dirName):
-        os.makedirs(dirName)
-    elif os.path.exists(dirName + "/dfa.dot") & (not force_overwrite):
-        if input("save exists. Enter y if you want to overwrite it.") != "y":
+def save_dfa_as_part_of_model(dir_name, dfa, name="dfa", force_overwrite=False):
+    if not os.path.isdir(dir_name):
+        os.makedirs(dir_name)
+    elif os.path.exists(dir_name + "/dfa.dot") & (not force_overwrite):
+        if input("the save {} exists. Enter y if you want to overwrite it.".format(name)) != "y":
             return
-    save_dfa_dot(dirName + "/dfa.dot", dfa)
+    save_dfa_dot(dir_name + "/" + name + ".dot", dfa)
 
 
 def save_dfa_dot(filename, dfa: DFA):
@@ -327,6 +327,7 @@ def save_dfa_dot(filename, dfa: DFA):
             for letter in tran.keys():
                 file.write('{} -> {}[label="{}"]\n'.format(s1, tran[letter], letter))
         file.write("}\n")
+
 
 def intersection(model1: DFA, model2: DFA):
     if model1.alphabet != model2.alphabet:

@@ -1,9 +1,9 @@
 import time
 
 from dfa import DFA
-from random_words import random_word_by_letter
+from random_words import random_word_by_letter, random_word
 from teacher import Teacher
-from dfa_check import DFA_checker
+from dfa_check import DFAChecker
 import numpy as np
 
 
@@ -26,13 +26,14 @@ class PACTeacher(Teacher):
 
         number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
         for i in range(number_of_rounds):
-            dfa.reset_current_to_init()
+            # dfa.reset_current_to_init()
             # self.model.reset_current_to_init()
-            word = ""
-            for letter in random_word_by_letter(self.model.alphabet):
-                word = word + letter
-                # if dfa.is_word_letter_by_letter(letter) != self.model.is_word_in(word):
-                #     return word
+            # word = []
+            # for letter in random_word_by_letter(self.model.alphabet):
+            #     word.append(letter)
+            # if dfa.is_word_letter_by_letter(letter) != self.model.is_word_in(word):
+            #     return word
+            word = random_word(self.model.alphabet)
             if dfa.is_word_in(word) != self.model.is_word_in(word):
                 # print("in DFA: " + str(dfa.is_word_in(word)))
                 # print("counter example: " + word)
@@ -59,26 +60,30 @@ class PACTeacher(Teacher):
             counter = self.equivalence_query(learner.dfa)
             if counter is None:
                 break
-            learner.new_counterexample(counter, True)
+            learner.new_counterexample(counter, False)
 
-    def check_and_teach(self, learner, specification):
+    def check_and_teach(self, learner, checkers):
         learner.teacher = self
-        checker = DFA_checker(learner.dfa, specification)
+
         while True:
-            counter_from_spec = checker.check_for_counterexample()
-            print(counter_from_spec)
-            if counter_from_spec is None:
+            learner.dfa.draw_nicely(name="notlala")
+            counters_from_specs = [(checker.check_for_counterexample(learner.dfa), checker.is_super_set) for checker in
+                                   checkers]
+            counter_from_spec = [None,None]
+            for word in counters_from_specs:
+                if word[0] is not None:
+                    counter_from_spec = word
+            # counter_from_spec = learner.dfa.is_language_subset_of(specification)
+            # print(counter_from_spec)
+            if counter_from_spec[0] is None:
                 counter_from_equiv = self.equivalence_query(learner.dfa)
-                print(counter_from_equiv)
+                # print(counter_from_equiv)
                 if counter_from_equiv is None:
-                    break
+                    return None
                 else:
                     learner.new_counterexample(counter_from_equiv)
             else:
-                if not self.model.is_word_in(counter_from_spec):
-                    print('found counter mistake in the model: ',counter_from_spec)
-                    break
-                learner.new_counterexample(counter_from_spec)
-
-            checker.model = learner.dfa
-
+                if not (counter_from_spec[1] ^ (self.model.is_word_in(counter_from_spec[0]))):
+                    print('found counter mistake in the model: ', counter_from_spec)
+                    return counter_from_spec
+                learner.new_counterexample(counter_from_spec[0])

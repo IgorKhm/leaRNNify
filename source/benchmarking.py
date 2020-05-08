@@ -25,10 +25,6 @@ FIELD_NAMES = ["alph_len",
                "dist_lstm_vs_inter", "dist_lstm_vs_extr", "dist_extr_vs_inter"]
 
 
-class Benchmark:
-    __slots__ = FIELD_NAMES
-
-
 def write_csv_header(filename):
     with open(filename, mode='a') as employee_file:
         writer = csv.DictWriter(employee_file, fieldnames=FIELD_NAMES)
@@ -57,9 +53,8 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
     if num_of_exm_per_length == -1:
-        num_of_exm_per_length = 7000
-    if epoch == -1:
-        epoch = 10
+        num_of_exm_per_length = 15000
+        epoch = 20
     if batch_size == -1:
         batch_size = 20
     if word_training_length == -1:
@@ -92,7 +87,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 
 
 def learn_and_check(dfa: DFA, spec: DFA, benchmark, dir_name=None):
-    lstm = learn_dfa(dfa, benchmark, epoch=3, num_of_exm_per_length=2000)
+    lstm = learn_dfa(dfa, benchmark)
 
     check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark)
 
@@ -192,4 +187,6 @@ def run_rand_benchmarks(num_of_bench=10, save_dir=None):
     write_csv_header(save_dir + "/test.csv")
     for num in range(num_of_bench):
         benchmark = rand_benchmark(save_dir + "/" + str(num))
+        print("Summary for the {}th benchmark".format(num))
+        print(benchmark)
         write_line_csv(save_dir + "/test.csv", benchmark)

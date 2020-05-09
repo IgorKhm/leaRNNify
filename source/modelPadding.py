@@ -343,7 +343,8 @@ class LSTMLanguageClasifier:
         return bool(output > 0.5)
 
     def is_words_in_batch(self, words):
-        words_torch = [torch.tensor([self._char_to_int[l] for l in word]) for word in words]
+        words_torch = [torch.tensor([self._char_to_int[l] for l in word]) if len(word) != 0 else torch.tensor([0])
+                       for word in words]
         # for word in words:
         #     lengths.append(len(word))
         #     words_in_num.append([self._char_to_int[l] for l in word])

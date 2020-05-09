@@ -24,9 +24,8 @@ def create_file_for_dfa():
                                  "sink": {"msg0": "sink", "msg1": "sink", "ack0": "sink", "ack1": "sink"}})
     return dfa
 
+
 print("Begin")
-
-
 
 dfa = create_file_for_dfa()
 dfa.draw_nicely(name="to learn")

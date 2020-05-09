@@ -73,7 +73,7 @@ class DFA:
                     cross_states.update({(q1, q2): (l, s1, s2)})
         return None
 
-    def is_language_subset_of(self, other):
+    def is_language_not_subset_of(self, other):
         if self.is_word_in(tuple()) & (not other.is_word_in(tuple())):
             return tuple()
 
@@ -125,7 +125,7 @@ class DFA:
 
     def __repr__(self):
         return str(len(self.states)) + " states, " + str(len(self.final_states)) + " final states and " + \
-               str(len(self.transitions)) + " transitions."
+               str(len(self.alphabet)) + " letters."
 
     # Stole the following function(draw_nicely) from lstar algo: https://github.com/tech-srl/lstar_extraction
     def draw_nicely(self, force=False, maximum=60,

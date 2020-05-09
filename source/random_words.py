@@ -95,3 +95,14 @@ def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, sam
 
     print()
     return output, samples
+
+
+def confidence_interval_subset(language_inf, language_sup, samples, delta=0.001, epsilon=0.001):
+    n = np.log(2 / delta) / (2 * epsilon * epsilon)
+
+    mistakes = 0
+
+    for w in samples:
+        if (language_inf.is_word_in(w)) and (not language_sup.is_word_in(w)):
+            mistakes = mistakes + 1
+    return mistakes / n, samples

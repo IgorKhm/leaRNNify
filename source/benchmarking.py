@@ -9,7 +9,7 @@ from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
 from modelPadding import LSTMLanguageClasifier
 from pac_teacher import PACTeacher
-from random_words import confidence_interval_many, random_word
+from random_words import confidence_interval_many, random_word, confidence_interval_subset
 
 FIELD_NAMES = ["alph_len",
 
@@ -22,7 +22,8 @@ FIELD_NAMES = ["alph_len",
 
                "extraction_time", "extraction_mistake",
 
-               "dist_lstm_vs_inter", "dist_lstm_vs_extr", "dist_extr_vs_inter"]
+               "dist_lstm_vs_inter", "dist_lstm_vs_extr", "dist_extr_vs_inter",
+               "dist_lstm_specs", "dist_extract_specs"]
 
 
 def write_csv_header(filename):
@@ -122,9 +123,9 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
 
     print("Finished DFA extraction")
     print("Starting distance measuring")
-    epsilon = 0.5
+    epsilon = 0.005
     delta = 0.001
-    output, _ = confidence_interval_many(models, random_word, epsilon=epsilon, delta=delta)
+    output, samples = confidence_interval_many(models, random_word, epsilon=epsilon, delta=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
     if len(models) == 3:
         print(" |----------------|----------------|----------------|-----------------|\n",
@@ -154,6 +155,15 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
     benchmark.update({"dist_lstm_vs_inter": "{:.4}".format(output[0][1]),
                       "dist_lstm_vs_extr": "{:.4}".format(output[0][2]),
                       "dist_extr_vs_inter": "{:.4}".format(output[2][1])})
+
+    a, _ = confidence_interval_subset(lstm, spec[0].specification, samples, epsilon, delta)
+    b, _ = confidence_interval_subset(student.dfa, spec[0].specification, samples, epsilon, delta)
+    benchmark.update(
+        {"dist_lstm_specs": "{}".format(a),
+         "dist_extract_specs": "{}".format(b)})
+
+    # confidence_interval_subset(lstm, spec, samples,epsilon, delta)
+
     print("Finished distance measuring")
 
 def rand_benchmark(save_dir=None):
@@ -164,8 +174,8 @@ def rand_benchmark(save_dir=None):
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa_inter.states) < 5:
-        dfa_rand1 = random_dfa(alphabet, min_states=5, max_states=15, min_final=2, max_final=5)
-        dfa_rand2 = random_dfa(alphabet, min_states=3, max_states=8, min_final=1, max_final=3)
+        dfa_rand1 = random_dfa(alphabet, min_states=5, max_states=10, min_final=2, max_final=5)
+        dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=7, min_final=4, max_final=5)
 
         dfa_inter = minimaize_dfa(intersection(dfa_rand1, dfa_rand2))
         dfa_spec = minimaize_dfa(dfa_rand2)
@@ -178,7 +188,10 @@ def rand_benchmark(save_dir=None):
         dfa_inter.draw_nicely(name="intersection_dfa_figure", save_dir=save_dir)
 
         save_dfa_as_part_of_model(save_dir, dfa_spec, name="dfa_spec")
-        dfa_spec.draw_nicely(name="dfa_spec_figure", save_dir=save_dir)
+        dfa_spec.draw_nicely(name="spec_dfa_figure", save_dir=save_dir)
+
+    print("DFA to learn {}".format(dfa_inter))
+    print("Spec to learn {}".format(dfa_spec))
 
     learn_and_check(dfa_inter, [DFAChecker(dfa_spec)], benchmark, save_dir)
 

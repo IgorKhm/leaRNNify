@@ -26,18 +26,18 @@ class PACTeacher(Teacher):
 
         number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
         for i in range(number_of_rounds):
-            # dfa.reset_current_to_init()
-            # self.model.reset_current_to_init()
-            # word = []
-            # for letter in random_word_by_letter(self.model.alphabet):
-            #     word.append(letter)
-            # if dfa.is_word_letter_by_letter(letter) != self.model.is_word_in(word):
-            #     return word
             word = random_word(self.model.alphabet)
             if dfa.is_word_in(word) != self.model.is_word_in(word):
-                # print("in DFA: " + str(dfa.is_word_in(word)))
-                # print("counter example: " + word)
                 return word
+            # for i in range(int(number_of_rounds % 100)):
+            #     words = [random_word(self.model.alphabet) for _ in range(100)]
+            #     rnn_labels = self.model.is_words_in_batch(words) > 0.5
+            #     dfa_labels = [dfa.is_word_in(word) for word in words]
+            #     # word = random_word(self.model.alphabet)
+            #     for rnn_label, dfa_label in zip(rnn_labels, dfa_labels):
+            #         if rnn_label != dfa_label:
+            #             return words[dfa_labels.index(dfa_label)]
+
         return None
 
     def membership_query(self, w):
@@ -69,9 +69,10 @@ class PACTeacher(Teacher):
         while True:
             if time.time() - start_time > timeout:
                 return
+            print(time.time() - start_time)
             counters_from_specs = [(checker.check_for_counterexample(learner.dfa), checker.is_super_set) for checker in
                                    checkers]
-            counter_from_spec = [None,None]
+            counter_from_spec = [None, None]
             for word in counters_from_specs:
                 if word[0] is not None:
                     counter_from_spec = word
@@ -80,9 +81,10 @@ class PACTeacher(Teacher):
                 if counter_from_equiv is None:
                     return None
                 else:
-                    learner.new_counterexample(counter_from_equiv)
+                    learner.new_counterexample(counter_from_equiv, set=True)
+
             else:
                 if not (counter_from_spec[1] ^ (self.model.is_word_in(counter_from_spec[0]))):
                     print('found counter mistake in the model: ', counter_from_spec)
                     return counter_from_spec
-                learner.new_counterexample(counter_from_spec[0])
+                learner.new_counterexample(counter_from_spec[0], set=True)

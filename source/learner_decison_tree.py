@@ -6,7 +6,6 @@ from dfa import DFA
 from learner import Learner
 from graphviz import Digraph
 
-from pac_teacher import PACTeacher
 
 
 class TreeNode:
@@ -137,7 +136,7 @@ class DecisionTreeLearner(Learner):
             if leaf.inLan:
                 final_nodes.append(leaf.name)
             for l in self.teacher.alphabet:
-                sl.append(leaf.name + l)
+                sl.append(leaf.name + tuple([l]))
         states = self._sift_set(sl)
         for leaf in range(len(self._leafs)):
             tran = {}
@@ -145,7 +144,7 @@ class DecisionTreeLearner(Learner):
                 tran.update({self.teacher.alphabet[l]: states[leaf * len(self.teacher.alphabet) + l].name})
             transitions.update({self._leafs[leaf].name: tran})
 
-        return DFA("", final_nodes, transitions)
+        return DFA(tuple(""), final_nodes, transitions)
 
     def _produce_hypothesis(self):
         transitions = {}

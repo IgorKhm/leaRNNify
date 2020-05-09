@@ -354,7 +354,7 @@ class LSTMLanguageClasifier:
         x_lens = [len(x) for x in words]
         # y_lens = [len(y) for y in yy]
 
-        xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0)
+        xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0).to(self._ltsm.device)
 
         output, _ = self._ltsm(xx_pad, x_lens, h)
         return output

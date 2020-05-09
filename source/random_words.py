@@ -1,17 +1,7 @@
-import string
 import sys
 
 import numpy as np
 import torch
-from IPython.display import Image
-from IPython.display import display
-
-import graphviz as gv
-import functools
-
-# from numpy.random._generator import default_rng
-
-from model import LSTMLanguageClasifier
 
 
 def random_word(alphabet, p=0.01):

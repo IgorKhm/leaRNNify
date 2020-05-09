@@ -170,7 +170,6 @@ def pad_collate(batch):
 
 def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=50,
                        batch_size=50):
-    starttime = time.time()
     int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
     int2char.update({0: ""})
     char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
@@ -182,56 +181,63 @@ def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=
         words_list.extend(new_list)
 
     round_num_batches = int(len(words_list) - len(words_list) % batch_size)
-    words_list = words_list[:round_num_batches]
+    words_list = words_list[:round_num_batches - 1]
 
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
-    # print("finished labeling")
-    # print("Splitting({:.0f})".format(time.time() - starttime))
-    # test_label, test_words, train_label, train_words, val_label, val_words = \
-    #     _split_words_to_train_val_and_test(batch_size, label_list, words_list)
-    # print("Finished splitting ({:.0f})".format(time.time() - starttime))
+
+    words_list.insert(0, np.array([0]))
+    label_list.insert(0, target(""))
+
     all_data = WordsDataset(words_list, label_list)
-    # val_data = WordsDataset(val_words, val_label)
-    # test_data = WordsDataset(test_words, test_label)
+
     test_length = int(len(all_data) // batch_size * 0.1) * batch_size
-    test_data, all_data = torch.utils.data.random_split(all_data, [test_length, len(all_data) - test_length])
+    test_data, _ = torch.utils.data.random_split(all_data, [test_length, len(all_data) - test_length])
 
     val_length = int(len(all_data) // batch_size * 0.2) * batch_size
-    val_data, train_data = torch.utils.data.random_split(all_data, [val_length, len(all_data) - val_length])
+    val_data, _ = torch.utils.data.random_split(all_data, [val_length, len(all_data) - val_length])
 
-    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+    train_loader = DataLoader(all_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
     val_loader = DataLoader(val_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
 
     return train_loader, val_loader, test_loader
 
 
-def _split_words_to_train_val_and_test(batch_size, label_list, words_list):
-    # chooses 10% words for test examples, and we want it to devied the bantch size
-    num_test = int(len(words_list) / 10)
-    num_test = num_test - num_test % batch_size
-    test_words, test_label = [], []
-    for _ in range(num_test):
-        i = np.random.randint(0, len(words_list))
-        test_words.append(words_list[i])
-        test_label.append(label_list[i])
-        del words_list[i]
-        del label_list[i]
-    print("split the part for test")
-    # split the rest between validation and learning
-    num_val = int(len(words_list) / 4)
-    num_val = num_val - num_val % batch_size
-    val_words, val_label = [], []
-    for _ in range(num_val):
-        i = np.random.randint(0, len(words_list))
-        val_words.append(words_list[i])
-        val_label.append(label_list[i])
-        # del words_list[i]
-        # del label_list[i]
-    print("split the part for val")
-    train_num = int(len(words_list) - len(words_list) % batch_size)
-    train_words, train_label = words_list[0:train_num], label_list[0:train_num]
-    return test_label, test_words, train_label, train_words, val_label, val_words
+def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=50,
+                       batch_size=50):
+    int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
+    int2char.update({0: ""})
+    char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
+    char2int.update({"": 0})
+
+    train = create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target)
+
+    validation = create_word_set(alphabet, batch_size, int2char, max_length, int(num_of_exm_per_length/5), target)
+
+    val_length = int(len(validation) // batch_size * 0.4) * batch_size
+    val, test = torch.utils.data.random_split(validation, [val_length, len(validation) - val_length])
+
+    train_loader = DataLoader(train, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+    val_loader = DataLoader(val, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+    test_loader = DataLoader(test, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+
+    return train_loader, val_loader, test_loader
+
+
+def create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target):
+    words_list = []
+    lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
+    for length in lengths:
+        new_list = np.unique(np.random.randint(1, len(alphabet) + 1, size=(num_of_exm_per_length, length)), axis=0)
+        words_list.extend(new_list)
+    round_num_batches = int(len(words_list) - len(words_list) % batch_size)
+    words_list = words_list[:round_num_batches - 1]
+    label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
+
+    words_list.insert(0, np.array([0]))
+    label_list.insert(0, target(""))
+
+    return WordsDataset(words_list, label_list)
 
 
 class LSTM(nn.Module):
@@ -312,7 +318,7 @@ class LSTMLanguageClasifier:
 
         self._ltsm = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5,
                           device=device)
-        train_loader, val_loader, test_loader = make_training_sets(alphahbet, target, batch_size=batch_size,
+        train_loader, val_loader, test_loader = make_training_set(alphahbet, target, batch_size=batch_size,
                                                                    num_of_exm_per_length=num_of_exm_per_lenght,
                                                                    max_length=self.word_traning_length)
         self.num_of_train, self.num_of_test = len(train_loader) * batch_size, len(test_loader) * batch_size
@@ -322,21 +328,17 @@ class LSTMLanguageClasifier:
         self._initial_state = self._ltsm.init_hidden(1)
         self._current_state = self._initial_state
 
-
         self.test_acc = test_rnn(self._ltsm, test_loader, batch_size, device)
         return
 
     def is_word_in(self, word):
-        if len(word) == 0:
-            out = self._ltsm.dropout(self._ltsm.init_hidden(1)[0])
-            out = self._ltsm.fc(out)
-            out = self._ltsm.sigmoid(out)
-            # outb = torch.tensor([out[i][output_lengths[i] - 1] for i in range(20)])
-            # outc = out[:, -1]
-            return bool(out[0] > 0.5)
         h = self._ltsm.init_hidden(1)
-        length = torch.tensor([len(word)]).to(self._ltsm.device)
-        array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)
+        if len(word) == 0:
+            length = torch.tensor([1]).to(self._ltsm.device)
+            array = torch.tensor([[0]]).to(self._ltsm.device)
+        else:
+            length = torch.tensor([len(word)]).to(self._ltsm.device)
+            array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)
         output, h = self._ltsm(array, length, h)
         return bool(output > 0.5)
 

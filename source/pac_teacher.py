@@ -62,22 +62,21 @@ class PACTeacher(Teacher):
                 break
             learner.new_counterexample(counter, False)
 
-    def check_and_teach(self, learner, checkers):
+    def check_and_teach(self, learner, checkers, timeout=900):
         learner.teacher = self
+        start_time = time.time()
 
         while True:
-            learner.dfa.draw_nicely(name="notlala")
+            if time.time() - start_time > timeout:
+                return
             counters_from_specs = [(checker.check_for_counterexample(learner.dfa), checker.is_super_set) for checker in
                                    checkers]
             counter_from_spec = [None,None]
             for word in counters_from_specs:
                 if word[0] is not None:
                     counter_from_spec = word
-            # counter_from_spec = learner.dfa.is_language_subset_of(specification)
-            # print(counter_from_spec)
             if counter_from_spec[0] is None:
                 counter_from_equiv = self.equivalence_query(learner.dfa)
-                # print(counter_from_equiv)
                 if counter_from_equiv is None:
                     return None
                 else:

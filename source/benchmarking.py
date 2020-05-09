@@ -81,7 +81,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
                       "lstm_testing_acc": "{:.3}".format(model.test_acc),
                       "lstm_val_acc": "{:.3}".format(model.val_acc),
                       "lstm_dataset_learning": model.num_of_train,
-                      "lstm_dataset_testing": model.num_of_test} )
+                      "lstm_dataset_testing": model.num_of_test})
 
     print("time: {}".format(time.time() - start_time))
     return model
@@ -104,19 +104,24 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
     teacher_pac = PACTeacher(lstm)
     student = DecisionTreeLearner(teacher_pac)
 
+    print("Starting DFA extraction")
     start_time = time.time()
     counter = teacher_pac.check_and_teach(student, spec)
-    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time),
-                      "extraction_mistake": counter[0]})
+    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
 
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
+        benchmark.update({"extraction_mistake": ""})
         models.append(student.dfa)
         student.dfa.draw_nicely(name="this")
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
+        benchmark.update({"extraction_mistake": counter[0]})
         models.append(student.dfa)
+
+    print("Finished DFA extraction")
+    print("Starting distance measuring")
     epsilon = 0.5
     delta = 0.001
     output, _ = confidence_interval_many(models, random_word, epsilon=epsilon, delta=delta)
@@ -149,7 +154,7 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
     benchmark.update({"dist_lstm_vs_inter": "{:.4}".format(output[0][1]),
                       "dist_lstm_vs_extr": "{:.4}".format(output[0][2]),
                       "dist_extr_vs_inter": "{:.4}".format(output[2][1])})
-
+    print("Finished distance measuring")
 
 def rand_benchmark(save_dir=None):
     dfa_inter = DFA(0, {0}, {0: {0: 0}})
@@ -186,7 +191,8 @@ def run_rand_benchmarks(num_of_bench=10, save_dir=None):
         os.makedirs(save_dir)
 
     write_csv_header(save_dir + "/test.csv")
-    for num in range(num_of_bench):
+    for num in range(1, num_of_bench + 1):
+        print("Running benchmark {}/{}:".format(num, num_of_bench))
         benchmark = rand_benchmark(save_dir + "/" + str(num))
         print("Summary for the {}th benchmark".format(num))
         print(benchmark)

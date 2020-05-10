@@ -3,7 +3,7 @@ import datetime
 import os
 import time
 
-from dfa import DFA, random_dfa, intersection, save_dfa_as_part_of_model, learn_multiple_times
+from dfa import DFA, random_dfa, intersection, save_dfa_as_part_of_model
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner

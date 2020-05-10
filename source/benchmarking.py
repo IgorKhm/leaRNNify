@@ -125,9 +125,6 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
                           "dfa_extract_final":len(student.dfa.final_states)})
         models.append(student.dfa)
 
-    save_dfa_as_part_of_model(save_dir, student.dfa, name="extract_dfa")
-    student.dfa.draw_nicely(name="extract_dfa_figure", save_dir=save_dir)
-
     print("Finished DFA extraction")
     print("Starting distance measuring")
     epsilon = 0.005
@@ -173,6 +170,8 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
 
     print("Finished distance measuring")
 
+    return student.dfa
+
 def rand_benchmark(save_dir=None):
     dfa_inter = DFA(0, {0}, {0: {0: 0}})
 
@@ -200,7 +199,10 @@ def rand_benchmark(save_dir=None):
     print("DFA to learn {}".format(dfa_inter))
     print("Spec to learn {}".format(dfa_spec))
 
-    learn_and_check(dfa_inter, [DFAChecker(dfa_spec)], benchmark, save_dir)
+    dfa_extact = learn_and_check(dfa_inter, [DFAChecker(dfa_spec)], benchmark, save_dir)
+
+    save_dfa_as_part_of_model(save_dir, dfa_extact, name="extract_dfa")
+    dfa_extact.draw_nicely(name="extract_dfa_figure", save_dir=save_dir)
 
     return benchmark
 

@@ -91,10 +91,12 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, spec: DFA, benchmark, dir_name=None):
     lstm = learn_dfa(dfa, benchmark)
 
-    check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark)
+    dfa_extact = check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark)
 
     if dir_name is not None:
         lstm.save_rnn(dir_name)
+        save_dfa_as_part_of_model(save_dir, dir_name, name="extract_dfa")
+        dfa_extact.draw_nicely(name="extract_dfa_figure", save_dir=dir_name)
         # save_dfa_as_part_of_model(dir_name, dfa, name="dfa")
         # save_dfa_as_part_of_model(dir_name, dfa, name="spec")
 
@@ -199,10 +201,7 @@ def rand_benchmark(save_dir=None):
     print("DFA to learn {}".format(dfa_inter))
     print("Spec to learn {}".format(dfa_spec))
 
-    dfa_extact = learn_and_check(dfa_inter, [DFAChecker(dfa_spec)], benchmark, save_dir)
-
-    save_dfa_as_part_of_model(save_dir, dfa_extact, name="extract_dfa")
-    dfa_extact.draw_nicely(name="extract_dfa_figure", save_dir=save_dir)
+    learn_and_check(dfa_inter, [DFAChecker(dfa_spec)], benchmark, save_dir)
 
     return benchmark
 

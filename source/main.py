@@ -61,9 +61,9 @@ print("Begin")
 #                          "5": {"msg0": "5", "msg1": "5", "ack0": "5", "ack1": "5"}})
 # rand_benchmark("../models/rand/test2/")
 
-
-learn_multiple_times(alternating_bit_dfa(), "../models/alternating_bit/lstm")
-learn_multiple_times(alternating_bit_dfa(), "../models/e_commerce/lstm")
+#
+# learn_multiple_times(alternating_bit_dfa(), "../models/alternating_bit/lstm")
+# learn_multiple_times(alternating_bit_dfa(), "../models/e_commerce/lstm")
 
 run_rand_benchmarks()
 # spec = intersection(spec, spec2)

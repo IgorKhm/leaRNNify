@@ -113,13 +113,20 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_mistake": ""})
+        benchmark.update({"extraction_mistake": "",
+                            "dfa_spec_final":len(student.dfa.states),
+                            "dfa_extract_final":len(student.dfa.final_states)})
         models.append(student.dfa)
         student.dfa.draw_nicely(name="this")
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_mistake": counter[0]})
+        benchmark.update({"extraction_mistake": counter[0],
+                          "dfa_spec_final":len(student.dfa.states),
+                          "dfa_extract_final":len(student.dfa.final_states)})
         models.append(student.dfa)
+
+    save_dfa_as_part_of_model(save_dir, student.dfa, name="extract_dfa")
+    student.dfa.draw_nicely(name="extract_dfa_figure", save_dir=save_dir)
 
     print("Finished DFA extraction")
     print("Starting distance measuring")

@@ -219,3 +219,16 @@ def run_rand_benchmarks(num_of_bench=10, save_dir=None):
         print("Summary for the {}th benchmark".format(num))
         print(benchmark)
         write_line_csv(save_dir + "/test.csv", benchmark)
+
+
+def learn_multiple_times(dfa, dir_save=None):
+    for hidden_dim, num_layers in ((20, 2), (50, 5), (100, 10),(200, 20), (500, 50)):
+        benchmarks = {}
+        lstm = learn_dfa(dfa, benchmarks,
+                         hidden_dim=hidden_dim,
+                         num_layers=hidden_dim,
+                         num_of_exm_per_length=20000,
+                         word_training_length=len(dfa.states) + 10)
+        print(benchmarks)
+        if dir_save is not None:
+            lstm.save_rnn(dir_save + "/" + "l-{}__h-{}".format(num_layers, hidden_dim))

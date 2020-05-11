@@ -60,8 +60,6 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     if batch_size == -1:
         batch_size = 20
     if word_training_length == -1:
-        hidden_dim = len(dfa.states) * 3
-    if word_training_length == -1:
         word_training_length = len(dfa.states) + 5
 
     start_time = time.time()

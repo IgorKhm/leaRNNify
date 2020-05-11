@@ -3,7 +3,7 @@ import datetime
 import os
 import time
 
-from dfa import DFA, random_dfa, intersection, save_dfa_as_part_of_model
+from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
@@ -33,16 +33,16 @@ def write_csv_header(filename):
 
 
 def write_line_csv(filename, benchmark):
-    with open(filename, mode='a') as employee_file:
-        writer = csv.DictWriter(employee_file, fieldnames=FIELD_NAMES)
+    with open(filename, mode='a') as benchmark_summary:
+        writer = csv.DictWriter(benchmark_summary, fieldnames=FIELD_NAMES)
         writer.writerow(benchmark)
 
 
-def minimaize_dfa(dfa):
-    teacher_pac1 = ExactTeacher(dfa)
-    student1 = DecisionTreeLearner(teacher_pac1)
-    teacher_pac1.teach(student1)
-    return student1.dfa
+def minimize_dfa(dfa: DFA) -> DFA:
+    teacher_pac = ExactTeacher(dfa)
+    student = DecisionTreeLearner(teacher_pac)
+    teacher_pac.teach(student)
+    return student.dfa
 
 
 def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
@@ -86,23 +86,21 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     return model
 
 
-def learn_and_check(dfa: DFA, spec: DFA, benchmark, dir_name=None):
-    lstm = learn_dfa(dfa, benchmark)
+def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
+    rnn = learn_dfa(dfa, benchmark)
 
-    dfa_extact = check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark)
+    dfa_extract = check_rnn_acc_to_spec_and_original_dfa(rnn, spec, benchmark)
 
     if dir_name is not None:
-        lstm.save_rnn(dir_name)
-        save_dfa_as_part_of_model(dir_name, dfa_extact, name="extract_dfa")
-        dfa_extact.draw_nicely(name="extract_dfa_figure", save_dir=dir_name)
-        # save_dfa_as_part_of_model(dir_name, dfa, name="dfa")
-        # save_dfa_as_part_of_model(dir_name, dfa, name="spec")
+        rnn.save_rnn(dir_name)
+        save_dfa_as_part_of_model(dir_name, dfa_extract, name="extract_dfa")
+        dfa_extract.draw_nicely(name="extract_dfa_figure", save_dir=dir_name)
+
+    compute_distances(dfa, rnn, dfa_extract, spec[0].specificatio, benchmark)
 
 
-def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
-    models = [lstm, dfa]
-
-    teacher_pac = PACTeacher(lstm)
+def check_rnn_acc_to_spec_and_original_dfa(rnn, spec, benchmark):
+    teacher_pac = PACTeacher(rnn)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
@@ -114,18 +112,20 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
         benchmark.update({"extraction_mistake": "",
-                            "dfa_spec_final":len(student.dfa.states),
-                            "dfa_extract_final":len(student.dfa.final_states)})
-        models.append(student.dfa)
-        student.dfa.draw_nicely(name="this")
+                          "dfa_spec_final": len(student.dfa.states),
+                          "dfa_extract_final": len(student.dfa.final_states)})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
         benchmark.update({"extraction_mistake": counter[0],
-                          "dfa_spec_final":len(student.dfa.states),
-                          "dfa_extract_final":len(student.dfa.final_states)})
-        models.append(student.dfa)
+                          "dfa_spec_final": len(student.dfa.states),
+                          "dfa_extract_final": len(student.dfa.final_states)})
 
     print("Finished DFA extraction")
+    return student.dfa
+
+
+def compute_distances(dfa_original, rnn, dfa_learned, dfa_spec, benchmark):
+    models = [dfa_original, rnn, dfa_learned]
     print("Starting distance measuring")
     epsilon = 0.005
     delta = 0.001
@@ -160,17 +160,14 @@ def check_lstm_acc_to_spec_and_original_dfa(lstm, dfa, spec, benchmark):
                       "dist_lstm_vs_extr": "{:.4}".format(output[0][2]),
                       "dist_extr_vs_inter": "{:.4}".format(output[2][1])})
 
-    a, _ = confidence_interval_subset(lstm, spec[0].specification, samples, epsilon, delta)
-    b, _ = confidence_interval_subset(student.dfa, spec[0].specification, samples, epsilon, delta)
+    a, _ = confidence_interval_subset(rnn, dfa_spec, samples, epsilon, delta)
+    b, _ = confidence_interval_subset(dfa_learned, dfa_spec, samples, epsilon, delta)
     benchmark.update(
         {"dist_lstm_specs": "{}".format(a),
          "dist_extract_specs": "{}".format(b)})
 
-    # confidence_interval_subset(lstm, spec, samples,epsilon, delta)
-
     print("Finished distance measuring")
 
-    return student.dfa
 
 def rand_benchmark(save_dir=None):
     dfa_inter = DFA(0, {0}, {0: {0: 0}})
@@ -183,8 +180,8 @@ def rand_benchmark(save_dir=None):
         dfa_rand1 = random_dfa(alphabet, min_states=5, max_states=10, min_final=2, max_final=5)
         dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=7, min_final=4, max_final=5)
 
-        dfa_inter = minimaize_dfa(intersection(dfa_rand1, dfa_rand2))
-        dfa_spec = minimaize_dfa(dfa_rand2)
+        dfa_inter = minimize_dfa(dfa_intersection(dfa_rand1, dfa_rand2))
+        dfa_spec = minimize_dfa(dfa_rand2)
 
     benchmark.update({"dfa_inter_states": len(dfa_inter.states), "dfa_inter_final": len(dfa_inter.final_states),
                       "dfa_spec_states": len(dfa_spec.states), "dfa_spec_final": len(dfa_spec.final_states)})
@@ -219,7 +216,7 @@ def run_rand_benchmarks(num_of_bench=10, save_dir=None):
 
 
 def learn_multiple_times(dfa, dir_save=None):
-    for hidden_dim, num_layers in ((20, 2), (50, 5), (100, 10),(200, 20), (500, 50)):
+    for hidden_dim, num_layers in ((20, 2), (50, 5), (100, 10), (200, 20), (500, 50)):
         benchmarks = {}
         lstm = learn_dfa(dfa, benchmarks,
                          hidden_dim=hidden_dim,

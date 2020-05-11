@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 from benchmarking import rand_benchmark, run_rand_benchmarks, learn_multiple_times
-from dfa import DFA, load_dfa_dot, random_dfa, intersection
+from dfa import DFA, load_dfa_dot, random_dfa, dfa_intersection
 from dfa import save_dfa_as_part_of_model
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher

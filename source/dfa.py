@@ -22,18 +22,18 @@ class DFA:
         self.alphabet = list(transitions[init_state].keys())
         self.current_state = self.init_state
 
-    def is_word_in(self, w):
-        s = self.init_state
-        for l in w:
-            s = self.transitions[s][l]
-        return s in self.final_states
+    def is_word_in(self, word):
+        state = self.init_state
+        for letter in word:
+            state = self.transitions[state][letter]
+        return state in self.final_states
 
-    def next_state_by_letter(self, s, l):
-        q = self.transitions[s][l]
-        return q
+    def next_state_by_letter(self, state, letter):
+        next_state = self.transitions[state][letter]
+        return next_state
 
-    def is_final_state(self, s):
-        return s in self.final_states
+    def is_final_state(self, state):
+        return state in self.final_states
 
     def is_word_letter_by_letter(self, letter, reset=False):
         if reset:
@@ -46,6 +46,11 @@ class DFA:
         self.current_state = self.init_state
 
     def equivalence_with_counterexample(self, other):
+        """
+        Check if equal to another DFA by traversing their cross product.
+        If equal returns None, otherwise returns a counter example.
+
+        """
         if self.is_word_in(tuple()) != other.is_word_in(tuple()):
             return tuple()
 
@@ -74,6 +79,11 @@ class DFA:
         return None
 
     def is_language_not_subset_of(self, other):
+        """
+        Checks whether this DFA's language is a subset of the language of other (checking A \cap A'^c != 0),
+        by traversing the cross product of self and the complimentary of other.
+        If equal returns None, otherwise returns a counter example.
+        """
         if self.is_word_in(tuple()) & (not other.is_word_in(tuple())):
             return tuple()
 
@@ -87,7 +97,7 @@ class DFA:
                 q1 = self.next_state_by_letter(s1, l)
                 q2 = other.next_state_by_letter(s2, l)
 
-                if (q1 in self.final_states) & (not q2 in other.final_states):
+                if (q1 in self.final_states) and (q2 not in other.final_states):
                     counter_example = tuple([l])
                     q1, q2 = s1, s2
 
@@ -100,6 +110,26 @@ class DFA:
                     to_check.append((q1, q2))
                     cross_states.update({(q1, q2): (l, s1, s2)})
         return None
+
+    def save(self, filename):
+        with open(filename + ".dot", "w") as file:
+            file.write("digraph g {\n")
+            file.write('__start0 [label="" shape="none]\n')
+
+            for s in self.states:
+                if s in self.final_states:
+                    shape = "doublecircle"
+                else:
+                    shape = "circle"
+                file.write('{} [shape="{}" label="{}"]\n'.format(s, shape, s))
+
+            file.write('__start0 -> {}\n'.format(self.init_state))
+
+            for s1 in self.transitions.keys():
+                tran = self.transitions[s1]
+                for letter in tran.keys():
+                    file.write('{} -> {}[label="{}"]\n'.format(s1, tran[letter], letter))
+            file.write("}\n")
 
     def __eq__(self, other):
         if self.is_word_in("") != other.is_word_in(""):
@@ -129,7 +159,7 @@ class DFA:
 
     # Stole the following function(draw_nicely) from lstar algo: https://github.com/tech-srl/lstar_extraction
     def draw_nicely(self, force=False, maximum=60,
-                    name="dfa",save_dir="img/"):  # todo: if two edges are identical except for letter, merge them
+                    name="dfa", save_dir="img/"):  # todo: if two edges are identical except for letter, merge them
         # and note both the letters
         if (not force) and len(self.transitions) > maximum:
             return
@@ -241,10 +271,10 @@ class DFA:
         #                  for a in self.alphabet for state in self.Q])
         # display(Image(filename=g.render(filename='img/automaton')))
 
-        g.render(filename=save_dir+"/"+name)
+        g.render(filename=save_dir + "/" + name)
 
 
-def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=10):
+def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=10) -> DFA:
     states = np.random.randint(min_states, max_states)
     num_of_final = np.random.randint(min_final, max_final)
     initial_state = np.random.randint(1, states)
@@ -262,7 +292,7 @@ def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=1
     return DFA(initial_state, final_states.tolist(), transitions)
 
 
-def load_dfa_dot(filename):
+def load_dfa_dot(filename: str) -> DFA:
     mode = "init"
     transitions = {}
     states = []
@@ -299,37 +329,19 @@ def load_dfa_dot(filename):
     # dfa.draw_nicely(name="upload")
 
 
-def save_dfa_as_part_of_model(dir_name, dfa, name="dfa", force_overwrite=False):
+def save_dfa_as_part_of_model(dir_name, dfa: DFA, name="dfa", force_overwrite=False):
+    """
+    Saves as a part of model, i.e. in a folder with an RNN and other information
+    """
     if not os.path.isdir(dir_name):
         os.makedirs(dir_name)
     elif os.path.exists(dir_name + "/dfa.dot") & (not force_overwrite):
         if input("the save {} exists. Enter y if you want to overwrite it.".format(name)) != "y":
             return
-    save_dfa_dot(dir_name + "/" + name + ".dot", dfa)
+    dfa.save(dir_name + "/" + name)
 
 
-def save_dfa_dot(filename, dfa: DFA):
-    with open(filename, "w") as file:
-        file.write("digraph g {\n")
-        file.write('__start0 [label="" shape="none]\n')
-
-        for s in dfa.states:
-            if s in dfa.final_states:
-                shape = "doublecircle"
-            else:
-                shape = "circle"
-            file.write('{} [shape="{}" label="{}"]\n'.format(s, shape, s))
-
-        file.write('__start0 -> {}\n'.format(dfa.init_state))
-
-        for s1 in dfa.transitions.keys():
-            tran = dfa.transitions[s1]
-            for letter in tran.keys():
-                file.write('{} -> {}[label="{}"]\n'.format(s1, tran[letter], letter))
-        file.write("}\n")
-
-
-def intersection(model1: DFA, model2: DFA):
+def dfa_intersection(model1: DFA, model2: DFA) -> DFA:
     if model1.alphabet != model2.alphabet:
         raise Exception("The two DFAs have different alphabets")
 

@@ -93,7 +93,7 @@ def learn_and_check(dfa: DFA, spec: DFA, benchmark, dir_name=None):
 
     if dir_name is not None:
         lstm.save_rnn(dir_name)
-        save_dfa_as_part_of_model(save_dir, dfa_extact, name="extract_dfa")
+        save_dfa_as_part_of_model(dir_name, dfa_extact, name="extract_dfa")
         dfa_extact.draw_nicely(name="extract_dfa_figure", save_dir=dir_name)
         # save_dfa_as_part_of_model(dir_name, dfa, name="dfa")
         # save_dfa_as_part_of_model(dir_name, dfa, name="spec")

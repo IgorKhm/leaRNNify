@@ -150,24 +150,29 @@ print("Begin")
 #
 # learn_multiple_times(alternating_bit_dfa(), "../models/alternating_bit/lstm")
 # learn_multiple_times(alternating_bit_dfa(), "../models/e_commerce/lstm")
-ltsm = LSTMLanguageClasifier()
+dfa = alternating_bit_dfa()
+ltsm = learn_dfa(dfa, benchmarks,
+                 hidden_dim=50,
+                 num_layers=2,
+                 num_of_exm_per_length=20000,
+                 word_training_length=len(dfa.states) + 10)
 
 print("Runnning tests on alternating_bit layers = 2 hidden din - 20:")
-ltsm.load_rnn("../models/alternating_bit/lstm/l-2__h-20")
+# ltsm.load_rnn("../models/alternating_bit/lstm/l-2__h-20")
 run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
 print("################################################################")
 
 
-print("Runnning tests on alternating_bit layers = 5 hidden din - 50:")
-ltsm.load_rnn("../models/alternating_bit/lstm/l-5__h-50")
-run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
-print("################################################################")
-
-
-print("Runnning tests on alternating_bit layers = 10 hidden din - 100:")
-ltsm.load_rnn("../models/alternating_bit/lstm/l-10__h-100")
-run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
-print("################################################################")
+# print("Runnning tests on alternating_bit layers = 5 hidden din - 50:")
+# ltsm.load_rnn("../models/alternating_bit/lstm/l-5__h-50")
+# run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
+# print("################################################################")
+#
+#
+# print("Runnning tests on alternating_bit layers = 10 hidden din - 100:")
+# ltsm.load_rnn("../models/alternating_bit/lstm/l-10__h-100")
+# run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
+# print("################################################################")
 
 #
 #

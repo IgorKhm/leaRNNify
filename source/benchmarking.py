@@ -226,3 +226,10 @@ def learn_multiple_times(dfa, dir_save=None):
         print(benchmarks)
         if dir_save is not None:
             lstm.save_rnn(dir_save + "/" + "l-{}__h-{}".format(num_layers, hidden_dim))
+
+def run_multiple_spec_on_ltsm(ltsm, spec_dfas, messages):
+    i = 1
+    for dfa, message in zip(spec_dfas, messages):
+        print(message)
+        bench = check_rnn_acc_to_spec(ltsm, [DFAChecker(dfa)], {})
+        print(bench)

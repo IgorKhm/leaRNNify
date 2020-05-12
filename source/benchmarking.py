@@ -89,7 +89,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    dfa_extract = check_rnn_acc_to_spec_and_original_dfa(rnn, spec, benchmark)
+    dfa_extract = check_rnn_acc_to_spec(rnn, spec, benchmark)
 
     if dir_name is not None:
         rnn.save_rnn(dir_name)
@@ -99,7 +99,7 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
     compute_distances(dfa, rnn, dfa_extract, spec[0].specificatio, benchmark)
 
 
-def check_rnn_acc_to_spec_and_original_dfa(rnn, spec, benchmark):
+def check_rnn_acc_to_spec(rnn, spec, benchmark):
     teacher_pac = PACTeacher(rnn)
     student = DecisionTreeLearner(teacher_pac)
 

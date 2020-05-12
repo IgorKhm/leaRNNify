@@ -204,7 +204,7 @@ def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=
 
 
 def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=50,
-                       batch_size=50):
+                      batch_size=50):
     int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
     int2char.update({0: ""})
     char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
@@ -212,7 +212,7 @@ def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=5
 
     train = create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target)
 
-    validation = create_word_set(alphabet, batch_size, int2char, max_length, int(num_of_exm_per_length/5), target)
+    validation = create_word_set(alphabet, batch_size, int2char, max_length, int(num_of_exm_per_length / 5), target)
 
     val_length = int(len(validation) // batch_size * 0.4) * batch_size
     val, test = torch.utils.data.random_split(validation, [val_length, len(validation) - val_length])
@@ -233,6 +233,36 @@ def create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_l
     round_num_batches = int(len(words_list) - len(words_list) % batch_size)
     words_list = words_list[:round_num_batches - 1]
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
+
+    pos = []
+    words = []
+    while len(pos) < (0.01 * len(words_list)):
+        words = []
+        for t in range(1,4):
+            for _ in range(1000):
+                h,i,j,k,l = np.random.randint(0,5),np.random.randint(1,5),np.random.randint(1,5),np.random.randint(1,5),np.random.randint(1,5)
+                z = h+i+j+k+l
+                w = np.zeros(z * t)
+                for p in range(t):
+                    for ind in range(h):
+                        w[p*z+ind] = 4
+                    for ind in range(i):
+                        w[p*z+h+ind] = 1
+                    for ind in range(j):
+                        w[p*z+h+i+ind] = 3
+                    for ind in range(k):
+                        w[p*z+h+i+j+ind] = 2
+                    for ind in range(l):
+                        w[p*z+h+i+j+k+ind] = 4
+                words.append(w)
+        words.extend(np.unique(np.random.randint(1, len(alphabet) + 1, size=(int(num_of_exm_per_length * 10), length)),
+                          axis=0))
+        pos.extend([w for w in words if target(from_array_to_word(int2char, w))])
+
+    pos_value = [True for _ in pos]
+
+    words_list.extend(pos)
+    label_list.extend(pos_value)
 
     words_list.insert(0, np.array([0]))
     label_list.insert(0, target(""))
@@ -319,8 +349,8 @@ class LSTMLanguageClasifier:
         self._ltsm = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5,
                           device=device)
         train_loader, val_loader, test_loader = make_training_set(alphahbet, target, batch_size=batch_size,
-                                                                   num_of_exm_per_length=num_of_exm_per_lenght,
-                                                                   max_length=self.word_traning_length)
+                                                                  num_of_exm_per_length=num_of_exm_per_lenght,
+                                                                  max_length=self.word_traning_length)
         self.num_of_train, self.num_of_test = len(train_loader) * batch_size, len(test_loader) * batch_size
 
         self.val_acc = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
@@ -410,7 +440,7 @@ class LSTMLanguageClasifier:
                     torch_save = splitline[1].rstrip('\n')
 
         self._ltsm = LSTM(len(self.alphabet) + 1, 1, embedding_dim, hidden_dim, n_layers, drop_prob=0.5, device=device)
-        self._ltsm.load_state_dict(torch.load(dir + "/" + torch_save))
+        self._ltsm.load_state_dict(torch.load(dir + "/" + torch_save, map_location={'cuda:0': 'cpu'}))
         self._ltsm.eval()
         torch.no_grad()
 

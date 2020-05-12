@@ -151,6 +151,7 @@ print("Begin")
 # learn_multiple_times(alternating_bit_dfa(), "../models/alternating_bit/lstm")
 # learn_multiple_times(alternating_bit_dfa(), "../models/e_commerce/lstm")
 dfa = alternating_bit_dfa()
+benchmarks = {}
 ltsm = learn_dfa(dfa, benchmarks,
                  hidden_dim=50,
                  num_layers=2,

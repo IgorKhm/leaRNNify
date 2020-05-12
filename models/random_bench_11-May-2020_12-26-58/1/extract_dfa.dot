@@ -1,0 +1,22 @@
+digraph g {
+__start0 [label="" shape="none]
+('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b') [shape="doublecircle" label="('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b')"]
+('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c') [shape="circle" label="('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c')"]
+() [shape="circle" label="()"]
+__start0 -> ()
+('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b') -> ()[label="a"]
+('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b') -> ()[label="b"]
+('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b') -> ()[label="c"]
+('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b') -> ()[label="d"]
+('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b') -> ('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c')[label="e"]
+('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c') -> ()[label="a"]
+('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c') -> ('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b')[label="b"]
+('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c') -> ()[label="c"]
+('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c') -> ('a', 'd', 'b', 'c', 'a', 'a', 'd', 'a', 'e', 'c', 'e', 'd', 'b')[label="d"]
+('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c') -> ()[label="e"]
+() -> ()[label="a"]
+() -> ('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c')[label="b"]
+() -> ()[label="c"]
+() -> ('a', 'd', 'c', 'c', 'e', 'b', 'e', 'c', 'a', 'c')[label="d"]
+() -> ()[label="e"]
+}

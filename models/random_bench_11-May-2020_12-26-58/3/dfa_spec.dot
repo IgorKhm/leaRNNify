@@ -1,0 +1,10 @@
+digraph g {
+__start0 [label="" shape="none]
+() [shape="doublecircle" label="()"]
+__start0 -> ()
+() -> ()[label="a"]
+() -> ()[label="b"]
+() -> ()[label="c"]
+() -> ()[label="d"]
+() -> ()[label="e"]
+}

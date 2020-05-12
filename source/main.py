@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from benchmarking import rand_benchmark, run_rand_benchmarks, learn_multiple_times, run_multiple_spec_on_ltsm
+from benchmarking import rand_benchmark, run_rand_benchmarks, learn_multiple_times, run_multiple_spec_on_ltsm,learn_dfa
 from dfa import DFA, load_dfa_dot, random_dfa, dfa_intersection
 from dfa import save_dfa_as_part_of_model
 from dfa_check import DFAChecker

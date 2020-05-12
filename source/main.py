@@ -155,6 +155,7 @@ benchmarks = {}
 ltsm = learn_dfa(dfa, benchmarks,
                  hidden_dim=50,
                  num_layers=2,
+                 epoch = 10
                  num_of_exm_per_length=20000,
                  word_training_length=len(dfa.states) + 10)
 

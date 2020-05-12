@@ -1,0 +1,8 @@
+digraph {
+	1 [label=start color=black shape=hexagon]
+	2 [label=1 color=green]
+	2 -> 2 [label="a-d"]
+	2 -> 1 [label=e]
+	1 -> 2 [label=a]
+	1 -> 1 [label="b-e"]
+}

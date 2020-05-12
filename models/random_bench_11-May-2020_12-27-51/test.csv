@@ -1,0 +1,3 @@
+alph_len,dfa_inter_states,dfa_spec_states,dfa_extract_states,dfa_inter_final,dfa_spec_final,dfa_extract_final,lstm_layers,lstm_hidden_dim,lstm_dataset_learning,lstm_dataset_testing,lstm_testing_acc,lstm_val_acc,lstm_time,extraction_time,extraction_mistake,dist_lstm_vs_inter,dist_lstm_vs_extr,dist_extr_vs_inter,dist_lstm_specs,dist_extract_specs
+5,23,5,,3,23,3,2,69,326760,41020,1e+02,98.8,2.42e+04,57.5,"('c', 'a', 'c', 'b', 'e', 'a', 'e')",0.000467,0.000717,0.0003421,1.1015670622946024e-05,6.342355813211348e-06
+5,11,2,,2,12,3,2,33,146780,19420,1e+02,1e+02,9.32e+03,1.01e+03,,0.0,0.0,0.0,0.0,0.0

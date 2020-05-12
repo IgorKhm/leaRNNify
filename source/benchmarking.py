@@ -99,13 +99,13 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
     compute_distances(dfa, rnn, dfa_extract, spec[0].specificatio, benchmark)
 
 
-def check_rnn_acc_to_spec(rnn, spec, benchmark):
+def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     teacher_pac = PACTeacher(rnn)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
     start_time = time.time()
-    counter = teacher_pac.check_and_teach(student, spec)
+    counter = teacher_pac.check_and_teach(student, spec,timeout = timeout)
     benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
 
     if counter is None:
@@ -229,7 +229,8 @@ def learn_multiple_times(dfa, dir_save=None):
 
 def run_multiple_spec_on_ltsm(ltsm, spec_dfas, messages):
     i = 1
+    benchmark = {}
     for dfa, message in zip(spec_dfas, messages):
         print(message)
-        bench = check_rnn_acc_to_spec(ltsm, [DFAChecker(dfa)], {})
-        print(bench)
+        check_rnn_acc_to_spec(ltsm, [DFAChecker(dfa)], benchmark, timeout=1800)
+        print(benchmark)

@@ -153,19 +153,19 @@ print("Begin")
 ltsm = LSTMLanguageClasifier()
 
 print("Runnning tests on alternating_bit layers = 2 hidden din - 20:")
-ltsm.load_rnn("/home/ikhmelnitsky/Desktop/git/leaRNNify/models/alternating_bit/lstm/l-2__h-20")
+ltsm.load_rnn("../models/alternating_bit/lstm/l-2__h-20")
 run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
 print("################################################################")
 
 
 print("Runnning tests on alternating_bit layers = 5 hidden din - 50:")
-ltsm.load_rnn("/home/ikhmelnitsky/Desktop/git/leaRNNify/models/alternating_bit/lstm/l-5__h-50")
+ltsm.load_rnn("../models/alternating_bit/lstm/l-5__h-50")
 run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
 print("################################################################")
 
 
 print("Runnning tests on alternating_bit layers = 10 hidden din - 100:")
-ltsm.load_rnn("/home/ikhmelnitsky/Desktop/git/leaRNNify/models/alternating_bit/lstm/l-10__h-100")
+ltsm.load_rnn("../models/alternating_bit/lstm/l-10__h-100")
 run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
 print("################################################################")
 

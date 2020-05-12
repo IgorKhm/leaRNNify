@@ -156,7 +156,7 @@ ltsm = learn_dfa(dfa, benchmarks,
                  hidden_dim=50,
                  num_layers=2,
                  epoch = 2,
-                 num_of_exm_per_length=20000,
+                 num_of_exm_per_length=10000,
                  word_training_length=len(dfa.states) + 10)
 
 print("Runnning tests on alternating_bit layers = 2 hidden din - 20:")

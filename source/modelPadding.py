@@ -234,40 +234,44 @@ def create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_l
     words_list = words_list[:round_num_batches - 1]
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
 
-    pos = []
-    words = []
-    while len(pos) < (0.01 * len(words_list)):
-        words = []
-        for t in range(1,4):
-            for _ in range(1000):
-                h,i,j,k,l = np.random.randint(0,5),np.random.randint(1,5),np.random.randint(1,5),np.random.randint(1,5),np.random.randint(1,5)
-                z = h+i+j+k+l
-                w = np.zeros(z * t)
-                for p in range(t):
-                    for ind in range(h):
-                        w[p*z+ind] = 4
-                    for ind in range(i):
-                        w[p*z+h+ind] = 1
-                    for ind in range(j):
-                        w[p*z+h+i+ind] = 3
-                    for ind in range(k):
-                        w[p*z+h+i+j+ind] = 2
-                    for ind in range(l):
-                        w[p*z+h+i+j+k+ind] = 4
-                words.append(w)
-        words.extend(np.unique(np.random.randint(1, len(alphabet) + 1, size=(int(num_of_exm_per_length * 10), length)),
-                          axis=0))
-        pos.extend([w for w in words if target(from_array_to_word(int2char, w))])
-
-    pos_value = [True for _ in pos]
-
-    words_list.extend(pos)
-    label_list.extend(pos_value)
+    pos_example_add(alphabet, int2char, label_list, length, num_of_exm_per_length, target, words_list)
 
     words_list.insert(0, np.array([0]))
     label_list.insert(0, target(""))
 
     return WordsDataset(words_list, label_list)
+
+
+def pos_example_add(alphabet, int2char, label_list, length, num_of_exm_per_length, target, words_list):
+    pos = []
+    words = []
+    while len(pos) < (0.01 * len(words_list)):
+        words = []
+        for t in range(1, 4):
+            for _ in range(1000):
+                h, i, j, k, l = np.random.randint(0, 5), np.random.randint(1, 5), np.random.randint(1,
+                                                                                                    5), np.random.randint(
+                    1, 5), np.random.randint(1, 5)
+                z = h + i + j + k + l
+                w = np.zeros(z * t)
+                for p in range(t):
+                    for ind in range(h):
+                        w[p * z + ind] = 4
+                    for ind in range(i):
+                        w[p * z + h + ind] = 1
+                    for ind in range(j):
+                        w[p * z + h + i + ind] = 3
+                    for ind in range(k):
+                        w[p * z + h + i + j + ind] = 2
+                    for ind in range(l):
+                        w[p * z + h + i + j + k + ind] = 4
+                words.append(w)
+        words.extend(np.unique(np.random.randint(1, len(alphabet) + 1, size=(int(num_of_exm_per_length * 10), length)),
+                               axis=0))
+        pos.extend([w for w in words if target(from_array_to_word(int2char, w))])
+    pos_value = [True for _ in pos]
+    words_list.extend(pos)
+    label_list.extend(pos_value)
 
 
 class LSTM(nn.Module):

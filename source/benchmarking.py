@@ -242,7 +242,7 @@ def rand_benchmark(save_dir=None):
 
     full_alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-    alphabet = full_alphabet[0:np.random.randint(4, 6)]
+    alphabet = full_alphabet[0:np.random.randint(4, 10)]
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 

@@ -150,20 +150,20 @@ print("Begin")
 #
 # learn_multiple_times(alternating_bit_dfa(), "../models/alternating_bit/lstm")
 # learn_multiple_times(alternating_bit_dfa(), "../models/e_commerce/lstm")
-dfa = alternating_bit_dfa()
-benchmarks = {}
-ltsm = learn_dfa(dfa, benchmarks,
-                 hidden_dim=50,
-                 num_layers=2,
-                 epoch = 2,
-                 num_of_exm_per_length=2000,
-                 word_training_length=len(dfa.states) + 10)
-
-print("Runnning tests on alternating_bit layers = 2 hidden din - 20:")
-# ltsm.load_rnn("../models/alternating_bit/lstm/l-2__h-20")
-run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
-print("################################################################")
-
+# dfa = alternating_bit_dfa()
+# benchmarks = {}
+# ltsm = learn_dfa(dfa, benchmarks,
+#                  hidden_dim=50,
+#                  num_layers=2,
+#                  epoch = 2,
+#                  num_of_exm_per_length=2000,
+#                  word_training_length=len(dfa.states) + 10)
+#
+# print("Runnning tests on alternating_bit layers = 2 hidden din - 20:")
+# # ltsm.load_rnn("../models/alternating_bit/lstm/l-2__h-20")
+# run_multiple_spec_on_ltsm(ltsm,  alternating_bit_tests,messages_alternating)
+# print("################################################################")
+#
 
 # print("Runnning tests on alternating_bit layers = 5 hidden din - 50:")
 # ltsm.load_rnn("../models/alternating_bit/lstm/l-5__h-50")
@@ -178,7 +178,7 @@ print("################################################################")
 
 #
 #
-# run_rand_benchmarks()
+run_rand_benchmarks()
 # # spec = intersection(spec, spec2)
 # # teacher_pac1 = ExactTeacher(spec)
 # student1 = DecisionTreeLearner(teacher_pac1)

@@ -73,7 +73,7 @@ class PACTeacher(Teacher):
             counter = self.equivalence_query(learner.dfa)
             if counter is None:
                 break
-            learner.new_counterexample(counter, do_hypothesis_in_batches=self.is_counter_example_in_batches)
+            learner.new_counterexample(counter, do_hypothesis_in_batches=False)
 
     def check_and_teach(self, learner, checkers: [DFAChecker], timeout=900):
         learner.teacher = self
@@ -96,7 +96,7 @@ class PACTeacher(Teacher):
                     break
             if counter_example.word is not None:
                 if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
-                    learner.new_counterexample(counter_example[0], do_hypothesis_in_batches=self.is_counter_example_in_batches)
+                    learner.new_counterexample(counter_example[0], do_hypothesis_in_batches=False)
                 else:
                     print('found counter mistake in the model: ', counter_example)
                     return counter_example
@@ -108,4 +108,4 @@ class PACTeacher(Teacher):
                 if counter_example is None:
                     return None
                 else:
-                    learner.new_counterexample(counter_example, do_hypothesis_in_batches=self.is_counter_example_in_batches)
+                    learner.new_counterexample(counter_example, do_hypothesis_in_batches=False)

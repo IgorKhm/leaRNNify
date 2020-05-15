@@ -1,10 +1,10 @@
 import os
 import time
+from copy import copy
 
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.nn.functional import cross_entropy
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
@@ -118,8 +118,8 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                                                                                                     np.mean(
                                                                                                         val_losses)))
                     valid_loss_min = np.mean(val_losses)
-                    # if valid_loss_min < 0.001:
-                    #     return model
+                    if valid_loss_min < 0.0005:
+                        return test_acc
     return test_acc
 
 
@@ -168,41 +168,6 @@ def pad_collate(batch):
     return xx_pad, torch.tensor(yy), x_lens  # , y_lens
 
 
-def make_training_sets(alphabet, target, num_of_exm_per_length=2000, max_length=50,
-                       batch_size=50):
-    int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
-    int2char.update({0: ""})
-    char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
-    char2int.update({"": 0})
-    words_list = []
-    lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
-    for length in lengths:
-        new_list = np.unique(np.random.randint(1, len(alphabet) + 1, size=(num_of_exm_per_length, length)), axis=0)
-        words_list.extend(new_list)
-
-    round_num_batches = int(len(words_list) - len(words_list) % batch_size)
-    words_list = words_list[:round_num_batches - 1]
-
-    label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
-
-    words_list.insert(0, np.array([0]))
-    label_list.insert(0, target(""))
-
-    all_data = WordsDataset(words_list, label_list)
-
-    test_length = int(len(all_data) // batch_size * 0.1) * batch_size
-    test_data, _ = torch.utils.data.random_split(all_data, [test_length, len(all_data) - test_length])
-
-    val_length = int(len(all_data) // batch_size * 0.2) * batch_size
-    val_data, _ = torch.utils.data.random_split(all_data, [val_length, len(all_data) - val_length])
-
-    train_loader = DataLoader(all_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
-    val_loader = DataLoader(val_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
-    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
-
-    return train_loader, val_loader, test_loader
-
-
 def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=50,
                       batch_size=50):
     int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
@@ -210,9 +175,9 @@ def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=5
     char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
     char2int.update({"": 0})
 
-    train = create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target)
+    train = create_words_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target)
 
-    validation = create_word_set(alphabet, batch_size, int2char, max_length, int(num_of_exm_per_length / 5), target)
+    validation = create_words_set(alphabet, batch_size, int2char, max_length, int(num_of_exm_per_length / 5), target)
 
     val_length = int(len(validation) // batch_size * 0.4) * batch_size
     val, test = torch.utils.data.random_split(validation, [val_length, len(validation) - val_length])
@@ -224,7 +189,7 @@ def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=5
     return train_loader, val_loader, test_loader
 
 
-def create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target):
+def create_words_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target):
     words_list = []
     lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
     for length in lengths:
@@ -234,7 +199,21 @@ def create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_l
     words_list = words_list[:round_num_batches - 1]
     label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
 
-    pos_example_add(alphabet, int2char, label_list, length, num_of_exm_per_length, target, words_list)
+    print("Positive examples: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
+
+    if sum([int(lab) for lab in label_list]) < 0.05 * len(words_list):
+        print("not enough positive examples")
+        print("before: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
+        add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,
+                                         words_list, True)
+        print("after: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
+
+    elif sum([int(not lab) for lab in label_list]) < 0.05 * len(words_list):
+        print("not enough positive examples")
+        print("before: {:.3}".format(sum([int(not lab) for lab in label_list]) / len(words_list)))
+        add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,
+                                         words_list, False)
+        print("after: {:.3}".format(sum([int(not lab) for lab in label_list]) / len(words_list)))
 
     words_list.insert(0, np.array([0]))
     label_list.insert(0, target(""))
@@ -242,36 +221,38 @@ def create_word_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_l
     return WordsDataset(words_list, label_list)
 
 
-def pos_example_add(alphabet, int2char, label_list, length, num_of_exm_per_length, target, words_list):
-    pos = []
-    words = []
-    while len(pos) < (0.01 * len(words_list)):
+def add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,
+                                     words_list, label):
+    new_examples = []
+    len_of_saturated_words = int(np.log(num_of_exm_per_length) / np.log(len(alphabet)))
+    max_tries, current_try = 20, 0
+
+    while len(new_examples) < (0.03 * len(words_list)) and current_try < max_tries:
         words = []
-        for t in range(1, 4):
-            for _ in range(1000):
-                h, i, j, k, l = np.random.randint(0, 5), np.random.randint(1, 5), np.random.randint(1,
-                                                                                                    5), np.random.randint(
-                    1, 5), np.random.randint(1, 5)
-                z = h + i + j + k + l
-                w = np.zeros(z * t)
-                for p in range(t):
-                    for ind in range(h):
-                        w[p * z + ind] = 4
-                    for ind in range(i):
-                        w[p * z + h + ind] = 1
-                    for ind in range(j):
-                        w[p * z + h + i + ind] = 3
-                    for ind in range(k):
-                        w[p * z + h + i + j + ind] = 2
-                    for ind in range(l):
-                        w[p * z + h + i + j + k + ind] = 4
-                words.append(w)
-        words.extend(np.unique(np.random.randint(1, len(alphabet) + 1, size=(int(num_of_exm_per_length * 10), length)),
-                               axis=0))
-        pos.extend([w for w in words if target(from_array_to_word(int2char, w))])
-    pos_value = [True for _ in pos]
-    words_list.extend(pos)
-    label_list.extend(pos_value)
+        for length in range(len_of_saturated_words, max_length + current_try):
+            words.extend(
+                np.unique(np.random.randint(1, len(alphabet) + 1, size=(int(num_of_exm_per_length * 10), length)),
+                          axis=0))
+        new_examples.extend([w for w in words if target(from_array_to_word(int2char, w)) == label])
+        # the following is a not optimized shitty procedure that needs to
+        unique = list()
+        for exm in new_examples:
+            add_exmp = True
+            for exm_u in unique:
+                if len(exm) != len(exm_u):
+                    continue
+                if all(np.array(exm_u) == np.array(exm)):
+                    add_exmp = False
+                    break
+            if add_exmp:
+                unique.append(exm)
+
+        new_examples = unique
+        current_try += 1
+
+    new_examples_value = [copy(label) for _ in new_examples]
+    words_list.extend(new_examples)
+    label_list.extend(new_examples_value)
 
 
 class LSTM(nn.Module):
@@ -334,6 +315,7 @@ class LSTMLanguageClasifier:
         self.num_of_test = 0
         self.test_acc = 0
         self.val_acc = 0
+        self.extra_time = 0
 
     def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
                      num_of_exm_per_lenght=5000, word_traning_length=40, epoch=20):
@@ -363,6 +345,8 @@ class LSTMLanguageClasifier:
         self._current_state = self._initial_state
 
         self.test_acc = test_rnn(self._ltsm, test_loader, batch_size, device)
+        self.states = {
+            str(self.from_state_to_list(self._ltsm.init_hidden(1))): ""}
         return
 
     def is_word_in(self, word):
@@ -463,30 +447,34 @@ class LSTMLanguageClasifier:
         return bool(self.is_word_in(word))
 
     def get_first_RState(self):
-        return self.from_state_to_list(self._ltsm.init_hidden(1)), bool(self.is_word_in(""))
+        start_time = time.time()
+        list_state = self.from_state_to_list(self._ltsm.init_hidden(1))
+        self.extra_time = self.extra_time + time.time() - start_time
+        return list_state, bool(self.is_word_in(""))
 
     def get_next_RState(self, state, char):
         # state = self.from_list_to_state(state)
         # print(len(self.states.keys()))
         # print(self.states.values())
+        start_time = time.time()
         word = self.states[str(state)] + char
-        if len(word) < self.word_traning_length:
-            length = self.word_traning_length
-        else:
-            length = len(word)
-        array = np.zeros(length)
-        for i in range(len(word)):
-            array[length - i - 1] = self._char_to_int[word[-i - 1]]
-        array = np.array([array])
-        state = self._ltsm.init_hidden(1)
+        h = self._ltsm.init_hidden(1)
+        # word = char
+        # h = self.from_list_to_state(state)
         if len(word) == 0:
-            l = torch.from_numpy(np.array([[0]]))
-            output, state = self._ltsm(l, state)
+            length = torch.tensor([1]).to(self._ltsm.device)
+            array = torch.tensor([[0]]).to(self._ltsm.device)
         else:
-            output, state = self._ltsm(torch.from_numpy(array).to(device=self._ltsm.device), state)
-            self.states.update({str(self.from_state_to_list(state)): word})
+            length = torch.tensor([len(word)]).to(self._ltsm.device)
+            array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)
+        output, h = self._ltsm(array, length, h)
 
-        return self.from_state_to_list(state), bool(output > 0.5)
+        state_list = self.from_state_to_list(h)
+        self.states.update({str(state_list): word})
+        self.extra_time = self.extra_time + time.time() - start_time
+        # print(self.extra_time)
+
+        return state_list, bool(output > 0.5)
 
     def from_state_to_list(self, state):
         list_state = []
@@ -498,7 +486,6 @@ class LSTMLanguageClasifier:
         return list_state
 
     def from_list_to_state(self, list_state):
-
         hiden = torch.tensor([[list_state[self._ltsm.hidden_dim:]]])
         cell = torch.tensor([[list_state[:self._ltsm.hidden_dim]]])
-        return (hiden, cell)
+        return (hiden.to(self._ltsm.device), cell.to(self._ltsm.device))

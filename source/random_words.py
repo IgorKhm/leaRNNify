@@ -39,22 +39,33 @@ def confidence_interval(language1, language2, sampler, delta=0.001, epsilon=0.00
     return mistakes / n, samples
 
 
-def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, samples=None):
+def confidence_interval_many(languages, sampler, confidence=0.001, width=0.005, samples=None):
+    """
+    Produce the probabilistic distance of the given languages. Using the Chernoff-Hoeffding bound we get that
+    in order to have:
+        P(S - E[S]>width)< confidence
+        S = 1/n(n empirical examples)
+
+    the number of examples that one needs to use is:
+        #examples = log(2 / confidence) / (2 * width * width)
+
+    For more details:
+    https://en.wikipedia.org/wiki/Hoeffding%27s_inequality
+
+    """
     num_of_lan = len(languages)
     if num_of_lan < 2:
         raise Exception("Need at least 2 languages to compare")
 
-    n = np.log(2 / delta) / (2 * epsilon * epsilon)
+    n = np.log(2 / confidence) / (2 * width * width)
     print("size of sample:" + str(int(n)))
     if samples is None:
-        samples = set()
+        samples = []
         while len(samples) <= n:
             if len(samples) % 1000 == 0:
                 sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
-            w = sampler(languages[0].alphabet)
-            if w not in samples:
-                if w != "":
-                    samples.add(w)
+            samples.append(sampler(languages[0].alphabet))
+
         sys.stdout.write('\r Creating words:  100/100 done \n')
     in_langs_lists = []
     i = 0
@@ -97,8 +108,17 @@ def confidence_interval_many(languages, sampler, delta=0.001, epsilon=0.005, sam
     return output, samples
 
 
-def confidence_interval_subset(language_inf, language_sup, samples, delta=0.001, epsilon=0.001):
-    n = np.log(2 / delta) / (2 * epsilon * epsilon)
+# change epsilon and delta...
+def confidence_interval_subset(language_inf, language_sup, samples, confidence=0.001, width=0.001):
+    """
+    Getting the confidence interval(width,confidence) using the Chernoff-Hoeffding bound.
+    The number of examples that one needs to use is n= log(2 / confidence) / (2 * width * width.
+    For more details:
+    https://en.wikipedia.org/wiki/Hoeffding%27s_inequality
+
+    :return:
+    """
+    n = np.log(2 / confidence) / (2 * width * width)
 
     mistakes = 0
 

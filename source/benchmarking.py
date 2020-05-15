@@ -3,27 +3,36 @@ import datetime
 import os
 import time
 
+import numpy as np
+
 from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
+from lstar.Extraction import extract as extract_iclm
 from modelPadding import LSTMLanguageClasifier
 from pac_teacher import PACTeacher
 from random_words import confidence_interval_many, random_word, confidence_interval_subset
 
 FIELD_NAMES = ["alph_len",
 
-               "dfa_inter_states", "dfa_spec_states",
-               "dfa_extract_states", "dfa_inter_final",
-               "dfa_spec_final", "dfa_extract_final",
+               "dfa_inter_states", "dfa_inter_final",
+               'dfa_spec_states', 'dfa_spec_final',
+               'dfa_extract_specs_states', "dfa_extract_specs_final",
+               "dfa_extract_states", "dfa_extract_final",
+               "dfa_icml18_states", "dfa_icml18_final",
 
-               "lstm_layers", "lstm_hidden_dim", "lstm_dataset_learning", "lstm_dataset_testing",
-               "lstm_testing_acc", "lstm_val_acc", "lstm_time",
+               "rnn_layers", "rnn_hidden_dim", "rnn_dataset_learning", "rnn_dataset_testing",
+               "rnn_testing_acc", "rnn_val_acc", "rnn_time",
 
-               "extraction_time", "extraction_mistake",
+               "extraction_time_spec", "extraction_mistake_during",
+               "extraction_time", "mistake_time_after", "extraction_mistake_after",
+               "extraction_time_icml18",
 
-               "dist_lstm_vs_inter", "dist_lstm_vs_extr", "dist_extr_vs_inter",
-               "dist_lstm_specs", "dist_extract_specs"]
+               "dist_rnn_vs_inter", "dist_rnn_vs_extr", "dist_rnn_vs_extr_spec", "dist_rnn_vs_icml18",
+               "dist_inter_vs_extr", "dist_inter_vs_extr_spec", "dist_inter_vs_icml18",
+
+               "dist_specs_rnn", "dist_specs_extract", "dist_specs_extract_w_spec"]
 
 
 def write_csv_header(filename):
@@ -74,13 +83,13 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
                        word_traning_length=word_training_length
                        )
 
-    benchmark.update({"lstm_time": "{:.3}".format(time.time() - start_time),
-                      "lstm_hidden_dim": hidden_dim,
-                      "lstm_layers": num_layers,
-                      "lstm_testing_acc": "{:.3}".format(model.test_acc),
-                      "lstm_val_acc": "{:.3}".format(model.val_acc),
-                      "lstm_dataset_learning": model.num_of_train,
-                      "lstm_dataset_testing": model.num_of_test})
+    benchmark.update({"rnn_time": "{:.3}".format(time.time() - start_time),
+                      "rnn_hidden_dim": hidden_dim,
+                      "rnn_layers": num_layers,
+                      "rnn_testing_acc": "{:.3}".format(model.test_acc),
+                      "rnn_val_acc": "{:.3}".format(model.val_acc),
+                      "rnn_dataset_learning": model.num_of_train,
+                      "rnn_dataset_testing": model.num_of_test})
 
     print("time: {}".format(time.time() - start_time))
     return model
@@ -89,14 +98,17 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    dfa_extract = check_rnn_acc_to_spec(rnn, spec, benchmark)
-
+    extracted_dfas = check_rnn_acc_to_spec(rnn, spec, benchmark)
     if dir_name is not None:
         rnn.save_rnn(dir_name)
-        save_dfa_as_part_of_model(dir_name, dfa_extract, name="extract_dfa")
-        dfa_extract.draw_nicely(name="extract_dfa_figure", save_dir=dir_name)
+        for dfa, name in extracted_dfas:
+            if isinstance(name, DFA):
+                save_dfa_as_part_of_model(dir_name, dfa, name=name)
+            # dfa_extract.draw_nicely(name="_dfa_figure", save_dir=dir_name)
 
-    compute_distances(dfa, rnn, dfa_extract, spec[0].specificatio, benchmark)
+    models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0], extracted_dfas[2][0]]
+
+    compute_distances(models, spec[0].specification, benchmark)
 
 
 def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
@@ -104,67 +116,123 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
+    ##################################################
+    # Doing the model checking during a DFA extraction
+    ###################################################
+    print("Starting DFA extraction with model checking")
     start_time = time.time()
-    counter = teacher_pac.check_and_teach(student, spec,timeout = timeout)
-    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
+    counter = teacher_pac.check_and_teach(student, spec, timeout=timeout)
+    benchmark.update({"extraction_time_spec": "{:.3}".format(time.time() - start_time)})
+    dfa_extract_w_spec = student.dfa
+    dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
 
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_mistake": "",
-                          "dfa_spec_final": len(student.dfa.states),
-                          "dfa_extract_final": len(student.dfa.final_states)})
+        benchmark.update({"extraction_mistake_during": "",
+                          "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
+                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states)})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_mistake": counter[0],
-                          "dfa_spec_final": len(student.dfa.states),
-                          "dfa_extract_final": len(student.dfa.final_states)})
+        benchmark.update({"extraction_mistake_during": counter[0],
+                          "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
+                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states)})
+
+    ###################################################
+    # Doing the model checking after a DFA extraction
+    ###################################################
+    print("Starting DFA extraction w/o model checking")
+    start_time = time.time()
+    student = DecisionTreeLearner(teacher_pac)
+    teacher_pac.teach(student, timeout=timeout)
+    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
+
+    print("Model checking the extracted DFA")
+    counter = student.dfa.is_language_not_subset_of(spec[0].specification)
+    if counter is not None:
+        if not rnn.is_word_in(counter):
+            counter = None
+
+    benchmark.update({"mistake_time_after": "{:.3}".format(time.time() - start_time)})
+
+    dfa_extract = student.dfa
+    if counter is None:
+        print("No mistakes found ==> DFA learned:")
+        print(student.dfa)
+        benchmark.update({"extraction_mistake_after": "",
+                          "dfa_extract_states": len(dfa_extract.states),
+                          "dfa_extract_final": len(dfa_extract.final_states)})
+    else:
+        print("Mistakes found ==> Counter example: {}".format(counter))
+        benchmark.update({"extraction_mistake_after": counter,
+                          "dfa_extract_states": len(dfa_extract.states),
+                          "dfa_extract_final": len(dfa_extract.final_states)})
+
+    ###################################################
+    # Doing DFA extraction acc. to icml18
+    ###################################################
+    print("Starting DFA extraction acc to iclm18")
+    start_time = time.time()
+
+    dfa_iclm18 = extract_iclm(rnn, time_limit=timeout, initial_split_depth=10)
+
+    benchmark.update({"extraction_time_icml18": time.time() - start_time,
+                      "dfa_icml18_states": len(dfa_iclm18.Q),
+                      "dfa_icml18_final": len(dfa_iclm18.F)})
 
     print("Finished DFA extraction")
-    return student.dfa
+
+    return (dfa_extract_w_spec, "dfa_extract_W_spec"), \
+           (dfa_extract, "dfa_extract"), \
+           (dfa_iclm18, "dfa_icml18")
 
 
-def compute_distances(dfa_original, rnn, dfa_learned, dfa_spec, benchmark):
-    models = [dfa_original, rnn, dfa_learned]
+def compute_distances(models, dfa_spec, benchmark, epsilon=0.5, delta=0.01):
     print("Starting distance measuring")
-    epsilon = 0.005
-    delta = 0.001
-    output, samples = confidence_interval_many(models, random_word, epsilon=epsilon, delta=delta)
+    output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
-    if len(models) == 3:
-        print(" |----------------|----------------|----------------|-----------------|\n",
-              "|                |  DFA original  |      RNN       |    DFA learned  |\n",
-              "|----------------|----------------|----------------|-----------------|\n",
-              "|  DFA original  |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[0][0],
-                                                                                                output[0][1],
-                                                                                                output[0][2]),
-              "|----------------|----------------|----------------|-----------------|\n",
-              "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[1][0],
-                                                                                                output[1][1],
-                                                                                                output[1][2]),
-              "|----------------|----------------|----------------|-----------------|\n",
-              "|   DFA learned  |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[2][0],
-                                                                                                output[2][1],
-                                                                                                output[2][2]),
-              "|----------------|----------------|----------------|-----------------|\n")
-    else:
-        print(" |----------------|----------------|----------------|\n",
-              "|                |  DFA original  |      RNN       |\n",
-              "|----------------|----------------|----------------|\n",
-              "|  DFA original  |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[0][0], output[0][1]),
-              "|----------------|----------------|----------------|\n",
-              "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[1][0], output[1][1]),
-              "|----------------|----------------|----------------|\n")
+    print(output)
+    # if len(models) == 3:
+    #     print(" |----------------|----------------|----------------|-----------------|\n",
+    #           "|                |  DFA original  |      RNN       |    DFA learned  |\n",
+    #           "|----------------|----------------|----------------|-----------------|\n",
+    #           "|  DFA original  |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[0][0],
+    #                                                                                             output[0][1],
+    #                                                                                             output[0][2]),
+    #           "|----------------|----------------|----------------|-----------------|\n",
+    #           "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[1][0],
+    #                                                                                             output[1][1],
+    #                                                                                             output[1][2]),
+    #           "|----------------|----------------|----------------|-----------------|\n",
+    #           "|   DFA learned  |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[2][0],
+    #                                                                                             output[2][1],
+    #                                                                                             output[2][2]),
+    #           "|----------------|----------------|----------------|-----------------|\n")
+    # else:
+    #     print(" |----------------|----------------|----------------|\n",
+    #           "|                |  DFA original  |      RNN       |\n",
+    #           "|----------------|----------------|----------------|\n",
+    #           "|  DFA original  |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[0][0], output[0][1]),
+    #           "|----------------|----------------|----------------|\n",
+    #           "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[1][0], output[1][1]),
+    #           "|----------------|----------------|----------------|\n")
 
-    benchmark.update({"dist_lstm_vs_inter": "{:.4}".format(output[0][1]),
-                      "dist_lstm_vs_extr": "{:.4}".format(output[0][2]),
-                      "dist_extr_vs_inter": "{:.4}".format(output[2][1])})
+    benchmark.update({"dist_rnn_vs_inter": "{:.4}".format(output[1][0]),
+                      "dist_rnn_vs_extr_spec": "{:.4}".format(output[1][2]),
+                      "dist_rnn_vs_extr": "{:.4}".format(output[1][3]),
+                      "dist_rnn_vs_icml18": "{:.4}".format(output[1][4])})
 
-    a, _ = confidence_interval_subset(rnn, dfa_spec, samples, epsilon, delta)
-    b, _ = confidence_interval_subset(dfa_learned, dfa_spec, samples, epsilon, delta)
+    benchmark.update({"dist_inter_vs_extr_spec": "{:.4}".format(output[0][2]),
+                      "dist_inter_vs_extr": "{:.4}".format(output[0][3]),
+                      "dist_inter_vs_icml18": "{:.4}".format(output[0][4])})
+
+    a, _ = confidence_interval_subset(models[1], dfa_spec, samples, epsilon, delta)
+    b, _ = confidence_interval_subset(models[2], dfa_spec, samples, epsilon, delta)
+    c, _ = confidence_interval_subset(models[3], dfa_spec, samples, epsilon, delta)
     benchmark.update(
-        {"dist_lstm_specs": "{}".format(a),
-         "dist_extract_specs": "{}".format(b)})
+        {"dist_specs_rnn": "{}".format(a),
+         "dist_specs_extract_w_spec": "{}".format(b),
+         "dist_specs_extract": "{}".format(c)})
 
     print("Finished distance measuring")
 
@@ -172,7 +240,9 @@ def compute_distances(dfa_original, rnn, dfa_learned, dfa_spec, benchmark):
 def rand_benchmark(save_dir=None):
     dfa_inter = DFA(0, {0}, {0: {0: 0}})
 
-    alphabet = "abcde"
+    full_alphabet = "abcdefghijklmnopqrstuvwxyz"
+
+    alphabet = full_alphabet[0:np.random.randint(4, 6)]
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 
@@ -227,10 +297,15 @@ def learn_multiple_times(dfa, dir_save=None):
         if dir_save is not None:
             lstm.save_rnn(dir_save + "/" + "l-{}__h-{}".format(num_layers, hidden_dim))
 
+
 def run_multiple_spec_on_ltsm(ltsm, spec_dfas, messages):
     i = 1
     benchmark = {}
+    check_rnn_acc_to_spec(ltsm, [DFAChecker(spec_dfas[5], is_super_set=False)], benchmark,
+                          timeout=1800)
+
     for dfa, message in zip(spec_dfas, messages):
         print(message)
-        check_rnn_acc_to_spec(ltsm, [DFAChecker(dfa)], benchmark, timeout=1800)
+        check_rnn_acc_to_spec(ltsm, [DFAChecker(dfa)], benchmark,
+                              timeout=1800)
         print(benchmark)

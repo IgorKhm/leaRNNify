@@ -238,7 +238,7 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.5, delta=0.01):
 
 
 def rand_benchmark(save_dir=None):
-    dfa_inter = DFA(0, {0}, {0: {0: 0}})
+    dfa_spec, dfa_inter = DFA(0, {0}, {0: {0: 0}}), DFA(0, {0}, {0: {0: 0}})
 
     full_alphabet = "abcdefghijklmnopqrstuvwxyz"
 

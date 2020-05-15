@@ -57,9 +57,9 @@ def minimize_dfa(dfa: DFA) -> DFA:
 def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
               epoch=-1, num_of_exm_per_length=-1, word_training_length=-1):
     if hidden_dim == -1:
-        hidden_dim = len(dfa.states) * 3
+        hidden_dim = len(dfa.states + int(dfa.alphabet)) * 3
     if num_layers == -1:
-        num_layers = 2
+        num_layers = int(hidden_dim / 10) + 2
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
     if num_of_exm_per_length == -1:
@@ -247,7 +247,7 @@ def rand_benchmark(save_dir=None):
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa_inter.states) < 5:
-        dfa_rand1 = random_dfa(alphabet, min_states=5, max_states=10, min_final=2, max_final=5)
+        dfa_rand1 = random_dfa(alphabet, min_states=10, max_states=20, min_final=2, max_final=10)
         dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=7, min_final=4, max_final=5)
 
         dfa_inter = minimize_dfa(dfa_intersection(dfa_rand1, dfa_rand2))

@@ -187,7 +187,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
            (dfa_iclm18, "dfa_icml18")
 
 
-def compute_distances(models, dfa_spec, benchmark, epsilon=0.5, delta=0.01):
+def compute_distances(models, dfa_spec, benchmark, epsilon=0.001, delta=0.001):
     print("Starting distance measuring")
     output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))

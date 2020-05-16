@@ -271,7 +271,7 @@ def rand_benchmark(save_dir=None):
     return benchmark
 
 
-def run_rand_benchmarks(num_of_bench=10, save_dir=None):
+def run_rand_benchmarks(num_of_bench=20, save_dir=None):
     if save_dir is None:
         save_dir = "../models/random_bench_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))
         os.makedirs(save_dir)

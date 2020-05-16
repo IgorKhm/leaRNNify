@@ -32,7 +32,7 @@ FIELD_NAMES = ["alph_len",
                "dist_rnn_vs_inter", "dist_rnn_vs_extr", "dist_rnn_vs_extr_spec", "dist_rnn_vs_icml18",
                "dist_inter_vs_extr", "dist_inter_vs_extr_spec", "dist_inter_vs_icml18",
 
-               "dist_specs_rnn", "dist_specs_extract", "dist_specs_extract_w_spec"]
+               "dist_specs_rnn", "dist_specs_extract", "dist_specs_extract_w_spec", "statistic_checking_time"]
 
 
 def write_csv_header(filename):
@@ -217,16 +217,18 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.001, delta=0.001):
     #           "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[1][0], output[1][1]),
     #           "|----------------|----------------|----------------|\n")
 
-    benchmark.update({"dist_rnn_vs_inter": "{:.4}".format(output[1][0]),
-                      "dist_rnn_vs_extr_spec": "{:.4}".format(output[1][2]),
-                      "dist_rnn_vs_extr": "{:.4}".format(output[1][3]),
-                      "dist_rnn_vs_icml18": "{:.4}".format(output[1][4])})
+    benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
+                      "dist_rnn_vs_extr_spec": "{}".format(output[1][2]),
+                      "dist_rnn_vs_extr": "{}".format(output[1][3]),
+                      "dist_rnn_vs_icml18": "{}".format(output[1][4])})
 
-    benchmark.update({"dist_inter_vs_extr_spec": "{:.4}".format(output[0][2]),
-                      "dist_inter_vs_extr": "{:.4}".format(output[0][3]),
-                      "dist_inter_vs_icml18": "{:.4}".format(output[0][4])})
+    benchmark.update({"dist_inter_vs_extr_spec": "{}".format(output[0][2]),
+                      "dist_inter_vs_extr": "{}".format(output[0][3]),
+                      "dist_inter_vs_icml18": "{}".format(output[0][4])})
 
-    a, _ = confidence_interval_subset(models[1], dfa_spec, samples, epsilon, delta)
+    start_time = time.time()
+    a, samples = confidence_interval_subset(models[1], dfa_spec, _, epsilon, delta)
+    benchmark.update({"statistic_checking_time": time.time() - start_time})
     b, _ = confidence_interval_subset(models[2], dfa_spec, samples, epsilon, delta)
     c, _ = confidence_interval_subset(models[3], dfa_spec, samples, epsilon, delta)
     benchmark.update(

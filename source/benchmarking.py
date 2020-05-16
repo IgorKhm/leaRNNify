@@ -57,9 +57,9 @@ def minimize_dfa(dfa: DFA) -> DFA:
 def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
               epoch=-1, num_of_exm_per_length=-1, word_training_length=-1):
     if hidden_dim == -1:
-        hidden_dim = len(dfa.states) * 3
+        hidden_dim = len(dfa.states) * 6
     if num_layers == -1:
-        num_layers = 2
+        num_layers = 3
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
     if num_of_exm_per_length == -1:

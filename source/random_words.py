@@ -1,5 +1,5 @@
 import sys
-
+import time
 import numpy as np
 import torch
 
@@ -118,11 +118,16 @@ def confidence_interval_subset(language_inf, language_sup, samples, confidence=0
 
     :return:
     """
+    start_time = time.time()
     n = np.log(2 / confidence) / (2 * width * width)
 
     mistakes = 0
 
+
     for w in samples:
         if (language_inf.is_word_in(w)) and (not language_sup.is_word_in(w)):
+            if mistake = 0:
+                print("first mistake")
+                print(time.time() - start_time)
             mistakes = mistakes + 1
     return mistakes / n, samples

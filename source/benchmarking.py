@@ -227,7 +227,7 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.001, delta=0.001):
                       "dist_inter_vs_icml18": "{}".format(output[0][4])})
 
     start_time = time.time()
-    a, samples = confidence_interval_subset(models[1], dfa_spec, _, epsilon, delta)
+    a, samples = confidence_interval_subset(models[1], dfa_spec, confidence=epsilon, width=delta)
     benchmark.update({"statistic_checking_time": time.time() - start_time})
     b, _ = confidence_interval_subset(models[2], dfa_spec, samples, epsilon, delta)
     c, _ = confidence_interval_subset(models[3], dfa_spec, samples, epsilon, delta)

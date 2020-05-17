@@ -38,6 +38,7 @@ class DFA:
         return q in self.F
 
     def draw_nicely(self,force=False,maximum=60): #todo: if two edges are identical except for letter, merge them and note both the letters
+        return
         if (not force) and len(self.Q) > maximum:
             return
 

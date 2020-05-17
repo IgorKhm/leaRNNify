@@ -153,7 +153,6 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
         if not rnn.is_word_in(counter):
             counter = None
 
-
     benchmark.update({"mistake_time_after": "{:.3}".format(time.time() - start_time)})
 
     dfa_extract = minimize_dfa(student.dfa)
@@ -245,7 +244,7 @@ def rand_benchmark(save_dir=None):
 
     full_alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-    alphabet = full_alphabet[0:np.random.randint(4, 10)]
+    alphabet = full_alphabet[0:np.random.randint(4, 6)]
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 

@@ -126,7 +126,7 @@ def confidence_interval_subset(language_inf, language_sup, samples, confidence=0
 
     for w in samples:
         if (language_inf.is_word_in(w)) and (not language_sup.is_word_in(w)):
-            if mistake = 0:
+            if mistakes == 0:
                 print("first mistake")
                 print(time.time() - start_time)
             mistakes = mistakes + 1

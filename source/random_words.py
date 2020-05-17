@@ -110,7 +110,7 @@ def confidence_interval_many(languages, sampler, confidence=0.001, width=0.005, 
 
 
 # change epsilon and delta...
-def confidence_interval_subset(language_inf, language_sup, samples, confidence=0.001, width=0.001):
+def confidence_interval_subset(language_inf, language_sup, samples = None, confidence=0.001, width=0.001):
     """
     Getting the confidence interval(width,confidence) using the Chernoff-Hoeffding bound.
     The number of examples that one needs to use is n= log(2 / confidence) / (2 * width * width.

@@ -118,8 +118,8 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
                                                                                                     np.mean(
                                                                                                         val_losses)))
                     valid_loss_min = np.mean(val_losses)
-                    if valid_loss_min < 0.0005:
-                        return test_acc
+                    # if valid_loss_min < 0.00005:
+                    #     return test_acc
     return test_acc
 
 

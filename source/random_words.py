@@ -62,8 +62,8 @@ def confidence_interval_many(languages, sampler, confidence=0.001, width=0.005, 
     if samples is None:
         samples = []
         while len(samples) <= n:
-            if len(samples) % 1000 == 0:
-                sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
+            # if len(samples) % 1000 == 0:
+            #     sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
             samples.append(sampler(languages[0].alphabet))
 
         sys.stdout.write('\r Creating words:  100/100 done \n')
@@ -88,9 +88,10 @@ def confidence_interval_many(languages, sampler, confidence=0.001, width=0.005, 
         #     in_langs_lists.append(l)
         #
         # else:
+        sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
         in_langs_lists.append([lang.is_word_in(w) for w in samples])
         i = i + 1
-        sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
+
 
     output = []
     for i in range(num_of_lan):

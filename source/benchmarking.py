@@ -153,9 +153,10 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
         if not rnn.is_word_in(counter):
             counter = None
 
+
     benchmark.update({"mistake_time_after": "{:.3}".format(time.time() - start_time)})
 
-    dfa_extract = student.dfa
+    dfa_extract = minimize_dfa(student.dfa)
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
@@ -187,7 +188,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
            (dfa_iclm18, "dfa_icml18")
 
 
-def compute_distances(models, dfa_spec, benchmark, epsilon=0.001, delta=0.001):
+def compute_distances(models, dfa_spec, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
     output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))

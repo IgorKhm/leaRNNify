@@ -127,12 +127,11 @@ def confidence_interval_subset(language_inf, language_sup, samples = None, confi
         while len(samples) <= n:
             # if len(samples) % 1000 == 0:
             #     sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
-            samples.append(random_word(languages[0].alphabet))
+            samples.append(random_word(language_inf.alphabet))
 
         sys.stdout.write('\r Creating words:  100/100 done \n')
 
     mistakes = 0
-
 
     for w in samples:
         if (language_inf.is_word_in(w)) and (not language_sup.is_word_in(w)):
@@ -141,3 +140,61 @@ def confidence_interval_subset(language_inf, language_sup, samples = None, confi
                 print(time.time() - start_time)
             mistakes = mistakes + 1
     return mistakes / n, samples
+
+
+def confidence_interval_many_for_reuse(languages, sampler, previous_answers=None, confidence=0.001, width=0.005,
+                                       samples=None):
+    """
+    Produce the probabilistic distance of the given languages. Using the Chernoff-Hoeffding bound we get that
+    in order to have:
+        P(S - E[S]>width)< confidence
+        S = 1/n(n empirical examples)
+
+    the number of examples that one needs to use is:
+        #examples = log(2 / confidence) / (2 * width * width)
+
+    For more details:
+    https://en.wikipedia.org/wiki/Hoeffding%27s_inequality
+
+    """
+    num_of_lan = len(languages)
+    if num_of_lan < 2:
+        raise Exception("Need at least 2 languages to compare")
+
+    n = np.log(2 / confidence) / (2 * width * width)
+    # print("size of sample:" + str(int(n)))
+    if samples is None:
+        samples = []
+        while len(samples) <= n:
+            # if len(samples) % 1000 == 0:
+            # sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
+            samples.append(sampler(languages[0].alphabet))
+
+        # sys.stdout.write('\r Creating words:  100/100 done \n')
+    in_langs_lists = []
+    # i = 0
+    # sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
+    torch.cuda.empty_cache()
+    if previous_answers is None:
+        for lang in languages:
+            in_langs_lists.append([lang.is_word_in(w) for w in samples])
+            # i = i + 1
+            # sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
+    else:
+        in_langs_lists = previous_answers
+        in_langs_lists.append([languages[2].is_word_in(w) for w in samples])
+        # print(in_langs_lists)
+    output = []
+    for _ in range(num_of_lan):
+        output.append([1] * num_of_lan)
+
+    for lang1 in range(num_of_lan):
+        for lang2 in range(num_of_lan):
+            if lang1 == lang2:
+                output[lang1][lang2] = 0
+            elif output[lang1][lang2] == 1:
+                output[lang1][lang2] = ([(in_langs_lists[lang1])[i] == (in_langs_lists[lang2])[i] for i in
+                                         range(len(samples))].count(False)) / n
+
+    print()
+    return output, samples, in_langs_lists[0:2]

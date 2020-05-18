@@ -101,9 +101,9 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
     extracted_dfas = check_rnn_acc_to_spec(rnn, spec, benchmark)
     if dir_name is not None:
         rnn.save_rnn(dir_name)
-        for dfa, name in extracted_dfas:
+        for extracted_dfa, name in extracted_dfas:
             if isinstance(name, DFA):
-                save_dfa_as_part_of_model(dir_name, dfa, name=name)
+                save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
             # dfa_extract.draw_nicely(name="_dfa_figure", save_dir=dir_name)
 
     models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0], extracted_dfas[2][0]]

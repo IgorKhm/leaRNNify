@@ -244,12 +244,12 @@ def rand_benchmark(save_dir=None):
 
     full_alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-    alphabet = full_alphabet[0:np.random.randint(4, 6)]
+    alphabet = full_alphabet[0:np.random.randint(4, 5)]
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa_inter.states) < 5 or len(dfa_spec.states) < 2 or (len(dfa_inter.states) > 35):
-        dfa_rand1 = random_dfa(alphabet, min_states=10, max_states=20, min_final=2, max_final=10)
+        dfa_rand1 = random_dfa(alphabet, min_states=10, max_states=15, min_final=2, max_final=10)
         dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=7, min_final=4, max_final=5)
 
         dfa_inter = minimize_dfa(dfa_intersection(dfa_rand1, dfa_rand2))

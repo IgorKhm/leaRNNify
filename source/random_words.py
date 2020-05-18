@@ -127,7 +127,7 @@ def confidence_interval_subset(language_inf, language_sup, samples = None, confi
         while len(samples) <= n:
             # if len(samples) % 1000 == 0:
             #     sys.stdout.write('\r Creating words:  {}/100 done'.format(str(int((len(samples) / n) * 100))))
-            samples.append(sampler(languages[0].alphabet))
+            samples.append(random_word(languages[0].alphabet))
 
         sys.stdout.write('\r Creating words:  100/100 done \n')
 

@@ -248,7 +248,7 @@ def rand_benchmark(save_dir=None):
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 
-    while len(dfa_inter.states) < 5 or len(dfa_spec.states) < 2 or (len(dfa_inter.states) > 35):
+    while len(dfa_inter.states) < 5 or len(dfa_spec.states) < 2 or (len(dfa_inter.states) > 30):
         dfa_rand1 = random_dfa(alphabet, min_states=10, max_states=15, min_final=2, max_final=10)
         dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=7, min_final=4, max_final=5)
 
@@ -273,7 +273,7 @@ def rand_benchmark(save_dir=None):
     return benchmark
 
 
-def run_rand_benchmarks(num_of_bench=20, save_dir=None):
+def run_rand_benchmarks(num_of_bench=10, save_dir=None):
     if save_dir is None:
         save_dir = "../models/random_bench_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))
         os.makedirs(save_dir)

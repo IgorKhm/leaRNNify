@@ -1,12 +1,13 @@
 import time
 from collections import namedtuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from dfa import DFA
 from dfa_check import DFAChecker
 from modelPadding import LSTMLanguageClasifier
-from random_words import random_word
+from random_words import random_word, confidence_interval_many, confidence_interval_many_for_reuse
 from teacher import Teacher
 
 
@@ -74,6 +75,66 @@ class PACTeacher(Teacher):
             if counter is None:
                 break
             learner.new_counterexample(counter, do_hypothesis_in_batches=False)
+
+    def teach_and_trace(self, student, dfa_model, timeout=900):
+        # DataPoint = namedtuple('DataPoint', ['dfa_num_states', 'dist_dfa', 'dist_rnn'])
+        # points = []
+
+        output, smaples, answers = confidence_interval_many_for_reuse([dfa_model, self.model, student.dfa], random_word,
+                                                                      width=0.1, confidence=0.1)
+        dist_to_dfa_vs = []
+        dist_to_rnn_vs = []
+        num_of_states = []
+
+        # points.append(DataPoint(len(student.dfa.states), output[0, 2], output[1, 2]))
+
+        a = None
+        student.teacher = self
+        i = 0
+        start_time = time.time()
+        t100 = start_time
+        while True:
+            if time.time() - start_time > timeout:
+                break
+            i = i + 1
+            if i % 100 == 0:
+                print("this is the {}th round".format(i))
+                print("{} time has passed from the begging and {} from the last 100".format(time.time() - start_time,
+                                                                                            time.time() - t100))
+                t100 = time.time()
+            counter = self.equivalence_query(student.dfa)
+            if counter is None:
+                break
+            student.new_counterexample(counter, do_hypothesis_in_batches=False)
+
+            print('compute dist')
+            output, _, answers = confidence_interval_many_for_reuse([dfa_model, self.model, student.dfa], random_word,
+                                                                    answers, samples=smaples, width=0.1, confidence=0.1)
+            # points.append(DataPoint(len(student.dfa.states), output[0, 2], output[1, 2]))
+
+            dist_to_dfa_vs.append(output[0][2])
+            dist_to_rnn_vs.append(output[1][2])
+            num_of_states.append(len(student.dfa.states))
+            print('done compute dist')
+
+        # plt.plot(num_of_states, dist_to_dfa_vs, label="DvD",color='green', linestyle='dashed')
+        # plt.title('original dfa vs extracted dfa')
+        #
+        # plt.plot(num_of_states, dist_to_rnn_vs, label="RvD",)
+        # plt.title('rnn vs extracted dfa')
+        # plt.legend()
+        # plt.figure()
+
+
+        #
+        fig = plt.figure(dpi=1200)
+        ax = fig.add_subplot(2, 1, 1)
+
+        ax.plot(num_of_states,dist_to_dfa_vs, color='blue', lw=2)
+
+        ax.set_yscale('log')
+
+        plt.show()
 
     def check_and_teach(self, learner, checkers: [DFAChecker], timeout=900):
         learner.teacher = self

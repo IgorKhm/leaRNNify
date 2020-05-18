@@ -369,7 +369,7 @@ class LSTMLanguageClasifier:
         h = self._ltsm.init_hidden(len(words))
         # words, lengths, _ = pad_collate((words, [0]*len(words)))
 
-        x_lens = [len(x) for x in words]
+        x_lens = [len(word) if len(word) != 0 else 1 for word in words ]
         # y_lens = [len(y) for y in yy]
 
         xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0).to(self._ltsm.device)

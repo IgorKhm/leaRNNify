@@ -10,7 +10,7 @@ from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
 from lstar.Extraction import extract as extract_iclm
-from modelPadding import LSTMLanguageClasifier
+from modelPadding import RNNLanguageClasifier
 from pac_teacher import PACTeacher
 from random_words import confidence_interval_many, random_word, confidence_interval_subset
 
@@ -72,7 +72,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
         word_training_length = len(dfa.states) + 5
 
     start_time = time.time()
-    model = LSTMLanguageClasifier()
+    model = RNNLanguageClasifier()
     model.train_a_lstm(dfa.alphabet, dfa.is_word_in,
                        hidden_dim=hidden_dim,
                        num_layers=num_layers,
@@ -100,7 +100,7 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
 
     extracted_dfas = check_rnn_acc_to_spec(rnn, spec, benchmark)
     if dir_name is not None:
-        rnn.save_rnn(dir_name)
+        rnn.save_lstm(dir_name)
         for extracted_dfa, name in extracted_dfas:
             if isinstance(name, DFA):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
@@ -192,30 +192,6 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.005, delta=0.001):
     output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
     print(output)
-    # if len(models) == 3:
-    #     print(" |----------------|----------------|----------------|-----------------|\n",
-    #           "|                |  DFA original  |      RNN       |    DFA learned  |\n",
-    #           "|----------------|----------------|----------------|-----------------|\n",
-    #           "|  DFA original  |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[0][0],
-    #                                                                                             output[0][1],
-    #                                                                                             output[0][2]),
-    #           "|----------------|----------------|----------------|-----------------|\n",
-    #           "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[1][0],
-    #                                                                                             output[1][1],
-    #                                                                                             output[1][2]),
-    #           "|----------------|----------------|----------------|-----------------|\n",
-    #           "|   DFA learned  |-----{:.4f}-----|-----{:.4f}-----|------{:.4f}-----|\n".format(output[2][0],
-    #                                                                                             output[2][1],
-    #                                                                                             output[2][2]),
-    #           "|----------------|----------------|----------------|-----------------|\n")
-    # else:
-    #     print(" |----------------|----------------|----------------|\n",
-    #           "|                |  DFA original  |      RNN       |\n",
-    #           "|----------------|----------------|----------------|\n",
-    #           "|  DFA original  |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[0][0], output[0][1]),
-    #           "|----------------|----------------|----------------|\n",
-    #           "|      RNN       |-----{:.4f}-----|-----{:.4f}-----|\n".format(output[1][0], output[1][1]),
-    #           "|----------------|----------------|----------------|\n")
 
     benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
                       "dist_rnn_vs_extr_spec": "{}".format(output[1][2]),
@@ -248,7 +224,7 @@ def rand_benchmark(save_dir=None):
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 
-    while len(dfa_inter.states) < 5 or len(dfa_spec.states) < 2 or (len(dfa_inter.states) > 20):
+    while len(dfa_inter.states) < 5 or len(dfa_spec.states) < 2 or (len(dfa_inter.states) > 25):
         dfa_rand1 = random_dfa(alphabet, min_states=10, max_states=15, min_final=2, max_final=10)
         dfa_rand2 = random_dfa(alphabet, min_states=5, max_states=7, min_final=4, max_final=5)
 
@@ -297,7 +273,7 @@ def learn_multiple_times(dfa, dir_save=None):
                          word_training_length=len(dfa.states) + 10)
         print(benchmarks)
         if dir_save is not None:
-            lstm.save_rnn(dir_save + "/" + "l-{}__h-{}".format(num_layers, hidden_dim))
+            lstm.save_lstm(dir_save + "/" + "l-{}__h-{}".format(num_layers, hidden_dim))
 
 
 def run_multiple_spec_on_ltsm(ltsm, spec_dfas, messages):

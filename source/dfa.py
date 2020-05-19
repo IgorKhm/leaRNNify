@@ -292,6 +292,7 @@ def random_dfa(alphabet, min_states=10, max_states=100, min_final=1, max_final=1
     return DFA(initial_state, final_states.tolist(), transitions)
 
 
+
 def load_dfa_dot(filename: str) -> DFA:
     mode = "init"
     transitions = {}
@@ -307,11 +308,15 @@ def load_dfa_dot(filename: str) -> DFA:
             elif mode == "states":
                 # reading states:
                 if "__start0" in line:
-                    initial_state = line.split(" -> ")[1]
-                    initial_state = initial_state[:len(initial_state) - 1]
+                    initial_state = line.split(" -> (")[1]
+                    initial_state = tuple([''])
                     mode = "transitions"
                     continue
-                new_state = line.split(" ")[0]
+                new_state = (line.split(") [")[0]).replace("\'", "")
+                new_state = new_state.replace("(", '')
+                new_state = new_state.replace(" ", '')
+                new_state = new_state.split(",")
+                new_state = tuple(new_state)
                 transitions.update({new_state: {}})
                 states.append(new_state)
                 if "doublecircle" in line:
@@ -323,10 +328,11 @@ def load_dfa_dot(filename: str) -> DFA:
                 line = line.replace('[label="', ";")
                 line = line.replace('"]\n', "")
                 split = line.split(";")
-                t = transitions[split[0]]
-                t.update({split[2]: split[1]})
+                state_from = tuple(((((split[0].replace('(', '')).replace(')', '')).replace('\'', '')).replace(' ', '')).split(","))
+                state_to = tuple(((((split[1].replace('(', '')).replace(')', '')).replace('\'', '')).replace(' ', '')).split(","))
+                t = transitions[state_from]
+                t.update({split[2]: state_to})
     return DFA(initial_state, final_states, transitions)
-    # dfa.draw_nicely(name="upload")
 
 
 def save_dfa_as_part_of_model(dir_name, dfa: DFA, name="dfa", force_overwrite=False):

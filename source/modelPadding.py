@@ -303,9 +303,9 @@ class LSTM(nn.Module):
         return hidden
 
 
-class LSTMLanguageClasifier:
+class RNNLanguageClasifier:
     def __init__(self):
-        self._ltsm = None
+        self._rnn = None
         self._initial_state = None
         self._current_state = None
         self._char_to_int = None
@@ -332,32 +332,32 @@ class LSTMLanguageClasifier:
             device = torch.device("cpu")
             print("GPU not available, CPU used")
 
-        self._ltsm = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5,
-                          device=device)
+        self._rnn = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5,
+                         device=device)
         train_loader, val_loader, test_loader = make_training_set(alphahbet, target, batch_size=batch_size,
                                                                   num_of_exm_per_length=num_of_exm_per_lenght,
                                                                   max_length=self.word_traning_length)
         self.num_of_train, self.num_of_test = len(train_loader) * batch_size, len(test_loader) * batch_size
 
-        self.val_acc = teach(self._ltsm, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
+        self.val_acc = teach(self._rnn, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=500)
 
-        self._initial_state = self._ltsm.init_hidden(1)
+        self._initial_state = self._rnn.init_hidden(1)
         self._current_state = self._initial_state
 
-        self.test_acc = test_rnn(self._ltsm, test_loader, batch_size, device)
+        self.test_acc = test_rnn(self._rnn, test_loader, batch_size, device)
         self.states = {
-            str(self.from_state_to_list(self._ltsm.init_hidden(1))): ""}
+            str(self.from_state_to_list(self._rnn.init_hidden(1))): ""}
         return
 
     def is_word_in(self, word):
-        h = self._ltsm.init_hidden(1)
+        h = self._rnn.init_hidden(1)
         if len(word) == 0:
-            length = torch.tensor([1]).to(self._ltsm.device)
-            array = torch.tensor([[0]]).to(self._ltsm.device)
+            length = torch.tensor([1]).to(self._rnn.device)
+            array = torch.tensor([[0]]).to(self._rnn.device)
         else:
-            length = torch.tensor([len(word)]).to(self._ltsm.device)
-            array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)
-        output, h = self._ltsm(array, length, h)
+            length = torch.tensor([len(word)]).to(self._rnn.device)
+            array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._rnn.device)
+        output, h = self._rnn(array, length, h)
         return bool(output > 0.5)
 
     def is_words_in_batch(self, words):
@@ -366,45 +366,40 @@ class LSTMLanguageClasifier:
         # for word in words:
         #     lengths.append(len(word))
         #     words_in_num.append([self._char_to_int[l] for l in word])
-        h = self._ltsm.init_hidden(len(words))
+        h = self._rnn.init_hidden(len(words))
         # words, lengths, _ = pad_collate((words, [0]*len(words)))
 
         x_lens = [len(word) if len(word) != 0 else 1 for word in words ]
         # y_lens = [len(y) for y in yy]
 
-        xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0).to(self._ltsm.device)
+        xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0).to(self._rnn.device)
 
-        output, _ = self._ltsm(xx_pad, x_lens, h)
+        output, _ = self._rnn(xx_pad, x_lens, h)
         return output
 
-    def is_word_letter_by_letter(self, letter):
-        letter = torch.from_numpy(np.array([[self._char_to_int[letter]]]))
-        output, self._current_state = self._ltsm(letter, self._current_state)
-        return bool(output > 0.5)
-
     def reset_current_to_init(self):
-        self._current_state = self._ltsm.init_hidden(1)
+        self._current_state = self._rnn.init_hidden(1)
 
-    def save_rnn(self, dirName, force_overwrite=False):
-        if not os.path.isdir(dirName):
-            os.makedirs(dirName)
-        elif os.path.exists(dirName + "/meta") & (not force_overwrite):
-            if input("there already exists a model in {}. Enter y if you want to overwrite it.".format(dirName)) != "y":
+    def save_lstm(self, dir_name, force_overwrite=False):
+        if not os.path.isdir(dir_name):
+            os.makedirs(dir_name)
+        elif os.path.exists(dir_name + "/meta") & (not force_overwrite):
+            if input("there already exists a model in {}. Enter y if you want to overwrite it.".format(dir_name)) != "y":
                 return
-        with open(dirName + "/meta", "w+") as file:
+        with open(dir_name + "/meta", "w+") as file:
             file.write("Metadata:\n")
             file.write("alphabet = ")
             file.write(str(self.alphabet[0]))
             for l in range(len(self.alphabet) - 1):
                 file.write("," + str(self.alphabet[l + 1]))
             file.write("\n")
-            file.write("embedding_dim = " + str(self._ltsm.embedding_dim) + "\n")
-            file.write("hidden_dim = " + str(self._ltsm.hidden_dim) + "\n")
-            file.write("n_layers = " + str(self._ltsm.n_layers) + "\n")
+            file.write("embedding_dim = " + str(self._rnn.embedding_dim) + "\n")
+            file.write("hidden_dim = " + str(self._rnn.hidden_dim) + "\n")
+            file.write("n_layers = " + str(self._rnn.n_layers) + "\n")
             file.write("torch_save = state_dict.pt")
-        torch.save(self._ltsm.state_dict(), dirName + "/state_dict.pt")
+        torch.save(self._rnn.state_dict(), dir_name + "/state_dict.pt")
 
-    def load_rnn(self, dir):
+    def load_lstm(self, dir_name):
         is_cuda = torch.cuda.is_available()
         if is_cuda:
             device = torch.device("cuda")
@@ -413,7 +408,7 @@ class LSTMLanguageClasifier:
             device = torch.device("cpu")
             print("GPU not available, CPU used")
 
-        with open(dir + "/meta", "r") as file:
+        with open(dir_name + "/meta", "r") as file:
             for line in file.readlines():
                 splitline = line.split(" = ")
                 if splitline[0] == "alphabet":
@@ -427,17 +422,17 @@ class LSTMLanguageClasifier:
                 elif splitline[0] == "torch_save":
                     torch_save = splitline[1].rstrip('\n')
 
-        self._ltsm = LSTM(len(self.alphabet) + 1, 1, embedding_dim, hidden_dim, n_layers, drop_prob=0.5, device=device)
-        self._ltsm.load_state_dict(torch.load(dir + "/" + torch_save, map_location={'cuda:0': 'cpu'}))
-        self._ltsm.eval()
+        self._rnn = LSTM(len(self.alphabet) + 1, 1, embedding_dim, hidden_dim, n_layers, drop_prob=0.5, device=device)
+        self._rnn.load_state_dict(torch.load(dir_name + "/" + torch_save, map_location={'cuda:0': 'cpu'}))
+        self._rnn.eval()
         torch.no_grad()
 
-        self._initial_state = self._ltsm.init_hidden(1)
+        self._initial_state = self._rnn.init_hidden(1)
         self._current_state = self._initial_state
         self._char_to_int = {self.alphabet[i]: i + 1 for i in range(len(self.alphabet))}
         self._char_to_int.update({"": 0})
         self.states = {
-            str(self.from_state_to_list(self._ltsm.init_hidden(1))): ""}  # maybe move to load? or some other place?
+            str(self.from_state_to_list(self._rnn.init_hidden(1))): ""}  # maybe move to load? or some other place?
 
     ######################################################
     #                 Code For Lstar                     #
@@ -448,32 +443,25 @@ class LSTMLanguageClasifier:
 
     def get_first_RState(self):
         start_time = time.time()
-        list_state = self.from_state_to_list(self._ltsm.init_hidden(1))
+        list_state = self.from_state_to_list(self._rnn.init_hidden(1))
         self.extra_time = self.extra_time + time.time() - start_time
         return list_state, bool(self.is_word_in(""))
 
     def get_next_RState(self, state, char):
-        # state = self.from_list_to_state(state)
-        # print(len(self.states.keys()))
-        # print(self.states.values())
         start_time = time.time()
         word = self.states[str(state)] + char
-        h = self._ltsm.init_hidden(1)
-        # word = char
-        # h = self.from_list_to_state(state)
+        h = self._rnn.init_hidden(1)
         if len(word) == 0:
-            length = torch.tensor([1]).to(self._ltsm.device)
-            array = torch.tensor([[0]]).to(self._ltsm.device)
+            length = torch.tensor([1]).to(self._rnn.device)
+            array = torch.tensor([[0]]).to(self._rnn.device)
         else:
-            length = torch.tensor([len(word)]).to(self._ltsm.device)
-            array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._ltsm.device)
-        output, h = self._ltsm(array, length, h)
+            length = torch.tensor([len(word)]).to(self._rnn.device)
+            array = torch.tensor([[self._char_to_int[l] for l in word]]).to(self._rnn.device)
+        output, h = self._rnn(array, length, h)
 
         state_list = self.from_state_to_list(h)
         self.states.update({str(state_list): word})
         self.extra_time = self.extra_time + time.time() - start_time
-        # print(self.extra_time)
-
         return state_list, bool(output > 0.5)
 
     def from_state_to_list(self, state):
@@ -486,6 +474,6 @@ class LSTMLanguageClasifier:
         return list_state
 
     def from_list_to_state(self, list_state):
-        hiden = torch.tensor([[list_state[self._ltsm.hidden_dim:]]])
-        cell = torch.tensor([[list_state[:self._ltsm.hidden_dim]]])
-        return (hiden.to(self._ltsm.device), cell.to(self._ltsm.device))
+        hiden = torch.tensor([[list_state[self._rnn.hidden_dim:]]])
+        cell = torch.tensor([[list_state[:self._rnn.hidden_dim]]])
+        return (hiden.to(self._rnn.device), cell.to(self._rnn.device))

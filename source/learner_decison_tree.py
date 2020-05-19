@@ -88,6 +88,7 @@ class DecisionTreeLearner(Learner):
         self._root = TreeNode(in_lan=teacher.membership_query(tuple()))
         self._leafs = [self._root]
         self.dfa = self._produce_hypothesis()
+        self.prev_examples = {}
 
     def _sift(self, word):
         current_node = self._root
@@ -95,7 +96,9 @@ class DecisionTreeLearner(Learner):
             if current_node in self._leafs:
                 return current_node
 
-            if self.teacher.membership_query(word + current_node.name):
+            if self.prev_examples.setdefault(word + current_node.name,
+                                             self.teacher.membership_query(word + current_node.name)):
+            # if self.teacher.membership_query(word + current_node.name):
                 current_node = current_node.right
             else:
                 current_node = current_node.left

@@ -6,7 +6,7 @@ import numpy as np
 
 from dfa import DFA
 from dfa_check import DFAChecker
-from modelPadding import LSTMLanguageClasifier
+from modelPadding import RNNLanguageClasifier
 from random_words import random_word, confidence_interval_many, confidence_interval_many_for_reuse
 from teacher import Teacher
 
@@ -22,7 +22,9 @@ class PACTeacher(Teacher):
         self._log_one_minus_epsilon = np.log(1 - epsilon)
         self._num_equivalence_asked = 0
 
-        self.is_counter_example_in_batches = isinstance(self.model, LSTMLanguageClasifier)
+        self.prev_examples = {}
+
+        self.is_counter_example_in_batches = isinstance(self.model, RNNLanguageClasifier)
 
     def equivalence_query(self, dfa: DFA):
         """
@@ -33,24 +35,21 @@ class PACTeacher(Teacher):
 
         if dfa.is_word_in("") != self.model.is_word_in(""):
             return ""
-
+        batch = []
+        batch_size = 200
         number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
+        # print(number_of_rounds)
         for i in range(number_of_rounds):
             word = random_word(self.model.alphabet)
-            if dfa.is_word_in(word) != self.model.is_word_in(word):
+            if self.model.is_word_in(word) != dfa.is_word_in(word):
                 return word
-            # ------------------------------------------------------
-            # Code for going through batches and not word by word:#
-            #
-            # for i in range(int(number_of_rounds % 100)):
-            #     words = [random_word(self.model.alphabet) for _ in range(100)]
-            #     rnn_labels = self.model.is_words_in_batch(words) > 0.5
-            #     dfa_labels = [dfa.is_word_in(word) for word in words]
-            #     # word = random_word(self.model.alphabet)
-            #     for rnn_label, dfa_label in zip(rnn_labels, dfa_labels):
-            #         if rnn_label != dfa_label:
-            #             return words[dfa_labels.index(dfa_label)]
-            # ------------------------------------------------------
+            # batch.append(word)
+            # i += 1
+            # if i % batch_size == 0:
+            #     for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, [dfa.is_word_in(w) for w in batch],
+            #                        batch):
+            #         if x != y:
+            #             return w
         return None
 
     def membership_query(self, word):
@@ -63,7 +62,9 @@ class PACTeacher(Teacher):
         t100 = start_time
         while True:
             if time.time() - start_time > timeout:
+                print(time.time() - start_time)
                 return
+            print(i)
             i = i + 1
             if i % 100 == 0:
                 print("this is the {}th round".format(i))
@@ -77,9 +78,6 @@ class PACTeacher(Teacher):
             learner.new_counterexample(counter, do_hypothesis_in_batches=False)
 
     def teach_and_trace(self, student, dfa_model, timeout=900):
-        # DataPoint = namedtuple('DataPoint', ['dfa_num_states', 'dist_dfa', 'dist_rnn'])
-        # points = []
-
         output, smaples, answers = confidence_interval_many_for_reuse([dfa_model, self.model, student.dfa], random_word,
                                                                       width=0.1, confidence=0.1)
         dist_to_dfa_vs = []
@@ -125,12 +123,11 @@ class PACTeacher(Teacher):
         # plt.legend()
         # plt.figure()
 
-
         #
         fig = plt.figure(dpi=1200)
         ax = fig.add_subplot(2, 1, 1)
 
-        ax.plot(num_of_states,dist_to_dfa_vs, color='blue', lw=2)
+        ax.plot(num_of_states, dist_to_dfa_vs, color='blue', lw=2)
 
         ax.set_yscale('log')
 

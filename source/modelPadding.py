@@ -339,7 +339,7 @@ class RNNLanguageClasifier:
                                                                   max_length=self.word_traning_length)
         self.num_of_train, self.num_of_test = len(train_loader) * batch_size, len(test_loader) * batch_size
 
-        self.val_acc = teach(self._rnn, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=500)
+        self.val_acc = teach(self._rnn, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
 
         self._initial_state = self._rnn.init_hidden(1)
         self._current_state = self._initial_state

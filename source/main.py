@@ -150,4 +150,4 @@ print("Begin")
 
 #
 #
-run_rand_benchmarks_wo_model_checking(20)
+run_rand_benchmarks_wo_model_checking(10)

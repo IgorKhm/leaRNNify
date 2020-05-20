@@ -50,32 +50,29 @@ def minimize_dfa(dfa: DFA) -> DFA:
 
 
 def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
-              epoch=-1, num_of_exm_per_length=-1, word_training_length=-1):
+              epoch=-1,num_of_examples=-1):
     if hidden_dim == -1:
-        hidden_dim = len(dfa.states) * 10
+        hidden_dim = len(dfa.states) * 20
     if num_layers == -1:
         num_layers = 1 + int(len(dfa.states)/10)
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
-    if num_of_exm_per_length == -1:
-        num_of_exm_per_length = 15000
     if epoch == -1:
         epoch = 10
     if batch_size == -1:
         batch_size = 20
-    if word_training_length == -1:
-        word_training_length = len(dfa.states) + 5
+    if num_of_examples == -1:
+        num_of_examples = 10000
 
     start_time = time.time()
     model = RNNLanguageClasifier()
-    model.train_a_lstm(dfa.alphabet, dfa.is_word_in,
+    model.train_a_lstm(dfa.alphabet, dfa.is_word_in, random_word,
                        hidden_dim=hidden_dim,
                        num_layers=num_layers,
                        embedding_dim=embedding_dim,
                        batch_size=batch_size,
                        epoch=epoch,
-                       num_of_exm_per_lenght=num_of_exm_per_length,
-                       word_traning_length=word_training_length
+                       num_of_examples=num_of_examples
                        )
 
     benchmark.update({"rnn_time": "{:.3}".format(time.time() - start_time),

@@ -189,6 +189,44 @@ def make_training_set(alphabet, target, num_of_exm_per_length=2000, max_length=5
     return train_loader, val_loader, test_loader
 
 
+def make_training_set_sampler(alphabet, target, sampler, num_of_examples, batch_size=50):
+    int2char = ({i + 1: alphabet[i] for i in range(len(alphabet))})
+    int2char.update({0: ""})
+    char2int = {alphabet[i]: i + 1 for i in range(len(alphabet))}
+    char2int.update({"": 0})
+
+    train = create_words_set_sampler(alphabet, batch_size, int2char,char2int, target, sampler, num_of_examples)
+
+    validation = create_words_set_sampler(alphabet, batch_size, int2char,char2int, target, sampler, num_of_examples / 10)
+
+    val_length = int(len(validation) // batch_size * 0.4) * batch_size
+    val, test = torch.utils.data.random_split(validation, [val_length, len(validation) - val_length])
+
+    train_loader = DataLoader(train, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+    val_loader = DataLoader(val, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+    test_loader = DataLoader(test, shuffle=True, batch_size=batch_size, collate_fn=pad_collate)
+
+    return train_loader, val_loader, test_loader
+
+
+def create_words_set_sampler(alphabet, batch_size, int2char,char2int, target, sampler, num_of_examples):
+    words_list = [np.array([char2int[l] for l in sampler(alphabet)]) for _ in range(int(num_of_examples))]
+
+
+    round_num_batches = int(len(words_list) - len(words_list) % batch_size)
+    words_list = words_list[:round_num_batches - 1]
+    label_list = [target(from_array_to_word(int2char, w)) for w in words_list]
+
+    print("Positive examples: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
+
+    words_list = [w if len(w) != 0 else np.array([0]) for w in words_list ]
+
+    # words_list.insert(0, np.array([0]))
+    # label_list.insert(0, target(""))
+
+    return WordsDataset(words_list, label_list)
+
+
 def create_words_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_length, target):
     words_list = []
     lengths = list(range(1, max_length))  # + list(range(20, max_length, 5))
@@ -201,14 +239,14 @@ def create_words_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_
 
     print("Positive examples: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
 
-    if sum([int(lab) for lab in label_list]) < 0.20 * len(words_list):
+    if sum([int(lab) for lab in label_list]) < 0.05 * len(words_list):
         print("not enough positive examples")
         print("before: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
         add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,
                                          words_list, True)
         print("after: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
 
-    elif sum([int(not lab) for lab in label_list]) < 0.20 * len(words_list):
+    elif sum([int(not lab) for lab in label_list]) < 0.05 * len(words_list):
         print("not enough positive examples")
         print("before: {:.3}".format(sum([int(not lab) for lab in label_list]) / len(words_list)))
         add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,
@@ -317,8 +355,8 @@ class RNNLanguageClasifier:
         self.val_acc = 0
         self.extra_time = 0
 
-    def train_a_lstm(self, alphahbet, target, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
-                     num_of_exm_per_lenght=5000, word_traning_length=40, epoch=20):
+    def train_a_lstm(self, alphahbet, target, sampler, embedding_dim=10, hidden_dim=10, num_layers=2, batch_size=20,
+                     num_of_examples=5000, word_traning_length=40, epoch=20):
         self.word_traning_length = word_traning_length
         self._char_to_int = {alphahbet[i]: i + 1 for i in range(len(alphahbet))}
         self._char_to_int.update({"": 0})
@@ -334,9 +372,10 @@ class RNNLanguageClasifier:
 
         self._rnn = LSTM(len(alphahbet) + 1, 1, embedding_dim, hidden_dim, num_layers, drop_prob=0.5,
                          device=device)
-        train_loader, val_loader, test_loader = make_training_set(alphahbet, target, batch_size=batch_size,
-                                                                  num_of_exm_per_length=num_of_exm_per_lenght,
-                                                                  max_length=self.word_traning_length)
+        # make_training_set(alphahbet, target)
+        train_loader, val_loader, test_loader = \
+            make_training_set_sampler(alphahbet, target, sampler, num_of_examples, batch_size)
+
         self.num_of_train, self.num_of_test = len(train_loader) * batch_size, len(test_loader) * batch_size
 
         self.val_acc = teach(self._rnn, batch_size, train_loader, val_loader, device, epochs=epoch, print_every=2000)
@@ -369,7 +408,7 @@ class RNNLanguageClasifier:
         h = self._rnn.init_hidden(len(words))
         # words, lengths, _ = pad_collate((words, [0]*len(words)))
 
-        x_lens = [len(word) if len(word) != 0 else 1 for word in words ]
+        x_lens = [len(word) if len(word) != 0 else 1 for word in words]
         # y_lens = [len(y) for y in yy]
 
         xx_pad = pad_sequence(words_torch, batch_first=True, padding_value=0).to(self._rnn.device)

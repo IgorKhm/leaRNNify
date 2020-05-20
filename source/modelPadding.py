@@ -201,14 +201,14 @@ def create_words_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_
 
     print("Positive examples: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
 
-    if sum([int(lab) for lab in label_list]) < 0.05 * len(words_list):
+    if sum([int(lab) for lab in label_list]) < 0.20 * len(words_list):
         print("not enough positive examples")
         print("before: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
         add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,
                                          words_list, True)
         print("after: {:.3}".format(sum([int(lab) for lab in label_list]) / len(words_list)))
 
-    elif sum([int(not lab) for lab in label_list]) < 0.05 * len(words_list):
+    elif sum([int(not lab) for lab in label_list]) < 0.20 * len(words_list):
         print("not enough positive examples")
         print("before: {:.3}".format(sum([int(not lab) for lab in label_list]) / len(words_list)))
         add_examples_with_specific_label(alphabet, int2char, label_list, max_length, num_of_exm_per_length, target,

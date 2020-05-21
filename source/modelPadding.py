@@ -76,16 +76,16 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
         for inputs, labels, inp_len in train_loader:
             counter += 1
             # h = tuple([e.data for e in h])
-
+            a,b = [x for x.clone() in inputs] ,[x for x.clone() in labels]
             inputs, labels = inputs.to(device), labels.to(device)
             model.zero_grad()
             output, _ = model(inputs, inp_len, h)
             try:
                 loss = criterion(output.squeeze(), labels.float())
             except:
-                print(inputs)
+                print(a)
+                print(b)
                 print(output)
-                print(labels)
                 exit()
             # batch_ce_loss = 0.0
             # for i in range(output.size(0)):

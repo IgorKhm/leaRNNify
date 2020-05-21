@@ -76,7 +76,7 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
         for inputs, labels, inp_len in train_loader:
             counter += 1
             # h = tuple([e.data for e in h])
-            a,b = [x.clone() for x in inputs] ,[x.clone() for x in labels]
+            # a,b = [x.clone() for x in inputs] ,[x.clone() for x in labels]
             inputs, labels = inputs.to(device), labels.to(device)
             model.zero_grad()
             output, _ = model(inputs, inp_len, h)
@@ -332,11 +332,10 @@ class LSTM(nn.Module):
 
         out = out.view(batch_size, -1)
         # outb = torch.tensor([out[i][output_lengths[i] - 1] for i in range(20)])
-        outc = out[:, -1]
         output_lengths = (output_lengths - 1).to(self.device)
         outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
 
-        return outb, hidden
+        return torch.clamp(outb, min=0), hidden
 
     def init_hidden(self, batch_size):
         # weight = next(self.parameters()).data

@@ -24,6 +24,8 @@ class WordsDataset(Dataset):
 
 def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criterion=nn.BCELoss(),
           epochs=10, print_every=500):
+
+    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     counter = 0
     clip = 5
@@ -330,7 +332,7 @@ class LSTM(nn.Module):
         output_lengths = (output_lengths - 1).to(self.device)
         outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
 
-        return torch.clamp(outb, min=0,max=1), hidden
+        return torch.clamp(outb, min=0,ma), hidden
 
     def init_hidden(self, batch_size):
         # weight = next(self.parameters()).data

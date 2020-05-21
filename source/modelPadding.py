@@ -80,13 +80,8 @@ def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criteri
             inputs, labels = inputs.to(device), labels.to(device)
             model.zero_grad()
             output, _ = model(inputs, inp_len, h)
-            try:
-                loss = criterion(output.squeeze(), labels.float())
-            except:
-                print(a)
-                print(b)
-                print(output)
-                exit()
+            loss = criterion(output.squeeze(), labels.float())
+
             # batch_ce_loss = 0.0
             # for i in range(output.size(0)):
             #     j = output[i][inp_len[i] - 1]
@@ -335,7 +330,7 @@ class LSTM(nn.Module):
         output_lengths = (output_lengths - 1).to(self.device)
         outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
 
-        return torch.clamp(outb, min=0), hidden
+        return torch.clamp(outb, min=0,max=1), hidden
 
     def init_hidden(self, batch_size):
         # weight = next(self.parameters()).data

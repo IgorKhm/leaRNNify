@@ -161,8 +161,8 @@ def rand_benchmark(save_dir=None):
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa.states) < 5:
-        max_final_states = np.random.randint(5, 15)
-        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=20, min_final=2,
+        max_final_states = np.random.randint(5, 25)
+        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=30, min_final=2,
                                max_final=max_final_states)
         dfa = minimize_dfa(dfa_rand1)
 

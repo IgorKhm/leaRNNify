@@ -341,7 +341,7 @@ def save_dfa_as_part_of_model(dir_name, dfa: DFA, name="dfa", force_overwrite=Fa
     """
     if not os.path.isdir(dir_name):
         os.makedirs(dir_name)
-    elif os.path.exists(dir_name + "/dfa.dot") & (not force_overwrite):
+    elif os.path.exists(dir_name + "/"+name+".dot") & (not force_overwrite):
         if input("the save {} exists. Enter y if you want to overwrite it.".format(name)) != "y":
             return
     dfa.save(dir_name + "/" + name)
@@ -363,3 +363,26 @@ def dfa_intersection(model1: DFA, model2: DFA) -> DFA:
     new_dfa = DFA(new_init_states, new_final_states, new_transitions)
 
     return new_dfa
+
+
+class DFANoisy(DFA):
+    def __init__(self, init_state, final_states, transitions, mistake_prob=0.01):
+        super().__init__(init_state, final_states, transitions)
+        self.mistake_prob = mistake_prob
+        self.known_mistakes = {}
+
+    def is_word_in(self, word):
+        if word in self.known_mistakes:
+            return self.known_mistakes[word]
+
+        state = self.init_state
+        for letter in word:
+            state = self.transitions[state][letter]
+        label = state in self.final_states
+
+        if np.random.randint(0, int(1 / self.mistake_prob)) == 0:
+            self.known_mistakes.update({word: not label})
+            return not label
+        else:
+            self.known_mistakes.update({word: label})
+            return label

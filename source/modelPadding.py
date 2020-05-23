@@ -22,7 +22,7 @@ class WordsDataset(Dataset):
         return torch.from_numpy(self.words[idx]), self.labels[idx]
 
 
-def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criterion=nn.BCELoss(),
+def teach(model, batch_size, train_loader, val_loader, device, lr=0.001, criterion=nn.BCELoss(),
           epochs=10, print_every=500):
 
     criterion = nn.MSELoss()
@@ -332,7 +332,7 @@ class LSTM(nn.Module):
         output_lengths = (output_lengths - 1).to(self.device)
         outb = out.gather(1, output_lengths.view(-1, 1)).squeeze()
 
-        return torch.clamp(outb, min=0,ma), hidden
+        return outb, hidden
 
     def init_hidden(self, batch_size):
         # weight = next(self.parameters()).data

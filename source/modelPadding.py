@@ -22,7 +22,7 @@ class WordsDataset(Dataset):
         return torch.from_numpy(self.words[idx]), self.labels[idx]
 
 
-def teach(model, batch_size, train_loader, val_loader, device, lr=0.005, criterion=nn.BCELoss(),
+def teach(model, batch_size, train_loader, val_loader, device, lr=0.001, criterion=nn.BCELoss(),
           epochs=10, print_every=500):
 
     criterion = nn.MSELoss()

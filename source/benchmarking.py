@@ -10,9 +10,11 @@ from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
 from lstar.Extraction import extract as extract_iclm
+from lstar.Tomita_Grammars import tomita_1, tomita_2, tomita_3, tomita_4, tomita_5, tomita_6, tomita_7
 from modelPadding import RNNLanguageClasifier
 from pac_teacher import PACTeacher
 from random_words import confidence_interval_many, random_word, confidence_interval_subset
+from functools import partial
 
 FIELD_NAMES = ["alph_len",
 
@@ -35,15 +37,19 @@ FIELD_NAMES = ["alph_len",
                "dist_specs_rnn", "dist_specs_extract", "dist_specs_extract_w_spec", "statistic_checking_time"]
 
 
-def write_csv_header(filename):
+def write_csv_header(filename, fieldnames=None):
+    if fieldnames is None:
+        fieldnames = FIELD_NAMES
     with open(filename, mode='a') as employee_file:
-        writer = csv.DictWriter(employee_file, fieldnames=FIELD_NAMES)
+        writer = csv.DictWriter(employee_file, fieldnames=fieldnames)
         writer.writeheader()
 
 
-def write_line_csv(filename, benchmark):
+def write_line_csv(filename, benchmark, fieldnames=None):
+    if fieldnames is None:
+        fieldnames = FIELD_NAMES
     with open(filename, mode='a') as benchmark_summary:
-        writer = csv.DictWriter(benchmark_summary, fieldnames=FIELD_NAMES)
+        writer = csv.DictWriter(benchmark_summary, fieldnames=fieldnames)
         writer.writerow(benchmark)
 
 
@@ -54,6 +60,7 @@ def minimize_dfa(dfa: DFA) -> DFA:
     return student.dfa
 
 
+#
 def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
               epoch=-1, num_of_exm_per_length=-1, word_training_length=-1):
     if hidden_dim == -1:
@@ -95,8 +102,46 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     return model
 
 
+def learn_target(target, alphabet, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
+                 epoch=-1, num_of_examples=-1):
+    if hidden_dim == -1:
+        hidden_dim = 100
+    if num_layers == -1:
+        num_layers = 3
+    if embedding_dim == -1:
+        embedding_dim = len(alphabet) * 2
+    if epoch == -1:
+        epoch = 10
+    if batch_size == -1:
+        batch_size = 20
+    if num_of_examples == -1:
+        num_of_examples = 50000
+
+    start_time = time.time()
+    model = RNNLanguageClasifier()
+    model.train_a_lstm(alphabet, target, random_word,
+                       hidden_dim=hidden_dim,
+                       num_layers=num_layers,
+                       embedding_dim=embedding_dim,
+                       batch_size=batch_size,
+                       epoch=epoch,
+                       num_of_examples=num_of_examples
+                       )
+
+    benchmark.update({"rnn_time": "{:.3}".format(time.time() - start_time),
+                      "rnn_hidden_dim": hidden_dim,
+                      "rnn_layers": num_layers,
+                      "rnn_testing_acc": "{:.3}".format(model.test_acc),
+                      "rnn_val_acc": "{:.3}".format(model.val_acc),
+                      "rnn_dataset_learning": model.num_of_train,
+                      "rnn_dataset_testing": model.num_of_test})
+
+    print("time: {}".format(time.time() - start_time))
+    return model
+
+
 def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
-    rnn = learn_dfa(dfa, benchmark)
+    rnn = learn_dfa(dfa, benchmark, epoch=3, num_of_exm_per_length=2000)
 
     extracted_dfas = check_rnn_acc_to_spec(rnn, spec, benchmark)
     if dir_name is not None:
@@ -108,7 +153,7 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
 
     models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0], extracted_dfas[2][0]]
 
-    compute_distances(models, spec[0].specification, benchmark)
+    compute_distances(models, spec[0].specification, benchmark, delta=0.05, epsilon=0.05)
 
 
 def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
@@ -187,6 +232,42 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
            (dfa_iclm18, "dfa_icml18")
 
 
+def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
+    rnn.num_of_membership_queries = 0
+    teacher_pac = PACTeacher(rnn)
+
+    ###################################################
+    # DFA extraction
+    ###################################################
+    print("Starting DFA extraction w/o model checking")
+    start_time = time.time()
+    student = DecisionTreeLearner(teacher_pac)
+    teacher_pac.teach(student, timeout=timeout)
+    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
+
+    dfa_extract = minimize_dfa(student.dfa)
+    print(student.dfa)
+    benchmark.update({"dfa_extract_states": len(dfa_extract.states),
+                      "dfa_extract_final": len(dfa_extract.final_states),
+                      "num_of_mem_quarries_extracted": rnn.num_of_membership_queries})
+
+    # ###################################################
+    # # Doing DFA extraction acc. to icml18
+    # ###################################################
+    # print("Starting DFA extraction acc to iclm18")
+    # start_time = time.time()
+    #
+    # dfa_iclm18 = extract_iclm(rnn, time_limit=timeout, initial_split_depth=10)
+    #
+    # benchmark.update({"extraction_time_icml18": time.time() - start_time,
+    #                   "dfa_icml18_states": len(dfa_iclm18.Q),
+    #                   "dfa_icml18_final": len(dfa_iclm18.F)})
+    #
+    # print("Finished DFA extraction")
+
+    return dfa_extract
+
+
 def compute_distances(models, dfa_spec, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
     output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
@@ -211,6 +292,19 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.005, delta=0.001):
         {"dist_specs_rnn": "{}".format(a),
          "dist_specs_extract_w_spec": "{}".format(b),
          "dist_specs_extract": "{}".format(c)})
+
+    print("Finished distance measuring")
+
+
+def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
+    print("Starting distance measuring")
+    output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
+    print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
+    print(output)
+
+    benchmark.update({"dist_rnn_vs_target": "{}".format(output[1][0]),
+                      "dist_rnn_vs_extr": "{}".format(output[1][2]),
+                      "dist_target_vs_extr": "{}".format(output[0][2])})
 
     print("Finished distance measuring")
 
@@ -287,3 +381,124 @@ def run_multiple_spec_on_ltsm(ltsm, spec_dfas, messages):
         check_rnn_acc_to_spec(ltsm, [DFAChecker(dfa)], benchmark,
                               timeout=1800)
         print(benchmark)
+
+
+class Lang:
+    def __init__(self, target, alphabet):
+        self.target = target
+        self.alphabet = alphabet
+
+    def is_word_in(self, word):
+        return self.target(word)
+
+
+def e_commerce_dfa():
+    dfa = DFA("0", {"0,2,3,4,5"},
+              {"0": {"os": "2", "gAP": "4", "gSC": "1", "bPSC": "1", "ds": "1", "eSC": "1", "aPSC": "1"},
+               "1": {"os": "1", "gAP": "1", "gSC": "1", "bPSC": "1", "ds": "1", "eSC": "1", "aPSC": "1"},
+               "2": {"os": "2", "gAP": "3", "gSC": "2", "bPSC": "1", "ds": "0", "eSC": "2", "aPSC": "1"},
+               "3": {"os": "3", "gAP": "3", "gSC": "3", "bPSC": "1", "ds": "4", "eSC": "3", "aPSC": "5"},
+               "4": {"os": "3", "gAP": "4", "gSC": "1", "bPSC": "1", "ds": "1", "eSC": "1", "aPSC": "1"},
+               "5": {"os": "3", "gAP": "5", "gSC": "5", "bPSC": "3", "ds": "4", "eSC": "3", "aPSC": "5"}})
+    return dfa
+
+
+def alternating_bit_dfa():
+    dfa = DFA("s0r1", {"s0r1"}, {"s0r1": {"msg0": "s0r0", "msg1": "sink", "ack0": "sink", "ack1": "s0r1"},
+                                 "s0r0": {"msg0": "s0r0", "msg1": "sink", "ack0": "s1r0", "ack1": "sink"},
+                                 "s1r0": {"msg0": "sink", "msg1": "s1r1", "ack0": "s1r0", "ack1": "sink"},
+                                 "s1r1": {"msg0": "sink", "msg1": "s1r1", "ack0": "sink", "ack1": "s0r1"},
+                                 "sink": {"msg0": "sink", "msg1": "sink", "ack0": "sink", "ack1": "sink"}})
+    return dfa
+
+
+def balanced_parentheses(word):
+    count = 0
+    for letter in word:
+        if letter == '(':
+            count += 1
+        elif letter == ')':
+            count -= 1
+            if count < 0:
+                return False
+    return count == 0
+
+
+def target_from_tuple(target, word):
+    return target(''.join(word))
+
+
+def run_specific_benchmarks():
+    dir_name = "../models/specific/models/"
+    summary_csv = "../models/specific/summary.csv"
+    alphabet = ('0', '1')
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_1", "tomita_1", partial(target_from_tuple,
+                                                                                            tomita_1))
+    write_csv_header("../models/specific/summary.csv", benchmark.keys())
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_2", "tomita_2", partial(target_from_tuple,
+                                                                                            tomita_2))
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_3", "tomita_3", partial(target_from_tuple,
+                                                                                            tomita_3))
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_4", "tomita_4", partial(target_from_tuple,
+                                                                                            tomita_4))
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_5", "tomita_5", partial(target_from_tuple,
+                                                                                            tomita_5))
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_6", "tomita_6", partial(target_from_tuple,
+                                                                                            tomita_6))
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    benchmark = specific_lan_benchmark(alphabet, dir_name + "tomita_7", "tomita_7", partial(target_from_tuple,
+                                                                                            tomita_7))
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    dfa = alternating_bit_dfa()
+    benchmark = specific_lan_benchmark(dfa.alphabet, dir_name + "alternating_bit_dfa", "alternating_bit_dfa",
+                                       dfa.is_word_in)
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    dfa = e_commerce_dfa()
+    benchmark = specific_lan_benchmark(dfa.alphabet, dir_name + "e_commerce_dfa", "e_commerce_dfa",
+                                       dfa.is_word_in)
+    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+    alphabets = '()abcdefghijklmnopqrstuvwxyz'
+    for i in range(6):
+        alphabet = alphabets[0:2 + i * 5]
+        benchmark = specific_lan_benchmark(alphabet, dir_name + "balanced_parentheses_" + str(len(alphabet - 2)),
+                                           "balanced_parentheses" + str(len(alphabet - 2)), balanced_parentheses)
+        write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+
+def specific_lan_benchmark(alphabet, dir_name, name, target):
+    benchmark = {"name": name,
+                 "alphabet": len(alphabet)}
+
+    # learn target + extract
+    rnn = learn_target(target, alphabet, benchmark)
+    dfa_extracted = extract_dfa_from_rnn(rnn, benchmark)
+
+    # save models:
+    rnn.save_lstm(dir_name)
+    save_dfa_as_part_of_model(dir_name, dfa_extracted, name=name)
+    if len(dfa_extracted.states) < 50:
+        dfa_extracted.draw_nicely(name="dfa_extracted_figure", save_dir=dir_name)
+
+    # distance:
+    models = [Lang(target, alphabet), rnn, dfa_extracted]
+    rnn.num_of_membership_queries = 0
+    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
+
+    benchmark.update({"membership_queries_distance": rnn.num_of_membership_queries})
+
+    return benchmark

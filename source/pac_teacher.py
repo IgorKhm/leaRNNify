@@ -35,22 +35,25 @@ class PACTeacher(Teacher):
 
         if dfa.is_word_in("") != self.model.is_word_in(""):
             return ""
-        batch = []
-        batch_size = 200
+
         number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
-        # print(number_of_rounds)
-        for i in range(number_of_rounds):
-            word = random_word(self.model.alphabet)
-            if self.model.is_word_in(word) != dfa.is_word_in(word):
-                return word
-            # batch.append(word)
-            # i += 1
-            # if i % batch_size == 0:
-            #     for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, [dfa.is_word_in(w) for w in batch],
-            #                        batch):
-            #         if x != y:
-            #             return w
-        return None
+
+        if isinstance(self.model, RNNLanguageClasifier):
+            batch_size = 200
+            for i in range(int(number_of_rounds/batch_size)+1):
+                batch = [random_word(self.model.alphabet) for _ in range(batch_size)]
+                for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, [dfa.is_word_in(w) for w in batch],
+                                   batch):
+                    if x != y:
+                        return w
+            return None
+
+        else:
+            for i in range(number_of_rounds):
+                word = random_word(self.model.alphabet)
+                if self.model.is_word_in(word) != dfa.is_word_in(word):
+                    return word
+            return None
 
     def membership_query(self, word):
         return self.model.is_word_in(word)
@@ -64,7 +67,7 @@ class PACTeacher(Teacher):
             if time.time() - start_time > timeout:
                 print(time.time() - start_time)
                 return
-            print(i)
+            # print(i)
             i = i + 1
             if i % 100 == 0:
                 print("this is the {}th round".format(i))
@@ -75,7 +78,7 @@ class PACTeacher(Teacher):
             counter = self.equivalence_query(learner.dfa)
             if counter is None:
                 break
-            learner.new_counterexample(counter, do_hypothesis_in_batches=False)
+            learner.new_counterexample(counter, self.is_counter_example_in_batches)
 
     def teach_and_trace(self, student, dfa_model, timeout=900):
         output, smaples, answers = confidence_interval_many_for_reuse([dfa_model, self.model, student.dfa], random_word,
@@ -154,7 +157,7 @@ class PACTeacher(Teacher):
                     break
             if counter_example.word is not None:
                 if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
-                    learner.new_counterexample(counter_example[0], do_hypothesis_in_batches=False)
+                    learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
                 else:
                     print('found counter mistake in the model: ', counter_example)
                     return counter_example
@@ -166,4 +169,4 @@ class PACTeacher(Teacher):
                 if counter_example is None:
                     return None
                 else:
-                    learner.new_counterexample(counter_example, do_hypothesis_in_batches=False)
+                    learner.new_counterexample(counter_example, self.is_counter_example_in_batches)

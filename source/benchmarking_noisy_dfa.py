@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model
+from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model, DFANoisy
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
@@ -18,16 +18,10 @@ FIELD_NAMES = ["alph_len",
 
                "dfa_states", "dfa_final",
                "dfa_extract_states", "dfa_extract_final",
-               "dfa_icml18_states", "dfa_icml18_final",
-
-               "rnn_layers", "rnn_hidden_dim", "rnn_dataset_learning", "rnn_dataset_testing",
-               "rnn_testing_acc", "rnn_val_acc", "rnn_time",
 
                "extraction_time",
-               "extraction_time_icml18",
 
-               "dist_rnn_vs_inter", "dist_rnn_vs_extr", "dist_rnn_vs_icml18",
-               "dist_inter_vs_extr", "dist_inter_vs_icml18"]
+               "dist_dfa_vs_noisy", "dist_dfa_vs_extr", "dist_noisy_vs_extr"]
 
 
 def write_csv_header(filename):
@@ -50,29 +44,32 @@ def minimize_dfa(dfa: DFA) -> DFA:
 
 
 def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-1, batch_size=-1,
-              epoch=-1,num_of_examples=-1):
+              epoch=-1, num_of_exm_per_length=-1, word_training_length=-1):
     if hidden_dim == -1:
-        hidden_dim = len(dfa.states) * 20
+        hidden_dim = len(dfa.states) * 6
     if num_layers == -1:
-        num_layers = 1 + int(len(dfa.states)/10)
+        num_layers = 3
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
+    if num_of_exm_per_length == -1:
+        num_of_exm_per_length = 15000
     if epoch == -1:
         epoch = 10
     if batch_size == -1:
         batch_size = 20
-    if num_of_examples == -1:
-        num_of_examples = 150000
+    if word_training_length == -1:
+        word_training_length = len(dfa.states) + 5
 
     start_time = time.time()
     model = RNNLanguageClasifier()
-    model.train_a_lstm(dfa.alphabet, dfa.is_word_in, random_word,
+    model.train_a_lstm(dfa.alphabet, dfa.is_word_in,
                        hidden_dim=hidden_dim,
                        num_layers=num_layers,
                        embedding_dim=embedding_dim,
                        batch_size=batch_size,
                        epoch=epoch,
-                       num_of_examples=num_of_examples
+                       num_of_exm_per_lenght=num_of_exm_per_length,
+                       word_traning_length=word_training_length
                        )
 
     benchmark.update({"rnn_time": "{:.3}".format(time.time() - start_time),
@@ -87,27 +84,25 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     return model
 
 
-def learn_and_check(dfa: DFA, benchmark, dir_name=None):
-    rnn = learn_dfa(dfa, benchmark)
-
-    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=60)
+def extract_mesaure(dfa: DFA, benchmark, dir_name=None):
+    dfa_noisy = DFANoisy(dfa.init_state, dfa.final_states, dfa.transitions, mistake_prob=0.001)
+    extracted_dfa = check_rnn_acc_to_spec(dfa_noisy, benchmark, timeout=900)
     if dir_name is not None:
-        rnn.save_lstm(dir_name)
-        for extracted_dfa, name in extracted_dfas:
-            if isinstance(name, DFA):
-                save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
+        save_dfa_as_part_of_model(dir_name, extracted_dfa, name="extracted_dfa")
 
-    models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
-    compute_distances_no_model_checking(models, benchmark, delta=0.05, epsilon=0.05)
+    models = [dfa, dfa_noisy, extracted_dfa]
+
+    compute_distances(models, benchmark)
 
 
-def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn)
+def check_rnn_acc_to_spec(dfa, benchmark, timeout=900):
+    teacher_pac = PACTeacher(dfa)
+    student = DecisionTreeLearner(teacher_pac)
 
+    print("Starting DFA extraction")
     ###################################################
-    # DFA extraction
+    # Doing the model checking after a DFA extraction
     ###################################################
-    print("Starting DFA extraction w/o model checking")
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)
     teacher_pac.teach(student, timeout=timeout)
@@ -118,70 +113,49 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     benchmark.update({"dfa_extract_states": len(dfa_extract.states),
                       "dfa_extract_final": len(dfa_extract.final_states)})
 
-    ###################################################
-    # Doing DFA extraction acc. to icml18
-    ###################################################
-    print("Starting DFA extraction acc to iclm18")
-    start_time = time.time()
-
-    dfa_iclm18 = extract_iclm(rnn, time_limit=timeout, initial_split_depth=10)
-
-    benchmark.update({"extraction_time_icml18": time.time() - start_time,
-                      "dfa_icml18_states": len(dfa_iclm18.Q),
-                      "dfa_icml18_final": len(dfa_iclm18.F)})
-
-    print("Finished DFA extraction")
-
-    return (dfa_extract, "dfa_extract"), (dfa_iclm18, "dfa_icml18")
+    return dfa_extract
 
 
-def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
+def compute_distances(models, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
     output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
     print(output)
 
-    benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
-                      "dist_rnn_vs_extr": "{}".format(output[1][2]),
-                      "dist_rnn_vs_icml18": "{}".format(output[1][3])})
-
-    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2]),
-                      "dist_inter_vs_icml18": "{}".format(output[0][3])})
+    benchmark.update({"dist_dfa_vs_noisy": "{}".format(output[0][1]),
+                      "dist_dfa_vs_extr": "{}".format(output[0][2]),
+                      "dist_noisy_vs_extr": "{}".format(output[1][2])})
 
     print("Finished distance measuring")
 
 
 def rand_benchmark(save_dir=None):
-    dfa = DFA(0, {0}, {0: {0: 0}})
-
     full_alphabet = "abcdefghijklmnopqrstuvwxyz"
 
-    alphabet = full_alphabet[0:5]
+    alphabet = full_alphabet[0:np.random.randint(4, 10)]
     benchmark = {}
     benchmark.update({"alph_len": len(alphabet)})
 
-    while len(dfa.states) < 5:
-        max_final_states = np.random.randint(5, 25)
-        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=30, min_final=2,
-                               max_final=max_final_states)
-        dfa = minimize_dfa(dfa_rand1)
+    max_final = np.random.randint(6, 40)
+
+    dfa_rand = random_dfa(alphabet, min_states=max_final + 1, max_states=50, min_final=5, max_final=max_final)
+    dfa = minimize_dfa(dfa_rand)
 
     benchmark.update({"dfa_states": len(dfa.states), "dfa_final": len(dfa.final_states)})
 
     if save_dir is not None:
         save_dfa_as_part_of_model(save_dir, dfa, name="dfa")
-        dfa.draw_nicely(name="dfa", save_dir=save_dir)
 
     print("DFA to learn {}".format(dfa))
 
-    learn_and_check(dfa, benchmark, save_dir)
+    extract_mesaure(dfa, benchmark, save_dir)
 
     return benchmark
 
 
-def run_rand_benchmarks_wo_model_checking(num_of_bench=10, save_dir=None):
+def run_rand_benchmarks_noisy_dfa(num_of_bench=10, save_dir=None):
     if save_dir is None:
-        save_dir = "../models/random_bench_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))
+        save_dir = "../models/random_bench_noisy_dfa_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))
         os.makedirs(save_dir)
 
     write_csv_header(save_dir + "/test.csv")

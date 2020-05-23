@@ -90,7 +90,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    extracted_dfas = check_rnn_acc_to_spec(rnn, benchmark, timeout=900)
+    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=60)
     if dir_name is not None:
         rnn.save_lstm(dir_name)
         for extracted_dfa, name in extracted_dfas:
@@ -98,10 +98,10 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
 
     models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
-    compute_distances(models, benchmark)
+    compute_distances_no_model_checking(models, benchmark, delta=0.05, epsilon=0.05)
 
 
-def check_rnn_acc_to_spec(rnn, benchmark, timeout=900):
+def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     teacher_pac = PACTeacher(rnn)
 
     ###################################################
@@ -135,7 +135,7 @@ def check_rnn_acc_to_spec(rnn, benchmark, timeout=900):
     return (dfa_extract, "dfa_extract"), (dfa_iclm18, "dfa_icml18")
 
 
-def compute_distances(models, benchmark, epsilon=0.005, delta=0.001):
+def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
     output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))

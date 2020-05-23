@@ -2,7 +2,7 @@
 
 import random
 import string
-from Training_Functions import make_train_set_for_target
+from lstar.Training_Functions import make_train_set_for_target
 
 bp_other_letters = string.ascii_lowercase  #probably avoid putting '$' in here because that's my dummy letter somewhere in the network (todo: something more general)
 alphabet_bp = "()"+bp_other_letters

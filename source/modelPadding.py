@@ -284,7 +284,7 @@ def add_examples_with_specific_label_sampler(alphabet, label_list, num_of_exampl
 
     while len(new_examples) < (0.05 * len(words_list)) and current_try < max_tries:
         words = set()
-        for _ in range(num_of_examples)*2:
+        for _ in range(num_of_examples*5):
             w = sampler(alphabet)
             if target(w) == label:
                 words.add(w)

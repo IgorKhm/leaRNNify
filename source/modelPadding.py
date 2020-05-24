@@ -280,11 +280,11 @@ def create_words_set(alphabet, batch_size, int2char, max_length, num_of_exm_per_
 def add_examples_with_specific_label_sampler(alphabet, label_list, num_of_examples, target,
                                              words_list, label, sampler, char2int):
     new_examples = []
-    max_tries, current_try = 10, 0
+    max_tries, current_try = 20, 0
 
     while len(new_examples) < (0.05 * len(words_list)) and current_try < max_tries:
         words = set()
-        for _ in range(num_of_examples):
+        for _ in range(num_of_examples)*2:
             w = sampler(alphabet)
             if target(w) == label:
                 words.add(w)

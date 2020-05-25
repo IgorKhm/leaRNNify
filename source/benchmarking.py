@@ -16,7 +16,7 @@ from specifications_for_models import Lang, tomita_1_check_languages, tomita_2_c
     tomita_3_check_languages, tomita_5_check_languages, tomita_4_check_languages, tomita_6_check_languages, \
     tomita_7_check_languages
 from pac_teacher import PACTeacher
-from random_words import confidence_interval_many, random_word, confidence_interval_subset
+from random_words import confidence_interval_many, random_word, confidence_interval_subset, model_check_random
 from functools import partial
 
 FIELD_NAMES = ["alph_len",

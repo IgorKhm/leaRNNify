@@ -550,7 +550,7 @@ def model_check_tomita():
         benchmark = {"name": "tomita1_" + str(i)}
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
         if i == 0:
-            write_csv_header("../models/specific/summary.csv", benchmark.keys())
+            write_csv_header(summary_csv, benchmark.keys())
         write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1
 

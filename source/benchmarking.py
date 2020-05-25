@@ -178,7 +178,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_mistake_during": None,
+        benchmark.update({"extraction_mistake_during": "NAN",
                           "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
                           "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
@@ -211,7 +211,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_mistake_after": None,
+        benchmark.update({"extraction_mistake_after": "NAN",
                           "dfa_extract_states": len(dfa_extract.states),
                           "dfa_extract_final": len(dfa_extract.final_states),
                           "dfa_extract_mem_queries": rnn.num_of_membership_queries})
@@ -244,7 +244,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_super_mistake_after": None,
+        benchmark.update({"extraction_super_mistake_after": "NAN",
                           "dfa_extract_super_states": len(dfa_extract.states),
                           "dfa_extract_super_final": len(dfa_extract.final_states),
                           "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
@@ -264,6 +264,8 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     rnn.num_of_membership_queries = 0
     start_time = time.time()
     counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
+    if counter is None:
+        counter= "NAN"
     benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
                       "mistake_rand": counter,
                       "rand_num_queries": rnn.num_of_membership_queries})

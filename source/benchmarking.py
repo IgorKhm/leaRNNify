@@ -266,7 +266,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
     benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
                       "mistake_rand": counter,
-                      "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
+                      "rand_num_queries": rnn.num_of_membership_queries})
 
     print(benchmark)
     return (dfa_extract_w_spec, "dfa_extract_W_spec"), \

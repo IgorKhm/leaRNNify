@@ -511,6 +511,7 @@ class RNNLanguageClasifier:
         self._char_to_int.update({"": 0})
         self.states = {
             str(self.from_state_to_list(self._rnn.init_hidden(1))): ""}  # maybe move to load? or some other place?
+        return self
 
     ######################################################
     #                 Code For Lstar                     #

@@ -24,14 +24,12 @@ def tomita_1_check_languages():
 def tomita_2_check_languages():
     """
     :return: The Languages:
-             1. the lang (1010)^*
+             1. the lang ends with 0
     """
 
-    return [DFA("s1", {"s1"}, {"s1": {"0": "s5", "1": "s2"},
-                               "s2": {"0": "s3", "1": "s5"},
-                               "s3": {"0": "s5", "1": "s4"},
-                               "s4": {"0": "s1", "1": "s5"},
-                               "s5": {"0": "s5", "1": "s5"}})]
+    return [DFA("s1", {"si,s0"}, {"si": {"0": "s0", "1": "s1"},
+                               "s0": {"0": "s0", "1": "s1"},
+                               "s1": {"0": "s0", "1": "s1"}})]
 
 
 def tomita_3_check_languages():

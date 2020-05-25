@@ -160,7 +160,7 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
 
 
 def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn)
+    teacher_pac = PACTeacher(rnn, epsilon=0.005, delta=0.005)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
@@ -263,7 +263,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     print("starting rand model checking")
     rnn.num_of_membership_queries = 0
     start_time = time.time()
-    model_check_random(rnn, spec[0].specification, width=0.001, confidence=0.001)
+    model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
     benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
                       "mistake_rand": counter,
                       "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})

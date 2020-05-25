@@ -12,6 +12,9 @@ from learner_decison_tree import DecisionTreeLearner
 from lstar.Extraction import extract as extract_iclm
 from lstar.Tomita_Grammars import tomita_1, tomita_2, tomita_3, tomita_4, tomita_5, tomita_6, tomita_7
 from modelPadding import RNNLanguageClasifier
+from specifications_for_models import Lang, tomita_1_check_languages, tomita_2_check_languages, \
+    tomita_3_check_languages, tomita_5_check_languages, tomita_4_check_languages, tomita_6_check_languages, \
+    tomita_7_check_languages
 from pac_teacher import PACTeacher
 from random_words import confidence_interval_many, random_word, confidence_interval_subset
 from functools import partial
@@ -165,6 +168,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     # Doing the model checking during a DFA extraction
     ###################################################
     print("Starting DFA extraction with model checking")
+    rnn.num_of_membership_queries = 0
     start_time = time.time()
     counter = teacher_pac.check_and_teach(student, spec, timeout=timeout)
     benchmark.update({"extraction_time_spec": "{:.3}".format(time.time() - start_time)})
@@ -176,17 +180,20 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
         print(student.dfa)
         benchmark.update({"extraction_mistake_during": "",
                           "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
-                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states)})
+                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
+                          "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
         benchmark.update({"extraction_mistake_during": counter[0],
                           "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
-                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states)})
+                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
+                          "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
 
     ###################################################
     # Doing the model checking after a DFA extraction
     ###################################################
     print("Starting DFA extraction w/o model checking")
+    rnn.num_of_membership_queries = 0
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)
     teacher_pac.teach(student, timeout=timeout)
@@ -206,30 +213,64 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
         print(student.dfa)
         benchmark.update({"extraction_mistake_after": "",
                           "dfa_extract_states": len(dfa_extract.states),
-                          "dfa_extract_final": len(dfa_extract.final_states)})
+                          "dfa_extract_final": len(dfa_extract.final_states),
+                          "dfa_extract_mem_queries": rnn.num_of_membership_queries})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
         benchmark.update({"extraction_mistake_after": counter,
                           "dfa_extract_states": len(dfa_extract.states),
-                          "dfa_extract_final": len(dfa_extract.final_states)})
+                          "dfa_extract_final": len(dfa_extract.final_states),
+                          "dfa_extract_mem_queries": rnn.num_of_membership_queries})
 
     ###################################################
-    # Doing DFA extraction acc. to icml18
+    # Doing the model checking acc. of a sup lang extraction
     ###################################################
-    print("Starting DFA extraction acc to iclm18")
+    print("Starting DFA extraction super w/o model checking")
+    rnn.num_of_membership_queries = 0
     start_time = time.time()
+    student = DecisionTreeLearner(teacher_pac)
+    teacher_pac.teach_a_superset(student, timeout=timeout)
+    benchmark.update({"extraction_super_time": "{:.3}".format(time.time() - start_time)})
 
-    dfa_iclm18 = extract_iclm(rnn, time_limit=timeout, initial_split_depth=10)
+    print("Model checking the extracted DFA")
+    counter = student.dfa.is_language_not_subset_of(spec[0].specification)
+    if counter is not None:
+        if not rnn.is_word_in(counter):
+            counter = None
 
-    benchmark.update({"extraction_time_icml18": time.time() - start_time,
-                      "dfa_icml18_states": len(dfa_iclm18.Q),
-                      "dfa_icml18_final": len(dfa_iclm18.F)})
+    benchmark.update({"mistake_time_after_super": "{:.3}".format(time.time() - start_time)})
+
+    dfa_extract_super = minimize_dfa(student.dfa)
+    if counter is None:
+        print("No mistakes found ==> DFA learned:")
+        print(student.dfa)
+        benchmark.update({"extraction_super_mistake_after": "",
+                          "dfa_extract_super_states": len(dfa_extract.states),
+                          "dfa_extract_super_final": len(dfa_extract.final_states),
+                          "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
+    else:
+        print("Mistakes found ==> Counter example: {}".format(counter))
+        benchmark.update({"extraction_mistake_after": counter,
+                          "dfa_extract_super_states": len(dfa_extract.states),
+                          "dfa_extract_super_final": len(dfa_extract.final_states),
+                          "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
 
     print("Finished DFA extraction")
 
+    ###################################################
+    # Doing the model checking randomly
+    ###################################################
+    print("starting rand model checking")
+    rnn.num_of_membership_queries = 0
+    start_time = time.time()
+    model_check_random(rnn, spec[0].specification, width=0.001, confidence=0.001)
+    benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
+                      "mistake_rand": counter,
+                      "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
+
     return (dfa_extract_w_spec, "dfa_extract_W_spec"), \
            (dfa_extract, "dfa_extract"), \
-           (dfa_iclm18, "dfa_icml18")
+           (dfa_extract_super, "dfa_extract_super")
 
 
 def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
@@ -383,15 +424,6 @@ def run_multiple_spec_on_ltsm(ltsm, spec_dfas, messages):
         print(benchmark)
 
 
-class Lang:
-    def __init__(self, target, alphabet):
-        self.target = target
-        self.alphabet = alphabet
-
-    def is_word_in(self, word):
-        return self.target(word)
-
-
 def e_commerce_dfa():
     dfa = DFA("0", {"0,2,3,4,5"},
               {"0": {"os": "2", "gAP": "4", "gSC": "1", "bPSC": "1", "ds": "1", "eSC": "1", "aPSC": "1"},
@@ -502,3 +534,88 @@ def specific_lan_benchmark(alphabet, dir_name, name, target):
     benchmark.update({"membership_queries_distance": rnn.num_of_membership_queries})
 
     return benchmark
+
+
+def model_check_tomita():
+    dir = "../models/specific/models/"
+    summary_csv = "../models/specific/model_checking_summary.csv"
+    timeout = 900
+
+    ############tomita 1#################
+
+    rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_1")
+    specs = tomita_1_check_languages()
+    i = 0
+    for spec in specs:
+        benchmark = {"name": "tomita1_" + str(i)}
+        check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+        if i == 1:
+            write_csv_header("../models/specific/summary.csv", benchmark.keys())
+        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        i += 1
+
+    ############tomita 2#################
+
+    rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_2")
+    specs = tomita_2_check_languages()
+    i = 0
+    for spec in specs:
+        benchmark = {"name": "tomita2_" + str(i)}
+        check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        i += 1
+
+    ############tomita 3#################
+
+    rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_3")
+    specs = tomita_3_check_languages()
+    i = 0
+    for spec in specs:
+        benchmark = {"name": "tomita3_" + str(i)}
+        check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        i += 1
+
+    ############tomita 4#################
+
+    rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_4")
+    specs = tomita_4_check_languages()
+    i = 0
+    for spec in specs:
+        benchmark = {"name": "tomita4_" + str(i)}
+        check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        i += 1
+
+    # ############tomita 5#################
+    #
+    # rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_5")
+    # specs = tomita_5_check_languages()
+    # i = 0
+    # for spec in specs:
+    #     benchmark = {"name": "tomita5_" + str(i)}
+    #     check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+    #     write_line_csv(summary_csv, benchmark, benchmark.keys)
+    #     i += 1
+    #
+    # ###########tomita 6#################
+    #
+    # rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_6")
+    # specs = tomita_6_check_languages()
+    # i = 0
+    # for spec in specs:
+    #     benchmark = {"name": "tomita6_" + str(i)}
+    #     check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+    #     write_line_csv(summary_csv, benchmark, benchmark.keys)
+    #     i += 1
+
+    ###########tomita 7#################
+
+    rnn = RNNLanguageClasifier().load_lstm(dir + "tomita_7")
+    specs = tomita_7_check_languages()
+    i = 0
+    for spec in specs:
+        benchmark = {"name": "tomita7_" + str(i)}
+        check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        i += 1

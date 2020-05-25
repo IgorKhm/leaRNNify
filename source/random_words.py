@@ -204,3 +204,18 @@ def confidence_interval_many_for_reuse(languages, sampler, previous_answers=None
 
     print()
     return output, samples, in_langs_lists[0:2]
+
+
+def model_check_random(language_inf, language_sup,  confidence=0.001, width=0.001):
+    """
+
+
+    :return:
+    """
+    n = np.log(2 / confidence) / (2 * width * width)
+
+    for _ in range(int(n)):
+        word = random_word(language_inf.alphabet)
+        if (language_inf.is_word_in(word)) and (not language_sup.is_word_in(word)):
+            return word
+    return None

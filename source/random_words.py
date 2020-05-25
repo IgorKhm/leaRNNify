@@ -217,7 +217,6 @@ def model_check_random(language_inf, language_sup,  confidence=0.001, width=0.00
     print("num of words" + str(n))
     batch_size = 200
     for i in range(int(n / batch_size) + 1):
-        print(i)
         batch = [random_word(alph) for _ in range(batch_size)]
         for x, y, w in zip(language_inf.is_words_in_batch(batch) > 0.5, [language_sup.is_word_in(w) for w in batch],
                            batch):

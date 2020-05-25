@@ -549,9 +549,9 @@ def model_check_tomita():
     for spec in specs:
         benchmark = {"name": "tomita1_" + str(i)}
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
-        if i == 1:
+        if i == 0:
             write_csv_header("../models/specific/summary.csv", benchmark.keys())
-        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1
 
     ############tomita 2#################
@@ -562,7 +562,7 @@ def model_check_tomita():
     for spec in specs:
         benchmark = {"name": "tomita2_" + str(i)}
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
-        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1
 
     ############tomita 3#################
@@ -573,7 +573,7 @@ def model_check_tomita():
     for spec in specs:
         benchmark = {"name": "tomita3_" + str(i)}
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
-        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1
 
     ############tomita 4#################
@@ -584,7 +584,7 @@ def model_check_tomita():
     for spec in specs:
         benchmark = {"name": "tomita4_" + str(i)}
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
-        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1
 
     # ############tomita 5#################
@@ -617,5 +617,5 @@ def model_check_tomita():
     for spec in specs:
         benchmark = {"name": "tomita7_" + str(i)}
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
-        write_line_csv(summary_csv, benchmark, benchmark.keys)
+        write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1

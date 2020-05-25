@@ -213,14 +213,14 @@ def model_check_random(language_inf, language_sup,  confidence=0.001, width=0.00
     :return:
     """
     n = np.log(2 / confidence) / (2 * width * width)
-
+    alph = language_sup.alphabet
+    print("num of words" + str(n))
     batch_size = 200
     for i in range(int(n / batch_size) + 1):
-        batch = [random_word(language_inf.alphabet) for _ in range(batch_size)]
+        print(i)
+        batch = [random_word(alph) for _ in range(batch_size)]
         for x, y, w in zip(language_inf.is_words_in_batch(batch) > 0.5, [language_sup.is_word_in(w) for w in batch],
                            batch):
             if x and (not y):
                 return w
     return None
-
-

@@ -260,26 +260,6 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     ###################################################
     # Doing the model checking randomly
     ###################################################
-    print("starting rand model checking")
-    rnn.num_of_membership_queries = 0
-    start_time = time.time()
-    model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
-    benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
-                      "mistake_rand": counter,
-                      "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
-
-    return (dfa_extract_w_spec, "dfa_extract_W_spec"), \
-           (dfa_extract, "dfa_extract"), \
-           (dfa_extract_super, "dfa_extract_super")
-
-
-def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
-    rnn.num_of_membership_queries = 0
-    teacher_pac = PACTeacher(rnn)
-
-    ###################################################
-    # DFA extraction
-    ###################################################
     print("Starting DFA extraction w/o model checking")
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)

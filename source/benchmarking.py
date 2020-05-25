@@ -178,7 +178,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_mistake_during": "",
+        benchmark.update({"extraction_mistake_during": None,
                           "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
                           "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
@@ -197,7 +197,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)
     teacher_pac.teach(student, timeout=timeout)
-    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
+    # benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
 
     print("Model checking the extracted DFA")
     counter = student.dfa.is_language_not_subset_of(spec[0].specification)
@@ -205,13 +205,13 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
         if not rnn.is_word_in(counter):
             counter = None
 
-    benchmark.update({"mistake_time_after": "{:.3}".format(time.time() - start_time)})
+    benchmark.update({"mistake_time_extraction": "{:.3}".format(time.time() - start_time)})
 
     dfa_extract = minimize_dfa(student.dfa)
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_mistake_after": "",
+        benchmark.update({"extraction_mistake_after": None,
                           "dfa_extract_states": len(dfa_extract.states),
                           "dfa_extract_final": len(dfa_extract.final_states),
                           "dfa_extract_mem_queries": rnn.num_of_membership_queries})
@@ -230,7 +230,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)
     teacher_pac.teach_a_superset(student, timeout=timeout)
-    benchmark.update({"extraction_super_time": "{:.3}".format(time.time() - start_time)})
+    # benchmark.update({"extraction_super_time": "{:.3}".format(time.time() - start_time)})
 
     print("Model checking the extracted DFA")
     counter = student.dfa.is_language_not_subset_of(spec[0].specification)
@@ -238,13 +238,13 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
         if not rnn.is_word_in(counter):
             counter = None
 
-    benchmark.update({"mistake_time_after_super": "{:.3}".format(time.time() - start_time)})
+    benchmark.update({"mistake_time_super": "{:.3}".format(time.time() - start_time)})
 
     dfa_extract_super = minimize_dfa(student.dfa)
     if counter is None:
         print("No mistakes found ==> DFA learned:")
         print(student.dfa)
-        benchmark.update({"extraction_super_mistake_after": "",
+        benchmark.update({"extraction_super_mistake_after": None,
                           "dfa_extract_super_states": len(dfa_extract.states),
                           "dfa_extract_super_final": len(dfa_extract.final_states),
                           "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
@@ -266,7 +266,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
     benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
                       "mistake_rand": counter,
-                      "rand_mem_queries": rnn.num_of_membership_queries})
+                      "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
 
     print(benchmark)
     return (dfa_extract_w_spec, "dfa_extract_W_spec"), \
@@ -274,6 +274,24 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
            (dfa_extract_super, "dfa_extract_super")
 
 
+def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
+    rnn.num_of_membership_queries = 0
+    teacher_pac = PACTeacher(rnn)
+
+    ###################################################
+    # DFA extraction
+    ###################################################
+    print("Starting DFA extraction w/o model checking")
+    start_time = time.time()
+    student = DecisionTreeLearner(teacher_pac)
+    teacher_pac.teach(student, timeout=timeout)
+    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
+
+    dfa_extract = minimize_dfa(student.dfa)
+    print(student.dfa)
+    benchmark.update({"dfa_extract_states": len(dfa_extract.states),
+                      "dfa_extract_final": len(dfa_extract.final_states),
+                      "num_of_mem_quarries_extracted": rnn.num_of_membership_queries})
 
     # ###################################################
     # # Doing DFA extraction acc. to icml18

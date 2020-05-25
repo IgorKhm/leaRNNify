@@ -33,8 +33,8 @@ class PACTeacher(Teacher):
         """
         self._num_equivalence_asked = self._num_equivalence_asked + 1
 
-        if dfa.is_word_in("") != self.model.is_word_in(""):
-            return ""
+        # if dfa.is_word_in("") != self.model.is_word_in(""):
+        #     return ""
 
         number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
 
@@ -62,8 +62,8 @@ class PACTeacher(Teacher):
         """
         self._num_equivalence_asked = self._num_equivalence_asked + 1
 
-        if dfa.is_word_in("") != self.model.is_word_in(""):
-            return ""
+        # if dfa.is_word_in("") != self.model.is_word_in(""):
+        #     return ""
 
         number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
 

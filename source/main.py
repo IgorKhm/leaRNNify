@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking
-from benchmarking import rand_benchmark, learn_multiple_times, run_multiple_spec_on_ltsm, learn_dfa, run_specific_benchmarks
+from benchmarking import rand_benchmark, learn_multiple_times, run_multiple_spec_on_ltsm, learn_dfa, run_specific_benchmarks, model_check_tomita
 from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking
 from dfa import DFA, load_dfa_dot, random_dfa, dfa_intersection
 from dfa import save_dfa_as_part_of_model
@@ -150,4 +150,4 @@ print("Begin")
 
 #
 #
-run_specific_benchmarks()
+model_check_tomita()

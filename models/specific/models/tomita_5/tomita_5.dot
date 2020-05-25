@@ -1,0 +1,16 @@
+digraph g {
+__start0 [label="" shape="none]
+() [shape="doublecircle" label="()"]
+('0',) [shape="circle" label="('0',)"]
+('1',) [shape="circle" label="('1',)"]
+('0', '1') [shape="circle" label="('0', '1')"]
+__start0 -> ()
+() -> ('0',)[label="0"]
+() -> ('1',)[label="1"]
+('0',) -> ()[label="0"]
+('0',) -> ('0', '1')[label="1"]
+('1',) -> ('0', '1')[label="0"]
+('1',) -> ()[label="1"]
+('0', '1') -> ('1',)[label="0"]
+('0', '1') -> ('0',)[label="1"]
+}

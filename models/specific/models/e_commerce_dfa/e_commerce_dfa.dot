@@ -1,0 +1,12 @@
+digraph g {
+__start0 [label="" shape="none]
+() [shape="circle" label="()"]
+__start0 -> ()
+() -> ()[label="os"]
+() -> ()[label="gAP"]
+() -> ()[label="gSC"]
+() -> ()[label="bPSC"]
+() -> ()[label="ds"]
+() -> ()[label="eSC"]
+() -> ()[label="aPSC"]
+}

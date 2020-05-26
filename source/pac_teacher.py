@@ -103,6 +103,7 @@ class PACTeacher(Teacher):
         return self.model.is_word_in(word)
 
     def teach(self, learner, timeout=900):
+        self._num_equivalence_asked = 0
         learner.teacher = self
         i = 0
         start_time = time.time()
@@ -182,6 +183,7 @@ class PACTeacher(Teacher):
 
     def check_and_teach(self, learner, checkers: [DFAChecker], timeout=900):
         learner.teacher = self
+        self._num_equivalence_asked = 0
         start_time = time.time()
         Counter_example = namedtuple('Counter_example', ['word', 'is_super'])
 
@@ -217,6 +219,7 @@ class PACTeacher(Teacher):
                     learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
 
     def teach_a_superset(self, learner, timeout=900):
+        self._num_equivalence_asked = 0
         learner.teacher = self
         i = 0
         start_time = time.time()

@@ -161,7 +161,7 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
 
 
 def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn, delta=0.001, epsilon=0.001)
+    teacher_pac = PACTeacher(rnn, delta=0.0005, epsilon=0.0005)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")

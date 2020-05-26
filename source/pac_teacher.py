@@ -31,7 +31,7 @@ class PACTeacher(Teacher):
         Tests whether the dfa is equivalent to the model by testing random words.
         If not equivalent returns an example
         """
-        
+
 
         # if dfa.is_word_in("") != self.model.is_word_in(""):
         #     return ""
@@ -40,7 +40,7 @@ class PACTeacher(Teacher):
         number_of_rounds = int(
             (1 / self.epsilon) * (np.log(1 / self.delta) + np.log(2) * (self._num_equivalence_asked + 1)))
 
-	self._num_equivalence_asked = self._num_equivalence_asked + 1
+		self._num_equivalence_asked = self._num_equivalence_asked + 1
         #print("num_rounds")
         #print(number_of_rounds)
         # print(number_of_rounds0)

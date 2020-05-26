@@ -264,7 +264,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     print("starting rand model checking")
     rnn.num_of_membership_queries = 0
     start_time = time.time()
-    counter = model_check_random(rnn, spec[0].specification, width=0.001, confidence=0.001)
+    counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
     if counter is None:
         counter = "NAN"
     benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),

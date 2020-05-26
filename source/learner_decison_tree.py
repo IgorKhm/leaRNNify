@@ -143,9 +143,11 @@ class DecisionTreeLearner(Learner):
                 print(inst.args)     # arguments stored in .args
                 print(inst)
                 print(words_left)
-                print(final)
                 print(current_nodes)
+
                 print(answers)
+                print(answers.dim)
+                print(final)
                 quit()
                 print(1/0)
 

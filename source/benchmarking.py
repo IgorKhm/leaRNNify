@@ -250,7 +250,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
                           "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_mistake_after": counter,
+        benchmark.update({"extraction_super_mistake_after": counter,
                           "dfa_extract_super_states": len(dfa_extract.states),
                           "dfa_extract_super_final": len(dfa_extract.final_states),
                           "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})

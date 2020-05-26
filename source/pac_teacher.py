@@ -31,12 +31,19 @@ class PACTeacher(Teacher):
         Tests whether the dfa is equivalent to the model by testing random words.
         If not equivalent returns an example
         """
-        self._num_equivalence_asked = self._num_equivalence_asked + 1
+        
 
         # if dfa.is_word_in("") != self.model.is_word_in(""):
         #     return ""
 
-        number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
+        # number_of_rounds0 = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
+        number_of_rounds = int(
+            (1 / self.epsilon) * (np.log(1 / self.delta) + np.log(2) * (self._num_equivalence_asked + 1)))
+
+	self._num_equivalence_asked = self._num_equivalence_asked + 1
+        #print("num_rounds")
+        #print(number_of_rounds)
+        # print(number_of_rounds0)
 
         if isinstance(self.model, RNNLanguageClasifier):
             batch_size = 200
@@ -60,12 +67,18 @@ class PACTeacher(Teacher):
         Tests whether the model language is a subset of the dfa language by testing random words.
         If not subset returns an example
         """
-        self._num_equivalence_asked = self._num_equivalence_asked + 1
 
         # if dfa.is_word_in("") != self.model.is_word_in(""):
         #     return ""
 
-        number_of_rounds = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
+        # number_of_rounds0 = int((self._log_delta - self._num_equivalence_asked) / self._log_one_minus_epsilon)
+        number_of_rounds = int(
+            (1 / self.epsilon) * (np.log(1 / self.delta) + np.log(2) * (self._num_equivalence_asked + 1)))
+        self._num_equivalence_asked = self._num_equivalence_asked + 1
+
+        #print("num_rounds")
+        #print(number_of_rounds)
+        # print(number_of_rounds0)
 
         if isinstance(self.model, RNNLanguageClasifier):
             batch_size = 200

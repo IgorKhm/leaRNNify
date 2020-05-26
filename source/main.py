@@ -5,10 +5,11 @@ import time
 
 import numpy as np
 
+from benchmarking import rand_benchmark, run_rand_benchmarks, learn_multiple_times, run_multiple_spec_on_ltsm, \
+    learn_dfa, run_specific_benchmarks, model_check_tomita, check_folder_of_rand
 from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking
-from benchmarking import rand_benchmark, learn_multiple_times, run_multiple_spec_on_ltsm, learn_dfa, run_specific_benchmarks, model_check_tomita
-from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking
-from dfa import DFA, load_dfa_dot, random_dfa, dfa_intersection
+from benchmarking_noisy_dfa import run_rand_benchmarks_noisy_dfa
+from dfa import DFA, load_dfa_dot, random_dfa, dfa_intersection, DFANoisy
 from dfa import save_dfa_as_part_of_model
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
@@ -150,4 +151,5 @@ print("Begin")
 
 #
 #
-model_check_tomita()
+check_folder_of_rand("../models/random_bench_21-May-2020_14-40-38")
+check_folder_of_rand("../models/random_bench_21-May-2020_22-02-16/good_ones")

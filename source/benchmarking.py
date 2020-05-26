@@ -1,3 +1,4 @@
+import copy
 import csv
 import datetime
 import os
@@ -5,7 +6,7 @@ import time
 
 import numpy as np
 
-from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model
+from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model, load_dfa_dot
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner
@@ -171,7 +172,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     rnn.num_of_membership_queries = 0
     start_time = time.time()
     counter = teacher_pac.check_and_teach(student, spec, timeout=timeout)
-    benchmark.update({"extraction_time_spec": "{:.3}".format(time.time() - start_time)})
+    benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
     dfa_extract_w_spec = student.dfa
     dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
 
@@ -265,7 +266,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     start_time = time.time()
     counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
     if counter is None:
-        counter= "NAN"
+        counter = "NAN"
     benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
                       "mistake_rand": counter,
                       "rand_num_queries": rnn.num_of_membership_queries})
@@ -622,3 +623,57 @@ def model_check_tomita():
         check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
         write_line_csv(summary_csv, benchmark, benchmark.keys())
         i += 1
+
+
+def check_folder_of_rand(folder):
+    timeout = 900
+    first_entry = True
+    summary_csv = folder + "/summary_model_checking.csv"
+    for folder in os.walk(folder):
+        if os.path.isfile(folder[0] + "/meta"):
+            name = folder[0].split('/')[-1]
+            rnn = RNNLanguageClasifier().load_lstm(folder[0])
+            dfa = load_dfa_dot(folder[0] + "/dfa.dot")
+            i = 1
+            for dfa_spec in from_dfa_to_sup_dfa_gen(dfa):
+                dfa_spec.save(folder[0] + "/spec_" + str(i))
+                benchmark = {"name": name, "spec_num": str(i)}
+                check_rnn_acc_to_spec(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
+                if first_entry:
+                    write_csv_header(summary_csv, benchmark.keys())
+                    first_entry = False
+                write_line_csv(summary_csv, benchmark, benchmark.keys())
+                i += 1
+
+            # print(dfa.final_states)
+            # print(dfa)
+
+            # specs = tomita_1_check_languages()
+            # i = 0
+            # for spec in specs:
+            #     benchmark = {"name": "tomita1_" + str(i)}
+            #     check_rnn_acc_to_spec(rnn, [DFAChecker(spec)], benchmark, timeout)
+            #     if i == 0:
+            #         write_csv_header(summary_csv, benchmark.keys())
+            #     write_line_csv(summary_csv, benchmark, benchmark.keys())
+            #     i += 1
+            #
+
+
+def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
+    not_final_states = [state for state in dfa.states if state not in dfa.final_states]
+    if len(not_final_states) == 1:
+        return
+
+    created_dfas = []
+    for _ in range(tries):
+        s = np.random.randint(1, len(not_final_states))
+        new_final_num = np.random.choice(len(not_final_states), size=s, replace=False)
+        new_final = [not_final_states[i] for i in new_final_num]
+        dfa_spec = DFA(dfa.init_state, dfa.final_states + new_final, dfa.transitions)
+        dfa_spec = minimize_dfa(dfa_spec)
+
+        if dfa_spec in created_dfas:
+            continue
+        created_dfas.append(dfa_spec)
+        yield dfa_spec

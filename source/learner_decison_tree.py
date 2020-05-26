@@ -127,7 +127,7 @@ class DecisionTreeLearner(Learner):
         final = [None for _ in words]
         while True:
             answers = self.teacher.model.is_words_in_batch([words[x[1]] + x[0].name for x in current_nodes])
-            if answers.dim == 0:
+            if len(answers.shape) == 0:
                 if answers > 0.5:
                     current_nodes[0][0] = current_nodes[0][0].right
                 else:
@@ -137,7 +137,7 @@ class DecisionTreeLearner(Learner):
                     final[current_nodes[0][1]] = current_nodes[0][0]
                     del (current_nodes[0])
                     words_left = words_left - 1
-            try:
+            else:
                 for i in range(len(answers) - 1, -1, -1):
                     if answers[i] > 0.5:
                         current_nodes[i][0] = current_nodes[i][0].right
@@ -148,18 +148,6 @@ class DecisionTreeLearner(Learner):
                         final[current_nodes[i][1]] = current_nodes[i][0]
                         del (current_nodes[i])
                         words_left = words_left - 1
-            except Exception as inst:
-                print(type(inst))    # the exception instance
-                print(inst.args)     # arguments stored in .args
-                print(inst)
-                print(words_left)
-                # print(current_nodes)
-                print(answers)
-                print(answers.dim)
-                print(len(final))
-                quit()
-                print(1/0)
-
             if words_left == 0:
                 return final
 

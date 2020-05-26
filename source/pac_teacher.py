@@ -201,6 +201,7 @@ class PACTeacher(Teacher):
                     break
             if counter_example.word is not None:
                 if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
+                    self._num_equivalence_asked += 1
                     learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
                 else:
                     print('found counter mistake in the model: ', counter_example)

@@ -151,5 +151,5 @@ print("Begin")
 
 #
 #
-check_folder_of_rand("../models/random_bench_21-May-2020_14-40-38")
-check_folder_of_rand("../models/random_bench_21-May-2020_22-02-16/good_ones")
+complition("../models/random_bench_21-May-2020_14-40-38")
+complition("../models/random_bench_21-May-2020_22-02-16/good_ones")

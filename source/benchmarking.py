@@ -278,7 +278,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
 
 
 def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn, epsilon=0.005, delta=0.005)
+    teacher_pac = PACTeacher(rnn, epsilon=0.0005, delta=0.0005)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")

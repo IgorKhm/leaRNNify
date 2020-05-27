@@ -180,6 +180,7 @@ class DecisionTreeLearner(Learner):
         l =[]
         while self.dfa.is_word_in(word) == val:
             if numb_of_refinements > 30:
+                print("num of ref: {}".format(numb_of_refinements))
                 return numb_of_refinements
                 print(word)
                 print(new_state_string)

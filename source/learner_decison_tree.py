@@ -178,6 +178,7 @@ class DecisionTreeLearner(Learner):
         val = self.dfa.is_word_in(word)
         numb_of_refinements = 0
         while self.dfa.is_word_in(word) == val:
+            new_differencing_string = None
             if numb_of_refinements > 30:
                 print(numb_of_refinements)
             numb_of_refinements += 1

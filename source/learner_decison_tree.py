@@ -177,16 +177,21 @@ class DecisionTreeLearner(Learner):
     def new_counterexample(self, word, do_hypothesis_in_batches=False):
         val = self.dfa.is_word_in(word)
         numb_of_refinements = 0
+        l =[]
         while self.dfa.is_word_in(word) == val:
             if numb_of_refinements > 30:
                 print(word)
                 print(new_differencing_string)
                 print(numb_of_refinements)
-
+                if new_differencing_string in l:
+                    print("ERROR")
+                else:
+                    l.append(new_differencing_string)
             new_differencing_string = None
 
             numb_of_refinements += 1
             first_time = False
+
             if len(self._leafs) == 1:
                 first_time = True
                 new_differencing_string = self._leafs[0].name

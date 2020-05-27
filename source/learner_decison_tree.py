@@ -175,43 +175,50 @@ class DecisionTreeLearner(Learner):
         return DFA(tuple(""), final_nodes, transitions)
 
     def new_counterexample(self, word, do_hypothesis_in_batches=False):
-        first_time = False
-        if len(self._leafs) == 1:
-            first_time = True
-            new_differencing_string = self._leafs[0].name
-            new_state_string = word
+        val = self.dfa.is_word_in(word)
+        numb_of_refinements = 0
+        while self.dfa.is_word_in(word) == val:
+            numb_of_refinements += 1
+            first_time = False
+            if len(self._leafs) == 1:
+                first_time = True
+                new_differencing_string = self._leafs[0].name
+                new_state_string = word
 
-        else:
-            state_dfa = self.dfa.init_state
-            prefix = tuple()
-            for letter in word:
-                prefix = prefix + tuple([letter])
-                state_tree = self._sift(prefix)
-                state_dfa = self.dfa.next_state_by_letter(state_dfa, letter)
-                if state_tree.name != state_dfa:
-                    for state_tree_2 in self._leafs:
-                        if state_tree_2.name == state_dfa:
-                            break
-                    state_tree = finding_common_ancestor(state_tree, state_tree_2)
-                    new_differencing_string = tuple([letter]) + state_tree.name
-                    break
+            else:
+                state_dfa = self.dfa.init_state
+                prefix = tuple()
+                for letter in word:
+                    prefix = prefix + tuple([letter])
+                    state_tree = self._sift(prefix)
+                    state_dfa = self.dfa.next_state_by_letter(state_dfa, letter)
+                    if state_tree.name != state_dfa:
+                        for state_tree_2 in self._leafs:
+                            if state_tree_2.name == state_dfa:
+                                break
+                        state_tree = finding_common_ancestor(state_tree, state_tree_2)
+                        new_differencing_string = tuple([letter]) + state_tree.name
+                        break
 
-            new_state_string = prefix[0:len(prefix) - 1]
+                new_state_string = prefix[0:len(prefix) - 1]
 
-        node_to_replace = self._sift(new_state_string)
+            node_to_replace = self._sift(new_state_string)
 
-        if self.teacher.membership_query(node_to_replace.name + new_differencing_string):
-            node_to_replace.left = TreeNode(new_state_string, first_time ^ node_to_replace.inLan, node_to_replace)
-            node_to_replace.right = TreeNode(node_to_replace.name, node_to_replace.inLan, node_to_replace)
-        else:
-            node_to_replace.right = TreeNode(new_state_string, first_time ^ node_to_replace.inLan, node_to_replace)
-            node_to_replace.left = TreeNode(node_to_replace.name, node_to_replace.inLan, node_to_replace)
+            if self.teacher.membership_query(node_to_replace.name + new_differencing_string):
+                node_to_replace.left = TreeNode(new_state_string, first_time ^ node_to_replace.inLan, node_to_replace)
+                node_to_replace.right = TreeNode(node_to_replace.name, node_to_replace.inLan, node_to_replace)
+            else:
+                node_to_replace.right = TreeNode(new_state_string, first_time ^ node_to_replace.inLan, node_to_replace)
+                node_to_replace.left = TreeNode(node_to_replace.name, node_to_replace.inLan, node_to_replace)
 
-        self._leafs.remove(node_to_replace)
-        node_to_replace.name = new_differencing_string
-        self._leafs.extend([node_to_replace.right, node_to_replace.left])
+            self._leafs.remove(node_to_replace)
+            node_to_replace.name = new_differencing_string
+            self._leafs.extend([node_to_replace.right, node_to_replace.left])
 
-        if do_hypothesis_in_batches:
-            self.dfa = self._produce_hypothesis_set()
-        else:
-            self.dfa = self._produce_hypothesis()
+            if do_hypothesis_in_batches:
+                self.dfa = self._produce_hypothesis_set()
+            else:
+                self.dfa = self._produce_hypothesis()
+        if numb_of_refinements > 1:
+            print("num of ref: {}".format(numb_of_refinements))
+        return numb_of_refinements

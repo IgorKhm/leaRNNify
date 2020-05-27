@@ -204,7 +204,9 @@ class PACTeacher(Teacher):
             if counter_example.word is not None:
                 if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
                     self._num_equivalence_asked += 1
-                    learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
+                    num = learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
+                    if num > 1:
+                        self._num_equivalence_asked += num - 1
                 else:
                     print('found counter mistake in the model: ', counter_example)
                     return counter_example
@@ -216,7 +218,9 @@ class PACTeacher(Teacher):
                 if counter_example is None:
                     return None
                 else:
-                    learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
+                    num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
+                    if num > 1:
+                        self._num_equivalence_asked += num - 1
 
     def teach_a_superset(self, learner, timeout=900):
         self._num_equivalence_asked = 0

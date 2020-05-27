@@ -182,6 +182,7 @@ class DecisionTreeLearner(Learner):
             if numb_of_refinements > 30:
                 print(word)
                 print(new_state_string)
+                print("len new string {}/{}:".format(len(new_state_string),len(word)))
                 print(numb_of_refinements)
                 if new_state_string in l:
                     print("ERROR")

@@ -722,7 +722,7 @@ def complition(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
-            dfa = load_dfa_dot(folder[0] + "/dfa.dot")
+            # dfa = load_dfa_dot(folder[0] + "/dfa.dot")
             for file in os.listdir(folder[0]):
                 if 'spec' in file:
                     dfa_spec = load_dfa_dot(folder[0] + "/dfa.dot")
@@ -731,5 +731,4 @@ def complition(folder):
                     if first_entry:
                         write_csv_header(summary_csv, benchmark.keys())
                         first_entry = False
-                write_line_csv(summary_csv, benchmark, benchmark.keys())
-                i += 1
+                    write_line_csv(summary_csv, benchmark, benchmark.keys())

@@ -184,6 +184,7 @@ def rand_benchmark(save_dir=None):
 
 
 def run_rand_benchmarks_wo_model_checking(num_of_bench=10, save_dir=None):
+    print("Running benchmark without model checking with "+ str(num_of_bench) +" number of benchmarks")
     if save_dir is None:
         save_dir = "../models/random_bench_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))
         os.makedirs(save_dir)

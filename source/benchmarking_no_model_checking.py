@@ -58,11 +58,11 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
     if epoch == -1:
-        epoch = 10
+        epoch = 20
     if batch_size == -1:
         batch_size = 20
     if num_of_examples == -1:
-        num_of_examples = 150000
+        num_of_examples = 200000
 
     start_time = time.time()
     model = RNNLanguageClasifier()
@@ -90,8 +90,15 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
+    if benchmark["rnn_testing_acc"] < 0.95:
+        print("didn't learned the rnn well enough starting over")
+        return
+
+
     extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=60)
     if dir_name is not None:
+        save_dfa_as_part_of_model(save_dir, dfa, name="dfa")
+        dfa.draw_nicely(name="dfa", save_dir=save_dir)
         rnn.save_lstm(dir_name)
         for extracted_dfa, name in extracted_dfas:
             if isinstance(name, DFA):
@@ -161,16 +168,13 @@ def rand_benchmark(save_dir=None):
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa.states) < 5:
-        max_final_states = np.random.randint(5, 25)
-        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=30, min_final=2,
+        max_final_states = np.random.randint(5, 40)
+        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=40, min_final=1,
                                max_final=max_final_states)
         dfa = minimize_dfa(dfa_rand1)
 
     benchmark.update({"dfa_states": len(dfa.states), "dfa_final": len(dfa.final_states)})
 
-    if save_dir is not None:
-        save_dfa_as_part_of_model(save_dir, dfa, name="dfa")
-        dfa.draw_nicely(name="dfa", save_dir=save_dir)
 
     print("DFA to learn {}".format(dfa))
 

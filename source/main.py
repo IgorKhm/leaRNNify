@@ -151,5 +151,6 @@ print("Begin")
 
 #
 #
-complition("../models/random_bench_21-May-2020_14-40-38")
-complition("../models/random_bench_21-May-2020_22-02-16/good_ones")
+run_rand_benchmarks_wo_model_checking(num_of_bench=30)
+# complition("../models/random_bench_21-May-2020_14-40-38")
+# complition("../models/random_bench_21-May-2020_22-02-16/good_ones")

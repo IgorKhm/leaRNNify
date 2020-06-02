@@ -95,10 +95,10 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
         return
 
 
-    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=60)
+    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=900)
     if dir_name is not None:
-        save_dfa_as_part_of_model(save_dir, dfa, name="dfa")
-        dfa.draw_nicely(name="dfa", save_dir=save_dir)
+        save_dfa_as_part_of_model(dir_name, dfa, name="dfa")
+        dfa.draw_nicely(name="dfa", save_dir=dir_name)
         rnn.save_lstm(dir_name)
         for extracted_dfa, name in extracted_dfas:
             if isinstance(name, DFA):

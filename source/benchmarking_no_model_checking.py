@@ -117,6 +117,7 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     print("Starting DFA extraction w/o model checking")
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)
+    teacher_pac.is_counter_example_in_batches = False
     teacher_pac.teach(student, timeout=timeout)
     benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
 

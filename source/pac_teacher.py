@@ -43,11 +43,7 @@ class PACTeacher(Teacher):
         self._num_equivalence_asked = self._num_equivalence_asked + 1
 
 
-        #print("num_rounds")
-        #print(number_of_rounds)
-        # print(number_of_rounds0)
-
-        if isinstance(self.model, RNNLanguageClasifier):
+        if self.is_counter_example_in_batches:
             batch_size = 200
             for i in range(int(number_of_rounds / batch_size) + 1):
                 batch = [random_word(self.model.alphabet) for _ in range(batch_size)]

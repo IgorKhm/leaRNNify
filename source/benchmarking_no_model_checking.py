@@ -90,7 +90,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    if benchmark["rnn_testing_acc"] < 0.95:
+    if float(benchmark["rnn_testing_acc"]) < 0.95:
         print("didn't learned the rnn well enough starting over")
         return
 

@@ -90,7 +90,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    if float(benchmark["rnn_testing_acc"]) < 0.95:
+    if float(benchmark["rnn_testing_acc"]) < 95:
         print("didn't learned the rnn well enough starting over")
         return
 
@@ -169,8 +169,8 @@ def rand_benchmark(save_dir=None):
     benchmark.update({"alph_len": len(alphabet)})
 
     while len(dfa.states) < 5:
-        max_final_states = np.random.randint(5, 40)
-        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=40, min_final=1,
+        max_final_states = np.random.randint(5, 29)
+        dfa_rand1 = random_dfa(alphabet, min_states=max_final_states, max_states=30, min_final=1,
                                max_final=max_final_states)
         dfa = minimize_dfa(dfa_rand1)
 

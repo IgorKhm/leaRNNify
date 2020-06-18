@@ -273,8 +273,8 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
 
     print(benchmark)
     return (dfa_extract_w_spec, "dfa_extract_W_spec"), \
-           (dfa_extract, "dfa_extract"), \
-           (dfa_extract_super, "dfa_extract_super")
+           (dfa_extract, "dfa_extract") #, \
+           #(dfa_extract_super, "dfa_extract_super")
 
 
 def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):

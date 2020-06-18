@@ -151,8 +151,8 @@ print("Begin")
 
 #
 #
-check_folder_of_rand("/home/ikhmelnitsky/Desktop/temp/leaRNNify/models/random_bench_10-Jun-2020_06-00-28")
-check_folder_of_rand("/home/ikhmelnitsky/Desktop/temp/leaRNNify/models/random_bench_03-Jun-2020_05-50-42")
+check_folder_of_rand("../models/random_bench_10-Jun-2020_06-00-28")
+check_folder_of_rand("../models/random_bench_03-Jun-2020_05-50-42")
 # run_rand_benchmarks_wo_model_checking(num_of_bench=30)
 # complition("../models/random_bench_21-May-2020_14-40-38")
 # complition("../models/random_bench_21-May-2020_22-02-16/good_ones")

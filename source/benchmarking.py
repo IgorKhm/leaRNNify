@@ -226,37 +226,37 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     ###################################################
     # Doing the model checking acc. of a sup lang extraction
     ###################################################
-    print("Starting DFA extraction super w/o model checking")
-    rnn.num_of_membership_queries = 0
-    start_time = time.time()
-    student = DecisionTreeLearner(teacher_pac)
-    teacher_pac.teach_a_superset(student, timeout=timeout)
-    # benchmark.update({"extraction_super_time": "{:.3}".format(time.time() - start_time)})
-
-    print("Model checking the extracted DFA")
-    counter = student.dfa.is_language_not_subset_of(spec[0].specification)
-    if counter is not None:
-        if not rnn.is_word_in(counter):
-            counter = None
-
-    benchmark.update({"mistake_time_super": "{:.3}".format(time.time() - start_time)})
-
-    dfa_extract_super = minimize_dfa(student.dfa)
-    if counter is None:
-        print("No mistakes found ==> DFA learned:")
-        print(student.dfa)
-        benchmark.update({"extraction_super_mistake_after": "NAN",
-                          "dfa_extract_super_states": len(dfa_extract.states),
-                          "dfa_extract_super_final": len(dfa_extract.final_states),
-                          "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
-    else:
-        print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_super_mistake_after": counter,
-                          "dfa_extract_super_states": len(dfa_extract.states),
-                          "dfa_extract_super_final": len(dfa_extract.final_states),
-                          "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
-
-    print("Finished DFA extraction")
+    # print("Starting DFA extraction super w/o model checking")
+    # rnn.num_of_membership_queries = 0
+    # start_time = time.time()
+    # student = DecisionTreeLearner(teacher_pac)
+    # teacher_pac.teach_a_superset(student, timeout=timeout)
+    # # benchmark.update({"extraction_super_time": "{:.3}".format(time.time() - start_time)})
+    #
+    # print("Model checking the extracted DFA")
+    # counter = student.dfa.is_language_not_subset_of(spec[0].specification)
+    # if counter is not None:
+    #     if not rnn.is_word_in(counter):
+    #         counter = None
+    #
+    # benchmark.update({"mistake_time_super": "{:.3}".format(time.time() - start_time)})
+    #
+    # dfa_extract_super = minimize_dfa(student.dfa)
+    # if counter is None:
+    #     print("No mistakes found ==> DFA learned:")
+    #     print(student.dfa)
+    #     benchmark.update({"extraction_super_mistake_after": "NAN",
+    #                       "dfa_extract_super_states": len(dfa_extract.states),
+    #                       "dfa_extract_super_final": len(dfa_extract.final_states),
+    #                       "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
+    # else:
+    #     print("Mistakes found ==> Counter example: {}".format(counter))
+    #     benchmark.update({"extraction_super_mistake_after": counter,
+    #                       "dfa_extract_super_states": len(dfa_extract.states),
+    #                       "dfa_extract_super_final": len(dfa_extract.final_states),
+    #                       "dfa_extract_super_mem_queries": rnn.num_of_membership_queries})
+    #
+    # print("Finished DFA extraction")
 
     ###################################################
     # Doing the model checking randomly

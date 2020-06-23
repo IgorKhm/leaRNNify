@@ -278,7 +278,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
 
 
 def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn, epsilon=0.0005, delta=0.0005)
+    teacher_pac = PACTeacher(rnn, epsilon=0.001, delta=0.001)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
@@ -717,7 +717,7 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 900
     first_entry = True
-    summary_csv = folder + "/summary_model_checking_complete_reuse.csv"
+    summary_csv = folder + "/summary_model_checking_complete_reuse_001.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]

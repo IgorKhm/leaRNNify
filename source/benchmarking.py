@@ -717,7 +717,7 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "/summary_model_checking_directed_p_0005.csv"
+    summary_csv = folder + "/summary_model_checking_directed_p_0005_sub.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]

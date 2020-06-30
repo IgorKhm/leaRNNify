@@ -210,7 +210,7 @@ class PACTeacher(Teacher):
             # Searching for counter examples in the the model:
             else:
 
-                counter_example = self.equivalence_query(learner.dfa)
+                counter_example = self.model_subset_of_dfa_query(learner.dfa)
                 if counter_example is None:
                     return None
                 else:

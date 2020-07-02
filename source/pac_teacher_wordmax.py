@@ -15,6 +15,7 @@ class PACTeacherMeme(Teacher):
 
     def __init__(self, model: DFA, epsilon=0.001, delta=0.001):
         assert ((epsilon <= 1) & (delta <= 1))
+        print("meme pac teacher")
         Teacher.__init__(self, model)
         self.epsilon = epsilon
         self.delta = delta

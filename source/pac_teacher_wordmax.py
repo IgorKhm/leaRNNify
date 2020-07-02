@@ -131,7 +131,7 @@ class PACTeacherMeme(Teacher):
             else:
 
                 counter_example,diff_with_spec = self.model_subset_of_dfa_query(learner.dfa,checker.specification)
-                if diff_with_spec
+                if diff_with_spec:
                     return counter_example
                 if counter_example is None:
                     return None

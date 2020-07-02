@@ -317,7 +317,7 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
     print("Starting DFA extraction with model checking")
     rnn.num_of_membership_queries = 0
     start_time = time.time()
-    counter = teacher_pac.check_and_teach(student, spec[0]))
+    counter = teacher_pac.check_and_teach(student, spec[0])
     benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
     dfa_extract_w_spec = student.dfa
     dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)

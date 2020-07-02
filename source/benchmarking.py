@@ -302,7 +302,7 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_mistake_during": counter[0],
+        benchmark.update({"extraction_mistake_during": counter,
                           "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
                           "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})

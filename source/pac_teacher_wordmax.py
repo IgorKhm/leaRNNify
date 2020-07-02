@@ -15,7 +15,7 @@ class PACTeacherMeme(Teacher):
 
     def __init__(self, model: DFA, epsilon=0.001, delta=0.001):
         assert ((epsilon <= 1) & (delta <= 1))
-        print("meme pac teacher")
+
         Teacher.__init__(self, model)
         self.epsilon = epsilon
         self.delta = delta
@@ -23,6 +23,8 @@ class PACTeacherMeme(Teacher):
         self._log_one_minus_epsilon = np.log(1 - epsilon)
         self._num_equivalence_asked = 0
         self._num_mem_quries_allowed = int(np.log(2 / epsilon) / (2 * delta * delta))
+
+        print("meme pac teacher: +" str(self._num_mem_quries_allowed))
 
         self.prev_examples = {}
 
@@ -107,7 +109,7 @@ class PACTeacherMeme(Teacher):
             learner.new_counterexample(counter, self.is_counter_example_in_batches)
 
 
-    def check_and_teach(self, learner, checker, num_of_membership_queries):
+    def check_and_teach(self, learner, checker):
         learner.teacher = self
         self._num_mem_quries_allowed = num_of_membership_queries
         self._num_equivalence_asked = 0

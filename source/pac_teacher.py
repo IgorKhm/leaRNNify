@@ -231,9 +231,9 @@ class PACTeacher(Teacher):
 
             counter_example = None
             # Searching for counter examples in the spec:
-            counters_example = checker.check_for_counterexample(learner.dfa)
+            counter_example = checker.check_for_counterexample(learner.dfa)
 
-            if counters_example is not None:
+            if counter_example is not None:
                 if not self.model.is_word_in(counter_example):
                     self._num_equivalence_asked += 1
                     num = learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)

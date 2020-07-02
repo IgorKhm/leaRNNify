@@ -236,7 +236,7 @@ class PACTeacher(Teacher):
             if counter_example is not None:
                 if not self.model.is_word_in(counter_example):
                     self._num_equivalence_asked += 1
-                    num = learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
+                    num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
                     if num > 1:
                         self._num_equivalence_asked += num - 1
                 else:

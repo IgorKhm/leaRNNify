@@ -226,15 +226,16 @@ class PACTeacher(Teacher):
         while True:
             if time.time() - start_time > timeout:
                 return
-            print(time.time() - start_time)
 
+            
 
-
+            counter_example = None
             # Searching for counter examples in the spec:
-            counters_examples = checker.check_for_counterexample(learner.dfa)
+            counters_example = checker.check_for_counterexample(learner.dfa)
 
-            if counters_examples is not None:
-                if not self.model.is_word_in(counter_example):
+            if counters_example is not None:
+                if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
+                if self.model.is_word_in(counter_example):
                     self._num_equivalence_asked += 1
                     num = learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
                     if num > 1:
@@ -253,7 +254,7 @@ class PACTeacher(Teacher):
                     num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
                     if num > 1:
                         self._num_equivalence_asked += num - 1
-                        
+
     def teach_a_superset(self, learner, timeout=900):
         self._num_equivalence_asked = 0
         learner.teacher = self

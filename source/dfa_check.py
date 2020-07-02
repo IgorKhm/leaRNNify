@@ -11,17 +11,17 @@ class DFAChecker(ModelChecker, ABC):
         self.is_super_set = is_super_set
 
     def check_for_counterexample(self, dfa):
-        if self.is_super_set:
-            sup_dfa = self.specification
-            inf_dfa = dfa
-        else:
-            sup_dfa = dfa
-            inf_dfa = self.specification
+        # if self.is_super_set:
+        #     sup_dfa = self.specification
+        #     inf_dfa = dfa
+        # else:
+        #     sup_dfa = dfa
+        #     inf_dfa = self.specification
 
         dfs_stack = []
         word_path = ()
 
-        dfs_stack.append([(inf_dfa.init_state, sup_dfa.init_state), word_path])
+        dfs_stack.append([(dfa.init_state, self.specification.init_state), word_path])
         visited = []
 
         while len(dfs_stack) != 0:
@@ -31,12 +31,12 @@ class DFAChecker(ModelChecker, ABC):
             else:
                 visited.append((model_state, spec_state))
 
-            if inf_dfa.is_final_state(model_state) and not (sup_dfa.is_final_state(spec_state)):
+            if dfa.is_final_state(model_state) and not (self.specification.is_final_state(spec_state)):
                 return word_path
 
             for letter in dfa.alphabet:
-                dfs_stack.append([(inf_dfa.next_state_by_letter(model_state, letter), \
-                                   sup_dfa.next_state_by_letter(spec_state, letter)),
+                dfs_stack.append([(dfa.next_state_by_letter(model_state, letter), \
+                                   self.specification.next_state_by_letter(spec_state, letter)),
                                   word_path + tuple([letter])])
 
         return None

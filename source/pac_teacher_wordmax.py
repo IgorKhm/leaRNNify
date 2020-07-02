@@ -111,7 +111,6 @@ class PACTeacherMeme(Teacher):
 
     def check_and_teach(self, learner, checker):
         learner.teacher = self
-        self._num_mem_quries_allowed = num_of_membership_queries
         self._num_equivalence_asked = 0
         start_time = time.time()
         while True:

@@ -25,7 +25,7 @@ class PACTeacher(Teacher):
         self.prev_examples = {}
 
         self.is_counter_example_in_batches = isinstance(self.model, RNNLanguageClasifier)
-
+        print("counter example in batchs : " + str(self.is_counter_example_in_batches))
     def equivalence_query(self, dfa: DFA):
         """
         Tests whether the dfa is equivalent to the model by testing random words.
@@ -177,28 +177,64 @@ class PACTeacher(Teacher):
 
         plt.show()
 
-    def check_and_teach(self, learner, checkers: [DFAChecker], timeout=900):
+    # def check_and_teach(self, learner, checkers: [DFAChecker], timeout=900):
+    #     learner.teacher = self
+    #     self._num_equivalence_asked = 0
+    #     start_time = time.time()
+    #     Counter_example = namedtuple('Counter_example', ['word', 'is_super'])
+    #
+    #     while True:
+    #         if time.time() - start_time > timeout:
+    #             return
+    #         print(time.time() - start_time)
+    #
+    #         counter_example = Counter_example(None, None)
+    #
+    #         # Searching for counter examples in the spec:
+    #         counters_examples = (Counter_example(checker.check_for_counterexample(learner.dfa), checker.is_super_set)
+    #                              for checker in checkers)
+    #         for example in counters_examples:
+    #             if example.word is not None:
+    #                 counter_example = example
+    #                 break
+    #         if counter_example.word is not None:
+    #             if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
+    #                 self._num_equivalence_asked += 1
+    #                 num = learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
+    #                 if num > 1:
+    #                     self._num_equivalence_asked += num - 1
+    #             else:
+    #                 print('found counter mistake in the model: ', counter_example)
+    #                 return counter_example
+    #
+    #         # Searching for counter examples in the the model:
+    #         else:
+    #
+    #             counter_example = self.model_subset_of_dfa_query(learner.dfa)
+    #             if counter_example is None:
+    #                 return None
+    #             else:
+    #                 num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
+    #                 if num > 1:
+    #                     self._num_equivalence_asked += num - 1
+    def check_and_teach(self, learner, checker, timeout=900):
         learner.teacher = self
         self._num_equivalence_asked = 0
         start_time = time.time()
-        Counter_example = namedtuple('Counter_example', ['word', 'is_super'])
+
 
         while True:
             if time.time() - start_time > timeout:
                 return
             print(time.time() - start_time)
 
-            counter_example = Counter_example(None, None)
+
 
             # Searching for counter examples in the spec:
-            counters_examples = (Counter_example(checker.check_for_counterexample(learner.dfa), checker.is_super_set)
-                                 for checker in checkers)
-            for example in counters_examples:
-                if example.word is not None:
-                    counter_example = example
-                    break
-            if counter_example.word is not None:
-                if counter_example.is_super != (self.model.is_word_in(counter_example.word)):
+            counters_examples = checker.check_for_counterexample(learner.dfa)
+
+            if counters_examples is not None:
+                if not self.model.is_word_in(counter_example):
                     self._num_equivalence_asked += 1
                     num = learner.new_counterexample(counter_example[0], self.is_counter_example_in_batches)
                     if num > 1:
@@ -210,14 +246,14 @@ class PACTeacher(Teacher):
             # Searching for counter examples in the the model:
             else:
 
-                counter_example = self.equivalence_query(learner.dfa)
+                counter_example = self.model_subset_of_dfa_query(learner.dfa)
                 if counter_example is None:
                     return None
                 else:
                     num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
                     if num > 1:
                         self._num_equivalence_asked += num - 1
-
+                        
     def teach_a_superset(self, learner, timeout=900):
         self._num_equivalence_asked = 0
         learner.teacher = self

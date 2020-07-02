@@ -24,7 +24,7 @@ class PACTeacherMeme(Teacher):
         self._num_equivalence_asked = 0
         self._num_mem_quries_allowed = int(np.log(2 / epsilon) / (2 * delta * delta))
 
-        print("meme pac teacher: +" str(self._num_mem_quries_allowed))
+        print("meme pac teacher: " +str(self._num_mem_quries_allowed))
 
         self.prev_examples = {}
 

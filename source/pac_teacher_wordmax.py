@@ -133,6 +133,7 @@ class PACTeacherMeme(Teacher):
 
                 counter_example,diff_with_spec = self.model_subset_of_dfa_query(learner.dfa,checker.specification)
                 if diff_with_spec:
+                    print("from rand")
                     return counter_example
                 if counter_example is None:
                     return None

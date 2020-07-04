@@ -309,49 +309,49 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
     #                       "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
     #
     # print(benchmark)
-
-    print("Starting DFA extraction")
-    ##################################################
-    # Doing the model checking during a DFA extraction
-    ###################################################
-    print("Starting DFA extraction with model checking")
-    rnn.num_of_membership_queries = 0
-    start_time = time.time()
-    counter = teacher_pac.check_and_teach(student, spec[0])
-    benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
-    dfa_extract_w_spec = student.dfa
-    dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
-
-    if counter is None:
-        print("No mistakes found ==> DFA learned:")
-        print(student.dfa)
-        benchmark.update({"extraction_mistake_during": "NAN",
-                          "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
-                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
-                          "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
-    else:
-        print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_mistake_during": counter,
-                          "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
-                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
-                          "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
-
-    print(benchmark)
-
+    #
+    # print("Starting DFA extraction")
+    # ##################################################
+    # # Doing the model checking during a DFA extraction
     # ###################################################
-    # # Doing the model checking randomly
-    # ###################################################
-    # print("starting rand model checking")
+    # print("Starting DFA extraction with model checking")
     # rnn.num_of_membership_queries = 0
     # start_time = time.time()
-    # counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
+    # counter = teacher_pac.check_and_teach(student, spec[0])
+    # benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
+    # dfa_extract_w_spec = student.dfa
+    # dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
+    #
     # if counter is None:
-    #     counter = "NAN"
-    # benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
-    #                   "mistake_rand": counter,
-    #                   "rand_num_queries": rnn.num_of_membership_queries})
+    #     print("No mistakes found ==> DFA learned:")
+    #     print(student.dfa)
+    #     benchmark.update({"extraction_mistake_during": "NAN",
+    #                       "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
+    #                       "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
+    #                       "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
+    # else:
+    #     print("Mistakes found ==> Counter example: {}".format(counter))
+    #     benchmark.update({"extraction_mistake_during": counter,
+    #                       "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
+    #                       "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
+    #                       "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
     #
     # print(benchmark)
+
+    ###################################################
+    # Doing the model checking randomly
+    ###################################################
+    print("starting rand model checking")
+    rnn.num_of_membership_queries = 0
+    start_time = time.time()
+    counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
+    if counter is None:
+        counter = "NAN"
+    benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
+                      "mistake_rand": counter,
+                      "rand_num_queries": rnn.num_of_membership_queries})
+
+    print(benchmark)
     return
 
 
@@ -762,7 +762,7 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "/summary_model_checking_memm005_2.csv"
+    summary_csv = folder + "/summary_model_checking_rand_short.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]

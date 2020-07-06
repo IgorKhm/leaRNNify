@@ -176,10 +176,10 @@ class DecisionTreeLearner(Learner):
 
     def new_counterexample(self, word, do_hypothesis_in_batches=False,max_refinements=20):
         val = self.dfa.is_word_in(word)
-        numb_of_refinements = max_refinements
+        numb_of_refinements = 1
         l =[]
         while self.dfa.is_word_in(word) == val:
-            if numb_of_refinements > 20:
+            if numb_of_refinements > max_refinements:
                 print("num of ref: {}".format(numb_of_refinements))
                 return numb_of_refinements
                 print(word)

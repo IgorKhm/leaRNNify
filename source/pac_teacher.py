@@ -251,7 +251,7 @@ class PACTeacher(Teacher):
                     return None
                 else:
                     if not checker.specification.is_word_in(counter_example):
-                        num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches,max_refinements = len(counter_example))
+                        num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches,max_refinements = len(counter_example)+1)
                         print("rand mistake")
                         print(checker.specification.is_word_in(counter_example))
                         print(learner.dfa.is_word_in(counter_example))

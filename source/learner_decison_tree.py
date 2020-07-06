@@ -237,4 +237,5 @@ class DecisionTreeLearner(Learner):
                 self.dfa = self._produce_hypothesis()
         if numb_of_refinements > 1:
             print("num of ref: {}".format(numb_of_refinements))
+            print(self.dfa.is_word_in(word) == val)
         return numb_of_refinements

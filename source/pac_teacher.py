@@ -250,7 +250,11 @@ class PACTeacher(Teacher):
                 if counter_example is None:
                     return None
                 else:
-                    num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
+                    if not checker.is_word_in(counter_example):
+                        num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches,max_refinements = len(counter_example))
+                        print("rand mistake")
+                    else:
+                        num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
                     if num > 1:
                         self._num_equivalence_asked += num - 1
 

@@ -402,11 +402,9 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.005, delta=0.001):
     print(output)
 
     benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
-                      "dist_rnn_vs_extr_spec": "{}".format(output[1][2]),
-                      "dist_rnn_vs_extr": "{}".format(output[1][3])})
+                      "dist_rnn_vs_extr": "{}".format(output[1][2])})
 
-    benchmark.update({"dist_inter_vs_extr_spec": "{}".format(output[0][2]),
-                      "dist_inter_vs_extr": "{}".format(output[0][3])})
+    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2])})
 
     # start_time = time.time()
     # a, samples = confidence_interval_subset(models[1], dfa_spec, confidence=epsilon, width=delta)

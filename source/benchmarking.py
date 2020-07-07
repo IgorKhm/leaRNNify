@@ -769,7 +769,7 @@ def complition(folder):
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
             dfa = load_dfa_dot(folder[0] + "/dfa.dot")
 
-            benchmark = {"name": name, "spec_num": file}
+            benchmark = {"name": name}
             extracted = check_rnn_acc_to_spec_only_mc(rnn, dfa, benchmark, timeout)
 
             models = [dfa, rnn, extracted]

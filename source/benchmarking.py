@@ -774,7 +774,7 @@ def complition(folder):
 
             models = [dfa, rnn, extracted]
 
-            compute_distances(models, benchmark, delta=0.005, epsilon=0.005)
+            compute_distances(models,None, benchmark, delta=0.005, epsilon=0.005)
             if first_entry:
                 write_csv_header(summary_csv, benchmark.keys())
                 first_entry = False

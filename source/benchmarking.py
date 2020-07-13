@@ -202,7 +202,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     # benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
 
     print("Model checking the extracted DFA")
-    counter = student.dfa.is_language_not_subset_of(spec.specification)
+    counter = student.dfa.is_language_not_subset_of(spec[0].specification)
     if counter is not None:
         if not rnn.is_word_in(counter):
             counter = None

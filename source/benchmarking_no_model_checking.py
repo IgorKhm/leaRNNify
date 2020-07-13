@@ -90,7 +90,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    if float(benchmark["rnn_testing_acc"]) < 95:
+    if float(benchmark["rnn_testing_acc"]) < 90:
         print("didn't learned the rnn well enough starting over")
         return
 
@@ -105,7 +105,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
 
     models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
-    compute_distances_no_model_checking(models, benchmark, delta=0.05, epsilon=0.05)
+    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
 
 
 def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
@@ -184,7 +184,7 @@ def rand_benchmark(save_dir=None):
     return benchmark
 
 
-def run_rand_benchmarks_wo_model_checking(num_of_bench=10, save_dir=None):
+def run_rand_benchmarks_wo_model_checking(num_of_bench=30, save_dir=None):
     print("Running benchmark without model checking with "+ str(num_of_bench) +" number of benchmarks")
     if save_dir is None:
         save_dir = "../models/random_bench_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))

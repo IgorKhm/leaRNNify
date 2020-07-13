@@ -98,7 +98,7 @@ class PACTeacher(Teacher):
     def membership_query(self, word):
         return self.model.is_word_in(word)
 
-    def teach(self, learner, timeout=900):
+    def teach(self, learner, timeout=600):
         self._num_equivalence_asked = 0
         learner.teacher = self
         i = 0
@@ -217,7 +217,7 @@ class PACTeacher(Teacher):
     #                 num = learner.new_counterexample(counter_example, self.is_counter_example_in_batches)
     #                 if num > 1:
     #                     self._num_equivalence_asked += num - 1
-    def check_and_teach(self, learner, checker, timeout=900):
+    def check_and_teach(self, learner, checker, timeout=600):
         learner.teacher = self
         self._num_equivalence_asked = 0
         start_time = time.time()

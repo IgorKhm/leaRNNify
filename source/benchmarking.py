@@ -162,7 +162,7 @@ def learn_and_check(dfa: DFA, spec: [DFAChecker], benchmark, dir_name=None):
 
 
 def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn, epsilon=0.005, delta=0.005)
+    teacher_pac = PACTeacher(rnn, epsilon=0.0005, delta=0.0005)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
@@ -279,17 +279,45 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
 
 
 def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
-    teacher_pac = PACTeacher(rnn, epsilon=0.005, delta=0.005)
+    teacher_pac = PACTeacher(rnn, epsilon=0.0005, delta=0.0005)
     student = DecisionTreeLearner(teacher_pac)
 
     print("Starting DFA extraction")
     ##################################################
     # Doing the model checking during a DFA extraction
     ###################################################
+    print("Starting DFA extraction with model checking")
+    rnn.num_of_membership_queries = 0
+    start_time = time.time()
+    counter = teacher_pac.check_and_teach(student, spec[0], timeout=timeout)
+    benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
+    dfa_extract_w_spec = student.dfa
+    dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
+
+    if counter is None:
+        print("No mistakes found ==> DFA learned:")
+        print(student.dfa)
+        benchmark.update({"extraction_mistake_during": "NAN",
+                          "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
+                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
+                          "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
+    else:
+        print("Mistakes found ==> Counter example: {}".format(counter))
+        benchmark.update({"extraction_mistake_during": counter,
+                          "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
+                          "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
+                          "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
+
+    print(benchmark)
+
+    # print("Starting DFA extraction")
+    # ##################################################
+    # # Doing the model checking during a DFA extraction
+    # ###################################################
     # print("Starting DFA extraction with model checking")
     # rnn.num_of_membership_queries = 0
     # start_time = time.time()
-    # counter = teacher_pac.check_and_teach(student, spec[0], timeout=timeout)
+    # counter = teacher_pac.check_and_teach(student, spec[0])
     # benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
     # dfa_extract_w_spec = student.dfa
     # dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
@@ -309,36 +337,6 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
     #                       "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
     #
     # print(benchmark)
-
-    print("Starting DFA extraction")
-    ##################################################
-    # Doing the model checking during a DFA extraction
-    ###################################################
-    print("Starting DFA extraction with model checking")
-    rnn.num_of_membership_queries = 0
-    start_time = time.time()
-    counter = teacher_pac.teach(student)
-    benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
-    dfa_extract_w_spec = student.dfa
-    dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
-
-    # if counter is None:
-    #     print("No mistakes found ==> DFA learned:")
-    #     print(student.dfa)
-    #     benchmark.update({"extraction_mistake_during": "NAN",
-    #                       "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
-    #                       "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
-    #                       "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
-    # else:
-    #     print("Mistakes found ==> Counter example: {}".format(counter))
-    benchmark.update({"dfa_extract_specs_states": len(dfa_extract_w_spec.states),
-                      "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
-                      "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
-
-    print(benchmark)
-
-    return dfa_extract_w_spec
-
 
     ###################################################
     # Doing the model checking randomly
@@ -402,19 +400,23 @@ def compute_distances(models, dfa_spec, benchmark, epsilon=0.005, delta=0.001):
     print(output)
 
     benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
-                      "dist_rnn_vs_extr": "{}".format(output[1][2])})
+                      "dist_rnn_vs_extr_spec": "{}".format(output[1][2]),
+                      "dist_rnn_vs_extr": "{}".format(output[1][3]),
+                      "dist_rnn_vs_icml18": "{}".format(output[1][4])})
 
-    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2])})
+    benchmark.update({"dist_inter_vs_extr_spec": "{}".format(output[0][2]),
+                      "dist_inter_vs_extr": "{}".format(output[0][3]),
+                      "dist_inter_vs_icml18": "{}".format(output[0][4])})
 
-    # start_time = time.time()
-    # a, samples = confidence_interval_subset(models[1], dfa_spec, confidence=epsilon, width=delta)
-    # benchmark.update({"statistic_checking_time": time.time() - start_time})
-    # b, _ = confidence_interval_subset(models[2], dfa_spec, samples, epsilon, delta)
-    # c, _ = confidence_interval_subset(models[3], dfa_spec, samples, epsilon, delta)
-    # benchmark.update(
-    #     {"dist_specs_rnn": "{}".format(a),
-    #      "dist_specs_extract_w_spec": "{}".format(b),
-    #      "dist_specs_extract": "{}".format(c)})
+    start_time = time.time()
+    a, samples = confidence_interval_subset(models[1], dfa_spec, confidence=epsilon, width=delta)
+    benchmark.update({"statistic_checking_time": time.time() - start_time})
+    b, _ = confidence_interval_subset(models[2], dfa_spec, samples, epsilon, delta)
+    c, _ = confidence_interval_subset(models[3], dfa_spec, samples, epsilon, delta)
+    benchmark.update(
+        {"dist_specs_rnn": "{}".format(a),
+         "dist_specs_extract_w_spec": "{}".format(b),
+         "dist_specs_extract": "{}".format(c)})
 
     print("Finished distance measuring")
 
@@ -704,7 +706,7 @@ def model_check_tomita():
 
 
 def check_folder_of_rand(folder):
-    timeout = 900
+    timeout = 600
     first_entry = True
     summary_csv = folder + "/summary_model_checking.csv"
     for folder in os.walk(folder):
@@ -715,14 +717,15 @@ def check_folder_of_rand(folder):
             i = 1
             for dfa_spec in from_dfa_to_sup_dfa_gen(dfa):
                 dfa_spec.save(folder[0] + "/spec_" + str(i))
-                benchmark = {"name": name, "spec_num": str(i)}
+                benchmark = {"name": name, "spec_num": str(i),
+                             "spec_states":len(dfa_spec.states),
+                             "spec_fin":len(dfa_spec.final_states)}
                 check_rnn_acc_to_spec(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
                 if first_entry:
                     write_csv_header(summary_csv, benchmark.keys())
                     first_entry = False
                 write_line_csv(summary_csv, benchmark, benchmark.keys())
                 i += 1
-
             # print(dfa.final_states)
             # print(dfa)
 
@@ -760,20 +763,18 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "/summary_model_distance.csv"
+    summary_csv = folder + "/summary_model_checking_directed_with_spec_0005.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
-            dfa = load_dfa_dot(folder[0] + "/dfa.dot")
-
-            benchmark = {"name": name}
-            extracted = check_rnn_acc_to_spec_only_mc(rnn, dfa, benchmark, timeout)
-
-            models = [dfa, rnn, extracted]
-
-            compute_distances(models,None, benchmark, delta=0.005, epsilon=0.005)
-            if first_entry:
-                write_csv_header(summary_csv, benchmark.keys())
-                first_entry = False
-            write_line_csv(summary_csv, benchmark, benchmark.keys())
+            # dfa = load_dfa_dot(folder[0] + "/dfa.dot")
+            for file in os.listdir(folder[0]):
+                if 'spec' in file:
+                    dfa_spec = load_dfa_dot(folder[0] + "/dfa.dot")
+                    benchmark = {"name": name, "spec_num": file}
+                    check_rnn_acc_to_spec_only_mc(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
+                    if first_entry:
+                        write_csv_header(summary_csv, benchmark.keys())
+                        first_entry = False
+                    write_line_csv(summary_csv, benchmark, benchmark.keys())

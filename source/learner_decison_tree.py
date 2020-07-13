@@ -231,11 +231,9 @@ class DecisionTreeLearner(Learner):
             self._leafs.extend([node_to_replace.right, node_to_replace.left])
 
             if do_hypothesis_in_batches:
-                print("hypothesis is batches")
                 self.dfa = self._produce_hypothesis_set()
             else:
                 self.dfa = self._produce_hypothesis()
         if numb_of_refinements > 1:
             print("num of ref: {}".format(numb_of_refinements))
-            print(self.dfa.is_word_in(word) == val)
         return numb_of_refinements

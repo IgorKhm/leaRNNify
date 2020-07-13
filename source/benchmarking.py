@@ -716,7 +716,7 @@ def check_folder_of_rand(folder):
             dfa = load_dfa_dot(folder[0] + "/dfa.dot")
             i = 1
             for dfa_spec in from_dfa_to_sup_dfa_gen(dfa):
-                dfa_spec.save(folder[0] + "/spec_" + str(i))
+                dfa_spec.save(folder[0] + "/spec_second_" + str(i))
                 benchmark = {"name": name, "spec_num": str(i),
                              "spec_states":len(dfa_spec.states),
                              "spec_fin":len(dfa_spec.final_states)}

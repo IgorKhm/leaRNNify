@@ -172,7 +172,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     print("Starting DFA extraction with model checking")
     rnn.num_of_membership_queries = 0
     start_time = time.time()
-    counter = teacher_pac.check_and_teach(student, spec, timeout=timeout)
+    counter = teacher_pac.check_and_teach(student, spec[0], timeout=timeout)
     benchmark.update({"during_time_spec": "{:.3}".format(time.time() - start_time)})
     dfa_extract_w_spec = student.dfa
     dfa_extract_w_spec = minimize_dfa(dfa_extract_w_spec)
@@ -708,7 +708,7 @@ def model_check_tomita():
 def check_folder_of_rand(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "/summary_model_checking.csv"
+    summary_csv = folder + "/summary_model_checking_second_try.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]

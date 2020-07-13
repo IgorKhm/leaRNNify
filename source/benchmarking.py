@@ -186,7 +186,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
     else:
         print("Mistakes found ==> Counter example: {}".format(counter))
-        benchmark.update({"extraction_mistake_during": counter[0],
+        benchmark.update({"extraction_mistake_during": counter,
                           "dfa_extract_specs_states": len(dfa_extract_w_spec.states),
                           "dfa_extract_specs_final": len(dfa_extract_w_spec.final_states),
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
@@ -202,7 +202,7 @@ def check_rnn_acc_to_spec(rnn, spec, benchmark, timeout=900):
     # benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
 
     print("Model checking the extracted DFA")
-    counter = student.dfa.is_language_not_subset_of(spec[0].specification)
+    counter = student.dfa.is_language_not_subset_of(spec.specification)
     if counter is not None:
         if not rnn.is_word_in(counter):
             counter = None

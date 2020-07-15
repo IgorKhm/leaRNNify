@@ -338,20 +338,20 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
     #
     # print(benchmark)
 
+    ##################################################
+    Doing the model checking randomly
     ###################################################
-    # Doing the model checking randomly
-    # ###################################################
-    # print("starting rand model checking")
-    # rnn.num_of_membership_queries = 0
-    # start_time = time.time()
-    # counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
-    # if counter is None:
-    #     counter = "NAN"
-    # benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
-    #                   "mistake_rand": counter,
-    #                   "rand_num_queries": rnn.num_of_membership_queries})
-    #
-    # print(benchmark)
+    print("starting rand model checking")
+    rnn.num_of_membership_queries = 0
+    start_time = time.time()
+    counter = model_check_random(rnn, spec[0].specification, width=0.005, confidence=0.005)
+    if counter is None:
+        counter = "NAN"
+    benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
+                      "mistake_rand": counter,
+                      "rand_num_queries": rnn.num_of_membership_queries})
+
+    print(benchmark)
     return
 
 
@@ -763,15 +763,15 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "/summary_model_checking_directed_with_spec_0005.csv"
+    summary_csv = folder + "summary_second_try_complition.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
             # dfa = load_dfa_dot(folder[0] + "/dfa.dot")
             for file in os.listdir(folder[0]):
-                if 'spec' in file:
-                    dfa_spec = load_dfa_dot(folder[0] + "/dfa.dot")
+                if 'spec_second_' in file:
+                    dfa_spec = load_dfa_dot(file)
                     benchmark = {"name": name, "spec_num": file}
                     check_rnn_acc_to_spec_only_mc(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
                     if first_entry:

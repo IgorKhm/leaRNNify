@@ -221,10 +221,10 @@ def model_check_random(language_inf, language_sup,  confidence=0.001, width=0.00
         for x, y, w in zip(language_inf.is_words_in_batch(batch) > 0.5, [language_sup.is_word_in(w) for w in batch],
                            batch):
             if x and (not y):
-                short_word = ""
-                for l in w:
-                    short_word+=l
-                    if language_inf.is_word_in(short_word) and (not language_sup.is_word_in(short_word)):
-                        return short_word
+                # short_word = ""
+                # for l in w:
+                #     short_word+=l
+                #     if language_inf.is_word_in(short_word) and (not language_sup.is_word_in(short_word)):
+                #         return short_word
                 return w
     return None

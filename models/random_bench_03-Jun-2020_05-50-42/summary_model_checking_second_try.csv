@@ -1,0 +1,48 @@
+name,spec_num,spec_states,spec_fin,during_time_spec,extraction_mistake_during,dfa_extract_specs_states,dfa_extract_specs_final,dfa_extract_spec_mem_queries,mistake_time_extraction,extraction_mistake_after,dfa_extract_states,dfa_extract_final,dfa_extract_mem_queries,mistake_time_rand,mistake_rand,rand_num_queries
+13,1,8,7,13.0,NAN,8,1,35578,7.67,NAN,8,1,19154,42.9,NAN,120000
+13,2,8,6,12.2,NAN,8,1,32831,8.11,NAN,8,1,20682,44.3,NAN,120000
+13,3,8,3,11.2,NAN,8,1,30194,9.25,NAN,8,1,23708,44.2,NAN,120000
+13,4,8,2,13.6,NAN,8,1,36797,9.09,NAN,8,1,23631,42.4,NAN,120000
+13,5,8,3,11.8,NAN,8,1,35824,6.93,NAN,8,1,19387,39.8,NAN,120000
+22,1,11,9,9.39,"('e', 'e', 'e', 'c', 'b', 'c', 'e', 'a', 'b', 'b')",16,13,9825,6.14e+02,"('b', 'c', 'e', 'e', 'b')",483,378,6208744,0.474,caaaadcbecaececaaabeacbaaeaacbecccedcabadbbdbdcccccbbaeadddddbebcebdeceaedabadbdccbcdbcabbaddadaecceedeccdacadcdbbbadbacdedcedbebdee,532
+22,2,11,10,7.74,"('e', 'e', 'd', 'c', 'e', 'd', 'e', 'd')",18,13,14591,49.3,"('e', 'e', 'e', 'c', 'a', 'd')",51,39,132286,0.931,eeecccbec,2209
+22,3,11,10,6.02,"('e', 'e', 'e', 'c', 'b', 'd', 'a')",15,11,15490,6.03e+02,"('b', 'c', 'e', 'e', 'd', 'e')",405,307,4930584,2.58,ccbbebabceedcdeadbaeedccee,6226
+7,1,19,12,2e+03,NAN,214,51,1204930,6.03e+02,NAN,445,105,5082784,17.2,bbceadbaeadcdacadabddcebbebbaccaaedaeabbbadcdaaedccbbbeecedcebbebdebaedddcbeaacdebecbedceacaaacccecdbcdcedcbccdabceeedbbadeadedacdbccccecbadcabeecaabbecdaebcedbbecaabcaebbedddadabadcedbedaacebaeeaddbbbbcbcbbceaddcccecadeebbdabdabedbcadddbeeecdadcddec,31450
+7,2,19,11,35.0,"('d', 'e', 'b', 'c', 'a', 'a', 'c', 'a', 'b')",38,11,43773,6.05e+02,"('c', 'b', 'e', 'b', 'd', 'e', 'e')",437,101,4994542,4.72,ebeeaccacaaeeccabcbedcbcbebcaacecbbc,9236
+7,3,19,8,47.0,"('c', 'd', 'e', 'd', 'd', 'c', 'a')",65,15,78861,6.01e+02,NAN,429,108,4884041,12.0,bedccabeecbeddbdbae,26019
+7,4,19,12,94.9,"('b', 'b', 'e', 'b', 'c', 'c', 'a', 'b', 'c', 'c')",39,10,34206,6.04e+02,"('b', 'c', 'a', 'a', 'c', 'e')",460,105,5354604,11.0,caedeceacdeeeeddaadeaecacbcaeacbabbedbedccccdaaebdbbbcedcdbaccdaabadcedbaebbcdeccbdabcbaecbcbaadcbededceccabadaddebdbeeeeaacebccbaeedcbdbcbeebeeabbcabeebededbaaccaeededdecebbddeedbbcdadcecceeaaebacccccaebecececbbaacaceddeddbbbbacbccccdac,19437
+7,5,19,8,49.8,"('d', 'e', 'b', 'c', 'a', 'a', 'c', 'e')",40,10,44507,6.1e+02,NAN,423,116,4449577,3.62,ddedbbaddeaceddbdedacaddcecdcaacdedcbcbccaaacbac,7048
+28,1,21,19,11.2,"('b', 'd', 'd', 'e', 'c', 'c', 'c', 'e', 'a', 'a')",26,22,17357,6.2e+02,NAN,470,384,5686858,0.922,cabcbbbcbaebaeeeaabebbeabadacaabeadeaebaacadbcddccdbbaebcebecbdeedcbcdaddacaaadaeaeedbeacebceeeebeeeaeabdaaadacc,712
+28,2,21,20,9.7,"('b', 'b', 'e', 'b', 'a', 'a', 'e', 'a', 'b', 'd', 'c', 'a', 'b')",32,26,17627,6.02e+02,NAN,405,333,4030708,6.38,aceedbddedeceecbd,10817
+28,3,21,19,13.6,"('a', 'd', 'a', 'd', 'e', 'd', 'd', 'd', 'd', 'd', 'd', 'a', 'd', 'a')",29,25,14136,6.45e+02,NAN,438,360,4833120,0.192,daedacdbbbdecacacccceeeebeecadeb,232
+26,1,9,7,11.5,NAN,9,4,34303,22.6,NAN,29,18,58719,39.7,NAN,120000
+26,2,9,7,13.1,NAN,9,4,39660,8.69,NAN,9,4,25345,40.1,NAN,120000
+26,3,9,7,13.1,NAN,9,4,39652,7.7,NAN,9,4,22308,40.0,NAN,120000
+26,4,9,5,11.7,NAN,9,4,34331,7.14,NAN,9,4,20659,40.0,NAN,120000
+26,5,9,6,13.1,NAN,9,4,39656,8.84,NAN,9,4,25548,39.9,NAN,120000
+9,1,23,18,13.8,"('a', 'e', 'e', 'b', 'b', 'e', 'd', 'd', 'e', 'b', 'b')",37,27,22165,6.15e+02,NAN,432,288,5001334,6.06,eadbdbebabcdedaacbcabcdcbdddabcabecedabaebeebddbbecbdeacbeadebdceeeecaeaccccdbdcbdaccddebadecdcdbdbdbedabebbeebbbaecdadaddcddadccbababcbaeabbbeddddeeaceacdbbcddecbcbadcdaddebadadcabddecdeeebdbabedabdaaabcaacababaebaeeabeeedcedbcebdaadababddddadbcbbbcceecbedbbedbdccbbbeacaeedaabdedcedacccacbbbddcabbcaabaaededdcbcbedebbdaecdeadeaecbcbecebccbbceabecacdeddddaedabeaacaeccedddddabacdaedbdccccedeebbcbedcbcbaaeacdacbacbeadcebccdeeacedaebbedcba,1839
+9,2,23,20,13.2,"('a', 'e', 'e', 'b', 'b', 'e', 'd', 'e', 'e', 'a', 'a', 'd')",30,21,17297,6.03e+02,NAN,407,274,4119203,1.35,bdbcbdaaabbeebbedacdcdbed,2025
+9,3,23,16,8.57,"('a', 'e', 'e', 'b', 'c', 'a', 'd', 'e', 'e', 'c', 'd', 'a')",30,21,16795,6.16e+02,NAN,451,298,4855213,2.7,eeccdacceacacdcbdaccdddcecdcbb,4630
+9,4,23,19,3.55,"('a', 'a', 'b', 'c', 'd', 'e', 'e', 'c', 'c', 'c', 'c')",28,19,13572,6.25e+02,NAN,426,294,4611989,2.8,eeecbdababcdcccebcaeaaeeedcadadcedeaeeaddaaedacceadcadaaddaadabadcccaabedededbbedbbbcbcceaccccaedcdddbaeaacacabdabadbcdbbcecacadeaaedecbaecceadbedebdceddabccdcbabdcdeadaadeedebcdbeadcceceddebaceaeaedcbeddcedeeaddebbaceccceddcbadcddebaabbdcecdabbacddecaedaeeccbacbaeddbcccbdcbeaaddeadcccedaaadeecdbbedeccbbda,907
+9,5,23,19,20.0,"('a', 'a', 'b', 'd', 'd', 'd', 'a', 'd', 'a', 'd', 'd')",28,18,37375,6.26e+02,NAN,409,286,4389626,0.935,aeabbcadaaecebbbadeaedcbacdcabcbadeeceebcebcddcdbceddceeadbeaadaebecbabeedccbadecccbedbdbabcccbbdcabbbdaeedecaebcbcbdabcaddabeebecebecacbebbadadcbdeaddabacbbdbdccadeeeeeaabddb,375
+11,1,28,21,36.6,"('c', 'b', 'a', 'a', 'd', 'a', 'b', 'a')",31,20,18580,6.28e+02,NAN,422,288,4588320,6.45,bcbdcdabbeacaedaeccaeaebbaeaaddcebaecddecbdcebcececcccdccbeebcebadbedcebeadcccaebbdaddabcabcdebedeeebabddedddeacdcaacaaebccedccdbbaaebbdbaebdacbdbacdabdbccbeaabcbccadacab,8770
+11,2,28,26,13.2,"('a', 'e', 'c', 'b', 'a', 'a', 'd', 'c', 'e', 'e')",36,21,24668,6.33e+02,NAN,379,248,3655929,10.9,cdeebcccceeaecacdcbeeaacadacacdebcdbebdaeeececabca,16850
+11,3,28,26,16.4,"('e', 'b', 'a', 'a', 'b', 'c', 'a', 'a', 'd', 'a', 'd', 'c')",48,32,37796,6.14e+02,"('c', 'b', 'a', 'a', 'd', 'a', 'd', 'c')",380,265,3446996,1.99,ecedebdccbcadbccbcbdedabcbbbabbaabdbbeebadbccdadbaaedddebbdbdedabcaaccebadbcdebaadacbeead,2889
+11,4,28,22,1.25e+02,"('a', 'e', 'c', 'b', 'a', 'a', 'd', 'd')",32,19,22493,6.26e+02,NAN,359,235,3175528,1.66,dabaeaebbbbabbaaebeceebdcdbeeaabbceccdcabcc,2643
+11,5,28,20,5.39,"('c', 'b', 'a', 'a', 'd', 'a', 'b', 'a')",32,20,18271,6.21e+02,"('e', 'b', 'c', 'd', 'c', 'a', 'b')",392,246,3783404,11.1,aeaaeadeddbcaedcebaccacbedbccdabccadedbbbbcdaaeadeddaaeaebbccccbbadcdcbaebdbbebdaebcbcdcdababbbdaddcdbdbcaddbd,17110
+3,1,14,12,1.7,"('a', 'e', 'b', 'c', 'c', 'd', 'b', 'a', 'b', 'b')",18,15,6037,22.6,"('c', 'c', 'b', 'a', 'b', 'c', 'e')",20,15,32912,9.54,edacacadceeccaabaccacaeabeceeccacdacaceedbbbdedaabddedeeacabddbecdabdaccebccdbdabcddcebdb,22489
+3,2,14,12,14.7,"('a', 'b', 'c', 'c', 'd', 'c', 'b', 'a', 'b', 'd')",22,18,28859,19.1,NAN,20,15,32274,2.08,daccbbbdbedeaacacddcdeebeccdabaedcbabbeaabbe,5044
+3,3,14,13,16.5,"('a', 'e', 'b', 'd', 'd', 'e', 'a', 'e', 'a', 'a', 'd', 'a', 'd')",22,16,12539,6.03e+02,"('b', 'd', 'c', 'b', 'a', 'b', 'a', 'b', 'd')",511,421,6773221,22.8,ddcacbdbeeaadeddddebacdbecccaeebadadeaeaedabbbabddbbdbabdeadbcdacadaedacbbcaddabceebbcdaadbcaadbddedccdedbaabdaabadadececbaebbaaebdccddaeaebcedcccadddadadcbadcdcbabcdcacdcc,54172
+5,1,27,25,0.536,"('a', 'b', 'd', 'd', 'e', 'e')",8,1,1088,6.2e+02,"('a', 'c', 'b', 'a', 'e')",481,14,6395893,0.618,aacbdccdbebcaadaccbceddcccdbddcccdaaeedabbedaecdeecbbabadabbedcbebdcadebdddbbbbee,681
+5,2,27,11,0.414,"('a', 'b', 'b', 'e', 'e')",6,1,718,6.35e+02,"('c', 'c', 'e', 'e')",494,14,6861276,0.275,baeaebceeabcbcecdaaddbedacadcadcdeadcebdedddcaccadbdae,254
+5,3,27,4,1.79,"('c', 'c', 'e', 'e')",16,1,4183,6.33e+02,"('c', 'c', 'e', 'e')",488,11,6957041,0.23,bcbbbbcdbeddbbccacadecbcaaaeacbeabdedccbababdee,247
+5,4,27,16,0.375,"('a', 'b', 'd', 'e', 'e')",5,1,529,6.31e+02,"('c', 'c', 'e', 'e')",478,17,6523686,0.162,bdbbee,206
+5,5,27,11,0.518,"('a', 'a', 'b', 'a', 'e')",9,1,1435,6.42e+02,NAN,472,17,6592250,0.149,bebbbbdbbadacee,215
+24,1,23,20,23.0,"('b', 'a', 'c', 'e', 'a', 'b', 'a', 'c', 'e', 'b', 'c', 'c')",43,23,48368,6.16e+02,NAN,332,178,3098690,4.59,bccaeceeccbddaeaebccacedaaacdebeabbacacceabdebbaaccbdcaabdadeeabbecacdceacaebeabeeadcacebeeea,7093
+24,2,23,18,7.66,"('a', 'e', 'd', 'a', 'd', 'e', 'e', 'e', 'd', 'a', 'a', 'e', 'e', 'b', 'b', 'c', 'b', 'c', 'c')",36,20,20221,6.05e+02,"('c', 'd', 'd', 'b', 'c', 'c', 'd', 'b', 'a')",269,147,1747256,1.98,ceaeeebbeaececddcdbdeebbebcccdceabbaaadaedeedbdcdaacdbbeeebedebeecbdeedcadeacecaabbedccdadcaddcecccadcebaadedbabceddbbbaacaeaaecccddbcacebeedddcebdacadbbabaebaaebcbedeaabccadedecdeacaedaacadebaddcaabaccdbcdbeacaeddbccdbaaacbc,1225
+24,3,23,18,8.82,"('b', 'a', 'd', 'd', 'd', 'c', 'e', 'a', 'b', 'd', 'c', 'a', 'a', 'a')",38,25,24319,21.0,NAN,23,14,37624,15.3,ccbdbcedebcdbacbdedbddccadeadcdbedbdcccaceaadbdedebeabbadbedbdbaceceabccaeaaacecddebbabcadcebbcdbbabbcbbcabccdbbeaeeaccaacbcbdaebdbeaaeeadeeaccabceceddcbadadeebbebbeacdacbaddbecaeccbbdbcccedaeaaaddcabccbddacddcbe,24412
+24,4,23,20,44.0,NAN,23,14,80592,6.01e+02,NAN,390,186,3801994,12.1,aaacdaaebccdcbdceebcaeabdcdeaeddaccaddbbedacebcddbccecbacbdcedbdcbbbbacbdbecdaebbadcedbcbccddaddedbeeebeababadccdaeabaeaebaaddbaeecbbbcabeeadaaceeeaceb,19151
+24,5,23,17,36.6,"('a', 'e', 'd', 'c', 'a', 'e', 'd', 'e', 'e', 'e', 'e', 'a', 'd', 'b')",32,18,59022,19.7,NAN,23,14,34140,4.25,cadedecabeeaedecbdba,7220
+27,1,16,12,9.65,"('b', 'd', 'd', 'e', 'a', 'e', 'e', 'd', 'e', 'a', 'd', 'b', 'b', 'a')",36,15,27226,6.02e+02,"('b', 'd', 'd', 'd', 'b')",460,206,5871696,0.279,bdddededeba,611
+27,2,16,11,97.3,"('b', 'e', 'a', 'e', 'e', 'a', 'c', 'e', 'a', 'd', 'a', 'b')",23,10,62288,6.19e+02,"('b', 'd', 'd', 'd', 'd', 'a')",451,207,5693679,3.4,eebaabebbceedaccbcddebecbbdaadececabdabaddadcaededdbabbebbeaccbebbbbaadcddeabacbdedecdacaceebecaccedaadcbacdbbdeeadddbaeebaecdedadeccaddecacbabbbccbcaeacbbbeaecbedcbace,6568
+27,3,16,10,34.9,"('b', 'd', 'd', 'd', 'd', 'b', 'd', 'e', 'c', 'd', 'c', 'd', 'b')",55,23,73731,6.39e+02,"('b', 'd', 'd', 'd', 'c', 'b')",494,200,6313520,6.41,acdcbbcccdeaabccb,14217

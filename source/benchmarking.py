@@ -771,7 +771,7 @@ def complition(folder):
             # dfa = load_dfa_dot(folder[0] + "/dfa.dot")
             for file in os.listdir(folder[0]):
                 if 'spec_second_' in file:
-                    dfa_spec = load_dfa_dot(file)
+                    dfa_spec = load_dfa_dot(folder[0]+"/"+file)
                     benchmark = {"name": name, "spec_num": file}
                     check_rnn_acc_to_spec_only_mc(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
                     if first_entry:

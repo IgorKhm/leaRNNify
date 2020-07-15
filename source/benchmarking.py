@@ -339,7 +339,7 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
     # print(benchmark)
 
     ##################################################
-    Doing the model checking randomly
+    #Doing the model checking randomly
     ###################################################
     print("starting rand model checking")
     rnn.num_of_membership_queries = 0

@@ -1,0 +1,49 @@
+name,spec_num,during_time_spec,extraction_mistake_during,dfa_extract_specs_states,dfa_extract_specs_final,dfa_extract_spec_mem_queries
+13,spec_second_4.dot,9.01,NAN,8,1,28740
+13,spec_second_2.dot,11.0,NAN,8,1,35826
+13,spec_second_1.dot,11.1,NAN,8,1,35576
+13,spec_second_5.dot,9.73,NAN,8,1,31491
+"[((), ('a', 'd', 'd', 'c', 'd', 'a'), ('e', 'e', 'd'), 99, 'from spec')]"
+"[((), ('b', 'c', 'e', 'e', 'b'), ('d',), 41, 'from spec')]"
+[]
+"[(('d', 'd'), ('e', 'd', 'b', 'a', 'e'), ('e', 'd', 'b', 'a'), 99, 'from spec'), (('d', 'd', 'e'), ('d', 'b', 'a', 'e', 'e'), ('d', 'b', 'a'), 99, 'from spec'), (('d', 'd', 'e', 'd'), ('b', 'a', 'e', 'e', 'd'), ('b', 'a'), 99, 'from spec'), (('d', 'd', 'e', 'd', 'b'), ('a', 'e', 'e', 'd', 'b'), ('a',), 99, 'from spec'), (('d', 'd', 'e', 'd', 'b', 'a'), ('e', 'e', 'd', 'b', 'a'), (), 99, 'from spec')]"
+"[(('a', 'e', 'a'), ('e', 'a', 'c', 'e', 'd', 'd', 'c', 'd', 'a', 'b'), ('a',), 50, 'from spec'), (('a', 'e'), ('a', 'e', 'a', 'c', 'e', 'd', 'd', 'c', 'd', 'a', 'b', 'a'), (), 50, 'from spec')]"
+"[(('d', 'e'), ('b', 'c', 'a', 'a', 'c', 'a', 'b'), (), 24, 'from spec')]"
+"[(('e', 'd', 'a', 'e', 'b'), ('d', 'b', 'b', 'c'), ('a', 'e'), 66, 'from spec')]"
+"[(('a', 'c', 'a'), ('c', 'c', 'a', 'b', 'b', 'b'), ('c', 'a', 'b', 'a'), 49, 'from spec'), (('a', 'c', 'a', 'c'), ('c', 'a', 'b', 'b', 'b', 'c'), ('a', 'b', 'a'), 49, 'from spec')]"
+[]
+[]
+[]
+"[(('b',), ('d', 'e', 'e', 'c', 'a', 'c', 'b', 'b', 'd', 'c', 'a'), (), 99, 'from spec')]"
+26,spec_second_4.dot,12.5,NAN,9,4,39703
+26,spec_second_2.dot,12.3,NAN,9,4,39675
+26,spec_second_1.dot,12.7,NAN,9,4,39656
+26,spec_second_5.dot,12.3,NAN,9,4,39664
+26,spec_second_3.dot,12.2,NAN,9,4,39655
+[]
+"[((), ('a', 'e', 'e', 'd', 'c', 'a', 'e', 'b', 'd', 'd', 'e'), ('a', 'd', 'e', 'd', 'b'), 99, 'from spec'), (('a',), ('e', 'e', 'd', 'c', 'a', 'e', 'b', 'd', 'd', 'e', 'a'), ('d', 'e', 'd', 'b'), 99, 'from spec')]"
+"[((), ('a', 'a', 'b', 'c', 'd'), ('e', 'e', 'c', 'd', 'a'), 99, 'from spec')]"
+"[((), ('c', 'b', 'a', 'c', 'e', 'd', 'd', 'a', 'd'), ('c', 'b'), 99, 'from spec'), (('c',), ('b', 'a', 'c', 'e', 'd', 'd', 'a', 'd', 'c'), ('b',), 99, 'from spec'), (('c', 'b'), ('a', 'c', 'e', 'd', 'd', 'a', 'd', 'c', 'b'), (), 99, 'from spec')]"
+"[((), ('a', 'a', 'b', 'c', 'd'), ('e', 'e', 'c', 'd', 'a'), 99, 'from spec')]"
+[]
+[]
+[]
+"[((), ('b', 'a', 'd', 'd', 'a', 'd'), ('c',), 99, 'from spec')]"
+"[((), ('a', 'e', 'c', 'b', 'a', 'a', 'd', 'a', 'd'), ('c',), 99, 'from spec'), (('a', 'e', 'c'), ('b', 'a', 'a', 'd', 'a', 'd', 'c'), (), 99, 'from spec')]"
+"[(('c', 'c'), ('b', 'a'), ('b', 'c', 'e'), 99, 'from spec'), (('c', 'c', 'b'), ('a', 'b'), ('c', 'e'), 99, 'from spec'), ((), ('c', 'c', 'b', 'a', 'b', 'c', 'e'), (), 99, 'from spec')]"
+"[(('d', 'c'), ('a', 'a', 'b', 'e', 'd', 'd'), ('e', 'c', 'a', 'b', 'e'), 65, 'from spec'), (('d',), ('c', 'a', 'a', 'b', 'e', 'd', 'd', 'e', 'c'), ('a', 'b', 'e'), 50, 'from spec'), (('d', 'c', 'a'), ('a', 'b', 'e', 'd', 'd', 'e', 'c', 'a'), ('b', 'e'), 99, 'from spec'), ((), ('d', 'c', 'a', 'a', 'b', 'e', 'd', 'd', 'e', 'c', 'a', 'b', 'e'), (), 99, 'from spec')]"
+"[(('b', 'd', 'c'), ('b', 'a'), ('b', 'b', 'c'), 99, 'from spec'), (('b', 'd', 'c', 'b'), ('a', 'b'), ('b', 'c'), 99, 'from spec'), (('b', 'd', 'c', 'b', 'a', 'b', 'b'), ('c',), (), 33, 'from spec')]"
+[]
+"[((), ('d', 'a', 'b', 'e'), ('e',), 66, 'from spec')]"
+"[(('a', 'b', 'd'), ('d',), ('e', 'e'), 20, 'from spec'), ((), ('a', 'b', 'd', 'd', 'e'), ('e',), 50, 'from spec')]"
+"[(('a', 'b'), ('b',), ('e', 'e'), 66, 'from spec')]"
+"[(('a', 'b'), ('b',), ('e', 'e'), 99, 'from spec')]"
+[]
+24,spec_second_2.dot,43.5,NAN,23,14,83158
+"[((), ('a', 'c', 'a', 'a'), ('d', 'd', 'a', 'a', 'e', 'e', 'd', 'e', 'a', 'd', 'b', 'd'), 99, 'from spec'), ((), ('a', 'c', 'a', 'a', 'd', 'd', 'a', 'a', 'e', 'e', 'd', 'e'), ('a', 'd', 'b', 'd'), 99, 'from spec'), (('a',), ('c', 'a', 'a', 'd', 'd', 'a', 'a', 'e', 'e', 'd', 'e', 'a'), ('d', 'b', 'd'), 99, 'from spec')]"
+"[((), ('a', 'c', 'a', 'a'), ('d', 'c', 'd', 'c', 'b', 'c', 'c', 'd', 'b', 'a'), 99, 'from spec'), ((), ('a', 'c', 'a', 'a', 'd', 'c', 'd', 'c', 'b', 'c', 'c'), ('d', 'b', 'a'), 30, 'from spec'), (('a', 'c', 'a', 'a', 'd'), ('c', 'd', 'c', 'b', 'c', 'c', 'd'), ('b', 'a'), 99, 'from spec'), (('a', 'c', 'a', 'a', 'd', 'c', 'd', 'c', 'b'), ('c', 'c', 'd', 'b'), ('a',), 50, 'from spec')]"
+[]
+[]
+[]
+"[((), ('a', 'd', 'e', 'a', 'a'), ('d', 'd', 'e', 'b', 'e', 'c', 'c', 'c', 'b'), 99, 'from spec'), (('a', 'd'), ('e', 'a', 'a', 'd', 'd', 'e', 'b', 'e'), ('c', 'c', 'c', 'b'), 54, 'from spec'), (('a', 'd', 'e', 'a', 'a', 'd', 'd', 'e', 'b', 'e', 'c'), ('c',), ('c', 'b'), 50, 'from spec'), (('a', 'd', 'e', 'a', 'a', 'd', 'd', 'e', 'b', 'e', 'c'), ('c', 'c'), ('b',), 99, 'from spec'), ((), ('a', 'd', 'e', 'a', 'a', 'd', 'd', 'e', 'b', 'e', 'c', 'c', 'c', 'b'), (), 99, 'from spec')]"
+"[(('b', 'd', 'e', 'd'), ('d', 'd', 'b'), ('d', 'e', 'a', 'c', 'c', 'b', 'b'), 99, 'from spec'), (('b', 'd', 'e', 'd', 'd'), ('d', 'b', 'd'), ('e', 'a', 'c', 'c', 'b', 'b'), 99, 'from spec')]"

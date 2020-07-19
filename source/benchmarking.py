@@ -309,7 +309,7 @@ def check_rnn_acc_to_spec_only_mc(rnn, spec, benchmark, timeout=900):
                           "dfa_extract_spec_mem_queries": rnn.num_of_membership_queries})
 
     print(benchmark)
-
+    return dfa_extract_w_spec,counter
     # print("Starting DFA extraction")
     # ##################################################
     # # Doing the model checking during a DFA extraction
@@ -763,7 +763,7 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "summary_second_try_complition.csv"
+    summary_csv = folder + "summary_fualty_flows.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
@@ -773,8 +773,38 @@ def complition(folder):
                 if 'spec_second_' in file:
                     dfa_spec = load_dfa_dot(folder[0]+"/"+file)
                     benchmark = {"name": name, "spec_num": file}
-                    check_rnn_acc_to_spec_only_mc(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
+                    dfa_extracted, counter = check_rnn_acc_to_spec_only_mc(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
+                    if counter is not None:
+                        flawed_flows = []
+                        flawed_flow_search(counter,dfa_spec,flawed_flows,rnn,dfa_spec)
+                        flawed_flow_search(counter,dfa_extracted,flawed_flows,rnn,dfa_spec)
+                        benchmark = {"flawed_flows": flawed_flows}
                     if first_entry:
                         write_csv_header(summary_csv, benchmark.keys())
                         first_entry = False
                     write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+
+def flawed_flow_search(counter, dfa, flawed_flow, rnn, dfa_spec):
+    s = dfa.init_state
+    prev_states = [s]
+    for c in counter:
+        s = dfa.next_state_by_letter(s, c)
+        if s not in prev_states:
+            prev_states.append(s)
+        else:
+            prefix = counter[0:prev_states.index(s)]
+            loop = counter[prev_states.index(s):len(prev_states)]
+            suffix = counter[len(prev_states):len(counter) + 1]
+            count = 0
+            preword = prefix
+            for _ in range(100):
+                if not dfa_spec.is_word_in(preword + suffix) and rnn.is_word_in(preword + suffix):
+                    count = count + 1
+                preword = preword + loop
+            if count > 10:
+                print("sucssesful attampet")
+                flawed_flow.append((prefix, loop, suffix, count, "from spec"))
+            else:
+                print("failed attampet")
+            prev_states.append(s)

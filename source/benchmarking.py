@@ -763,7 +763,7 @@ def from_dfa_to_sup_dfa_gen(dfa: DFA, tries=5):
 def complition(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "summary_fualty_flows.csv"
+    summary_csv = folder + "/summary_fualty_flows_cross.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
@@ -778,6 +778,7 @@ def complition(folder):
                         flawed_flows = []
                         flawed_flow_search(counter,dfa_spec,flawed_flows,rnn,dfa_spec)
                         flawed_flow_search(counter,dfa_extracted,flawed_flows,rnn,dfa_spec)
+                        flawed_flow_cross_product(counter, dfa_extracted, flawed_flows, rnn, dfa_spec)
                         benchmark.update({"flawed_flows": flawed_flows})
                     if first_entry:
                         write_csv_header(summary_csv, benchmark.keys())
@@ -813,11 +814,11 @@ def flawed_flow_cross_product(counter, dfa_extracted,dfa_spec,flawed_flow, rnn):
     s1,s2 = dfa_extracted.init_state, dfa_spec.init_state
     i=0
     for ch in counter:
-        loops = loop_from_initial(dfa1,dfa2,s1,s2)
+        loops = loop_from_initial(dfa_extracted,dfa_spec,s1,s2)
         if len(loops) !=0:
             for loop in loops:
                 check_for_loops(counter[0:i],loop,counter[i:len(counter)],dfa_spec,rnn,flawed_flow)
-        s1,s2 = dfa_extracted.next_state_by_letter(s1, ch),dfa_specnext_state_by_letter(s2, ch)
+        s1,s2 = dfa_extracted.next_state_by_letter(s1, ch),dfa_spec.next_state_by_letter(s2, ch)
         i+=1
 
 def loop_from_initial(dfa1,dfa2,s1,s2):
@@ -827,12 +828,13 @@ def loop_from_initial(dfa1,dfa2,s1,s2):
     while len(front)!= 0:
         s1,s2,w = front.pop()
         for ch in dfa1.alphabet:
-            q1,q2  =  df1.next_state_by_letter(s1, ch), dfa2,next_state_by_letter(s2, ch)
+            q1,q2  =  dfa1.next_state_by_letter(s1, ch), dfa2.next_state_by_letter(s2, ch)
             if (q1,q2) not in visited:
                 visited.append((q1,q2))
-                front.append((q1,q2,w+ch))
+                front.append((q1,q2,w+tuple(ch)))
             elif (q1,q2) == visited[0]:
-                 loops.append(w+ch)
+                 loops.append(w+tuple(ch))
+    return loops
 
 
 

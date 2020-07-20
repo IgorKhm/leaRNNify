@@ -830,7 +830,7 @@ def loop_from_initial(dfa1,dfa2,s1,s2):
             q1,q2  =  df1.next_state_by_letter(s1, ch), dfa2,next_state_by_letter(s2, ch)
             if (q1,q2) not in visited:
                 visited.append((q1,q2))
-                front.append((q1,q2,w+ch)]
+                front.append((q1,q2,w+ch))
             elif (q1,q2) == visited[0]:
                  loops.append(w+ch)
 

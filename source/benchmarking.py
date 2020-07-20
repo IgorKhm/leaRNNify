@@ -776,9 +776,10 @@ def complition(folder):
                     dfa_extracted, counter = check_rnn_acc_to_spec_only_mc(rnn, [DFAChecker(dfa_spec)], benchmark, timeout)
                     if counter is not None:
                         flawed_flows = []
-                        flawed_flow_search(counter,dfa_spec,flawed_flows,rnn,dfa_spec)
-                        flawed_flow_search(counter,dfa_extracted,flawed_flows,rnn,dfa_spec)
-                        flawed_flow_cross_product(counter, dfa_extracted, flawed_flows, rnn, dfa_spec)
+                        # flawed_flow_search(counter,dfa_spec,flawed_flows,rnn,dfa_spec)
+                        # flawed_flow_search(counter,dfa_extracted,flawed_flows,rnn,dfa_spec)
+                        flawed_flow_cross_product(counter, dfa_extracted, dfa_spec,flawed_flows, rnn )
+                        
                         benchmark.update({"flawed_flows": flawed_flows})
                     if first_entry:
                         write_csv_header(summary_csv, benchmark.keys())

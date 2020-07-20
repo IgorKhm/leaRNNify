@@ -778,7 +778,7 @@ def complition(folder):
                         flawed_flows = []
                         flawed_flow_search(counter,dfa_spec,flawed_flows,rnn,dfa_spec)
                         flawed_flow_search(counter,dfa_extracted,flawed_flows,rnn,dfa_spec)
-                        benchmark = {"flawed_flows": flawed_flows}
+                        benchmark.update({"flawed_flows": flawed_flows})
                     if first_entry:
                         write_csv_header(summary_csv, benchmark.keys())
                         first_entry = False
@@ -808,3 +808,43 @@ def flawed_flow_search(counter, dfa, flawed_flow, rnn, dfa_spec):
             else:
                 print("failed attampet")
             prev_states.append(s)
+
+def flawed_flow_cross_product(counter, dfa_extracted,dfa_spec,flawed_flow, rnn):
+    s1,s2 = dfa_extracted.init_state, dfa_spec.init_state
+    i=0
+    for ch in counter:
+        loops = loop_from_initial(dfa1,dfa2,s1,s2)
+        if len(loops) !=0:
+            for loop in loops:
+                check_for_loops(counter[0:i],loop,counter[i:len(counter)],dfa_spec,rnn,flawed_flow)
+        s1,s2 = dfa_extracted.next_state_by_letter(s1, ch),dfa_specnext_state_by_letter(s2, ch)
+        i+=1
+
+def loop_from_initial(dfa1,dfa2,s1,s2):
+    loops = []
+    visited = [(s1,s2)]
+    front = [(s1,s2,tuple())]
+    while len(front)!= 0:
+        s1,s2,w = front.pop()
+        for ch in dfa1.alphabet:
+            q1,q2  =  df1.next_state_by_letter(s1, ch), dfa2,next_state_by_letter(s2, ch)
+            if (q1,q2) not in visited:
+                visited.append((q1,q2))
+                front.append((q1,q2,w+ch))]
+            elif (q1,q2) == visited[0]:
+                 loops.append(w+ch)
+
+
+
+def check_for_loops(prefix,loop,suffix,dfa_spec,rnn,flawed_flow):
+    count = 0
+    preword = prefix
+    for _ in range(100):
+        if not dfa_spec.is_word_in(preword + suffix) and rnn.is_word_in(preword + suffix):
+            count = count + 1
+        preword = preword + loop
+    if count > 10:
+        print("sucssesful attampet")
+        flawed_flow.append((prefix, loop, suffix, count, "from spec"))
+    else:
+        print("failed attampet")

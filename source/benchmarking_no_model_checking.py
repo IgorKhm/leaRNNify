@@ -54,15 +54,15 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
     if hidden_dim == -1:
         hidden_dim = len(dfa.states) * 20
     if num_layers == -1:
-        num_layers = 1 + int(len(dfa.states)/10)
+        num_layers = 2 + int(len(dfa.states)/10)
     if embedding_dim == -1:
         embedding_dim = len(dfa.alphabet) * 2
     if epoch == -1:
-        epoch = 20
+        epoch = 30
     if batch_size == -1:
         batch_size = 20
     if num_of_examples == -1:
-        num_of_examples = 200000
+        num_of_examples = 250000
 
     start_time = time.time()
     model = RNNLanguageClasifier()
@@ -90,7 +90,7 @@ def learn_dfa(dfa: DFA, benchmark, hidden_dim=-1, num_layers=-1, embedding_dim=-
 def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     rnn = learn_dfa(dfa, benchmark)
 
-    if float(benchmark["rnn_testing_acc"]) < 90:
+    if float(benchmark["rnn_testing_acc"]) < 80:
         print("didn't learned the rnn well enough starting over")
         return
 

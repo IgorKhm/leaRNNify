@@ -7,7 +7,7 @@ import numpy as np
 
 from benchmarking import rand_benchmark,complition, run_rand_benchmarks, learn_multiple_times, run_multiple_spec_on_ltsm, \
     learn_dfa, run_specific_benchmarks, model_check_tomita, check_folder_of_rand
-from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking
+from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking,run_extraction_on_dir
 from benchmarking_noisy_dfa import run_rand_benchmarks_noisy_dfa
 from dfa import DFA, load_dfa_dot, random_dfa, dfa_intersection, DFANoisy
 from dfa import save_dfa_as_part_of_model
@@ -150,13 +150,20 @@ print("Begin")
 # print("################################################################")
 
 #
-# #
+# #run_extraction_on_dir
 # check_folder_of_rand("../models/random_bench_10-Jun-2020_06-00-28")
 # check_folder_of_rand("../models/random_bench_03-Jun-2020_05-50-42")
 # complition("../models/random_bench_10-Jun-2020_06-00-28")
 # complition("../models/random_bench_03-Jun-2020_05-50-42")
 # complition("../models/random_bench_21-May-2020_14-40-38")
 # complition("../models/random_bench_21-May-2020_22-02-16/good_ones")
-run_rand_benchmarks_wo_model_checking(num_of_bench=30)
+# run_rand_benchmarks_wo_model_checking(num_of_bench=30)
 # complition("../models/random_bench_21-May-2020_14-40-38")
 # complition("../models/random_bench_21-May-2020_22-02-16/good_ones")
+
+
+run_extraction_on_dir("../models/random_bench_10-Jun-2020_06-00-28")
+run_extraction_on_dir("../models/random_bench_03-Jun-2020_05-50-42")
+run_extraction_on_dir("../models/random_bench_21-May-2020_14-40-38")
+run_extraction_on_dir("../models/random_bench_21-May-2020_22-02-16/good_ones")
+run_extraction_on_dir("../models/random_bench_23-Jul-2020_07-41-25")

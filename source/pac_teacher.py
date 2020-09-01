@@ -105,7 +105,7 @@ class PACTeacher(Teacher):
         start_time = time.time()
         t100 = start_time
         while True:
-            if time.time() - start_time > timeout:
+            if self._num_equivalence_asked > 600:
                 print(time.time() - start_time)
                 return
             # print(i)
@@ -119,7 +119,8 @@ class PACTeacher(Teacher):
             counter = self.equivalence_query(learner.dfa)
             if counter is None:
                 break
-            learner.new_counterexample(counter, self.is_counter_example_in_batches)
+            num_of_ref = learner.new_counterexample(counter, self.is_counter_example_in_batches)
+            self._num_equivalence_asked += num_of_ref
 
     def teach_and_trace(self, student, dfa_model, timeout=900):
         output, smaples, answers = confidence_interval_many_for_reuse([dfa_model, self.model, student.dfa], random_word,

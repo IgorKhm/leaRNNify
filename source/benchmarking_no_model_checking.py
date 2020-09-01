@@ -197,3 +197,36 @@ def run_rand_benchmarks_wo_model_checking(num_of_bench=30, save_dir=None):
         print("Summary for the {}th benchmark".format(num))
         print(benchmark)
         write_line_csv(save_dir + "/test.csv", benchmark)
+
+
+
+def extract(dfa: DFA, benchmark,rnn, dir_name=None):
+
+
+    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=900)
+    if dir_name is not None:
+        rnn.save_lstm(dir_name)
+        for extracted_dfa, name in extracted_dfas:
+            if isinstance(extracted_dfa, DFA):
+                save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
+
+    models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
+    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
+
+
+
+def run_extraction_on_dir(dir):
+    # print(" "+ str(num_of_bench) +" number of benchmarks")
+    first_entry = True
+    summary_csv = folder + "/extraxtion2.csv"
+    for folder in os.walk(folder):
+        if os.path.isfile(folder[0] + "/meta"):
+            name = folder[0].split('/')[-1]
+            rnn = RNNLanguageClasifier().load_lstm(folder[0])
+            dfa = load_dfa_dot(folder[0]+"/dfa.dot")
+            benchmark = {"name": name, "spec_num": file}
+            extract(dfa, benchmark,rnn, folder)
+            if first_entry:
+                write_csv_header(summary_csv, benchmark.keys())
+                first_entry = False
+            write_line_csv(summary_csv, benchmark, benchmark.keys())

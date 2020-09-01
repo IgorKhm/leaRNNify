@@ -218,14 +218,14 @@ def extract(dfa: DFA, benchmark,rnn, dir_name=None):
 def run_extraction_on_dir(dir):
     # print(" "+ str(num_of_bench) +" number of benchmarks")
     first_entry = True
-    summary_csv = folder + "/extraxtion2.csv"
-    for folder in os.walk(folder):
+    summary_csv = dir + "/extraxtion2.csv"
+    for folder in os.walk(dir):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
             dfa = load_dfa_dot(folder[0]+"/dfa.dot")
             benchmark = {"name": name, "spec_num": file}
-            extract(dfa, benchmark,rnn, folder)
+            extract(dfa, benchmark,rnn, folder[0])
             if first_entry:
                 write_csv_header(summary_csv, benchmark.keys())
                 first_entry = False

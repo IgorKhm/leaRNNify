@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model
+from dfa import DFA, random_dfa, dfa_intersection, save_dfa_as_part_of_model,load_dfa_dot
 from dfa_check import DFAChecker
 from exact_teacher import ExactTeacher
 from learner_decison_tree import DecisionTreeLearner

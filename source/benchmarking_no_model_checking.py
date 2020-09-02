@@ -111,7 +111,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
 
 
-    def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
+def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     teacher_pac = PACTeacher(rnn)
 
     ###################################################
@@ -155,7 +155,7 @@ def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=
     benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
                       "dist_rnn_vs_extr": "{}".format(output[1][2])})
 
-    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2]))})
+    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2])})
 
     print("Finished distance measuring")
 

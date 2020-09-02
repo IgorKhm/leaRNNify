@@ -144,7 +144,7 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     # print("Finished DFA extraction")
     #
     # return (dfa_extract, "dfa_extract"), (dfa_iclm18, "dfa_icml18")
-    return (dfa_extract, "dfa_extract")
+    return [(dfa_extract, "dfa_extract")]
 
 def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")

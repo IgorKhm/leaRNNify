@@ -209,7 +209,7 @@ def extract(dfa: DFA, benchmark,rnn, dir_name=None):
             if isinstance(extracted_dfa, DFA):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name+"-extracted_2")
 
-    models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
+    models = [dfa, rnn, extracted_dfas[0][0]]
     compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.001)
 
 

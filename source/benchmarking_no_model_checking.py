@@ -44,7 +44,7 @@ def write_line_csv(filename, benchmark, fieldnames=None):
     with open(filename, mode='a') as benchmark_summary:
         writer = csv.DictWriter(benchmark_summary, fieldnames=fieldnames)
         writer.writerow(benchmark)
-        
+
 def minimize_dfa(dfa: DFA) -> DFA:
     teacher_pac = ExactTeacher(dfa)
     student = DecisionTreeLearner(teacher_pac)
@@ -111,7 +111,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
 
 
-def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
+    def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     teacher_pac = PACTeacher(rnn)
 
     ###################################################
@@ -132,19 +132,19 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     ###################################################
     # Doing DFA extraction acc. to icml18
     ###################################################
-    print("Starting DFA extraction acc to iclm18")
-    start_time = time.time()
-
-    dfa_iclm18 = extract_iclm(rnn, time_limit=timeout, initial_split_depth=10)
-
-    benchmark.update({"extraction_time_icml18": time.time() - start_time,
-                      "dfa_icml18_states": len(dfa_iclm18.Q),
-                      "dfa_icml18_final": len(dfa_iclm18.F)})
-
-    print("Finished DFA extraction")
-
-    return (dfa_extract, "dfa_extract"), (dfa_iclm18, "dfa_icml18")
-
+    # print("Starting DFA extraction acc to iclm18")
+    # start_time = time.time()
+    #
+    # dfa_iclm18 = extract_iclm(rnn, time_limit=timeout, initial_split_depth=10)
+    #
+    # benchmark.update({"extraction_time_icml18": time.time() - start_time,
+    #                   "dfa_icml18_states": len(dfa_iclm18.Q),
+    #                   "dfa_icml18_final": len(dfa_iclm18.F)})
+    #
+    # print("Finished DFA extraction")
+    #
+    # return (dfa_extract, "dfa_extract"), (dfa_iclm18, "dfa_icml18")
+    return (dfa_extract, "dfa_extract")
 
 def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
@@ -153,11 +153,9 @@ def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=
     print(output)
 
     benchmark.update({"dist_rnn_vs_inter": "{}".format(output[1][0]),
-                      "dist_rnn_vs_extr": "{}".format(output[1][2]),
-                      "dist_rnn_vs_icml18": "{}".format(output[1][3])})
+                      "dist_rnn_vs_extr": "{}".format(output[1][2])})
 
-    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2]),
-                      "dist_inter_vs_icml18": "{}".format(output[0][3])})
+    benchmark.update({"dist_inter_vs_extr": "{}".format(output[0][2]))})
 
     print("Finished distance measuring")
 
@@ -212,7 +210,7 @@ def extract(dfa: DFA, benchmark,rnn, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name+"-extracted_2")
 
     models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
-    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
+    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.001)
 
 
 

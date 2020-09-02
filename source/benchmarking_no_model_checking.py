@@ -30,18 +30,21 @@ FIELD_NAMES = ["alph_len",
                "dist_inter_vs_extr", "dist_inter_vs_icml18"]
 
 
-def write_csv_header(filename):
+def write_csv_header(filename, fieldnames=None):
+    if fieldnames is None:
+        fieldnames = FIELD_NAMES
     with open(filename, mode='a') as employee_file:
-        writer = csv.DictWriter(employee_file, fieldnames=FIELD_NAMES)
+        writer = csv.DictWriter(employee_file, fieldnames=fieldnames)
         writer.writeheader()
 
 
-def write_line_csv(filename, benchmark):
+def write_line_csv(filename, benchmark, fieldnames=None):
+    if fieldnames is None:
+        fieldnames = FIELD_NAMES
     with open(filename, mode='a') as benchmark_summary:
-        writer = csv.DictWriter(benchmark_summary, fieldnames=FIELD_NAMES)
+        writer = csv.DictWriter(benchmark_summary, fieldnames=fieldnames)
         writer.writerow(benchmark)
-
-
+        
 def minimize_dfa(dfa: DFA) -> DFA:
     teacher_pac = ExactTeacher(dfa)
     student = DecisionTreeLearner(teacher_pac)

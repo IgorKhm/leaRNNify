@@ -7,10 +7,10 @@ from dfa import DFA
 from modelPadding import LSTM, RNNLanguageClasifier
 
 
-def random_word_func_entropy_dfa(dfa:DFA,p=0.01):
-
-    for s in dfa.state:
-
+# def random_word_func_entropy_dfa(dfa:DFA,p=0.01):
+#
+#     for s in dfa.state:
+#
 
 def random_word(alphabet, p=0.01):
     nums_of_letters = len(alphabet)
@@ -217,7 +217,7 @@ def model_check_random(language_inf, language_sup,  confidence=0.001, width=0.00
 
     :return:
     """
-    start_time = time.time()
+    start_time=time.time()
     n = np.log(2 / confidence) / (2 * width * width)
     alph = language_sup.alphabet
     print("num of words" + str(n))

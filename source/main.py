@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from benchmarking import rand_benchmark,complition, run_rand_benchmarks, learn_multiple_times, run_multiple_spec_on_ltsm, \
+from benchmarking import rand_benchmark,complition,complition_smc, run_rand_benchmarks, learn_multiple_times, run_multiple_spec_on_ltsm, \
     learn_dfa, run_specific_benchmarks, model_check_tomita, check_folder_of_rand
 from benchmarking_no_model_checking import run_rand_benchmarks_wo_model_checking,run_extraction_on_dir
 from benchmarking_noisy_dfa import run_rand_benchmarks_noisy_dfa

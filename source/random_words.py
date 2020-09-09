@@ -7,6 +7,11 @@ from dfa import DFA
 from modelPadding import LSTM, RNNLanguageClasifier
 
 
+def random_word_func_entropy_dfa(dfa:DFA,p=0.01):
+
+    for s in dfa.state:
+
+
 def random_word(alphabet, p=0.01):
     nums_of_letters = len(alphabet)
     word = []
@@ -212,11 +217,14 @@ def model_check_random(language_inf, language_sup,  confidence=0.001, width=0.00
 
     :return:
     """
+    start_time = time.time()
     n = np.log(2 / confidence) / (2 * width * width)
     alph = language_sup.alphabet
     print("num of words" + str(n))
     batch_size = 200
     for i in range(int(n / batch_size) + 1):
+        if (time.time() -start_time > 600):
+            return None
         batch = [random_word(alph) for _ in range(batch_size)]
         for x, y, w in zip(language_inf.is_words_in_batch(batch) > 0.5, [language_sup.is_word_in(w) for w in batch],
                            batch):

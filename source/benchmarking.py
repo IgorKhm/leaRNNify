@@ -790,7 +790,7 @@ def complition(folder):
 def complition_smc(folder):
     timeout = 600
     first_entry = True
-    summary_csv = folder + "/summary_smc.csv"
+    summary_csv = folder + "/summary_smc_2.csv"
     for folder in os.walk(folder):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]

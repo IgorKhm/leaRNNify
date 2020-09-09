@@ -779,12 +779,44 @@ def complition(folder):
                         # flawed_flow_search(counter,dfa_spec,flawed_flows,rnn,dfa_spec)
                         # flawed_flow_search(counter,dfa_extracted,flawed_flows,rnn,dfa_spec)
                         flawed_flow_cross_product(counter, dfa_extracted, dfa_spec,flawed_flows, rnn )
-                        
+
                         benchmark.update({"flawed_flows": flawed_flows})
                     if first_entry:
                         write_csv_header(summary_csv, benchmark.keys())
                         first_entry = False
                     write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+
+def complition_smc(folder):
+    timeout = 600
+    first_entry = True
+    summary_csv = folder + "/summary_fualty_flows_cross.csv"
+    for folder in os.walk(folder):
+        if os.path.isfile(folder[0] + "/meta"):
+            name = folder[0].split('/')[-1]
+            rnn = RNNLanguageClasifier().load_lstm(folder[0])
+            # dfa = load_dfa_dot(folder[0] + "/dfa.dot")
+            for file in os.listdir(folder[0]):
+                if 'spec_second_' in file:
+                    dfa_spec = load_dfa_dot(folder[0]+"/"+file)
+                    benchmark = {"name": name, "spec_num": file}
+                    print("starting rand model checking")
+                    rnn.num_of_membership_queries = 0
+                    start_time = time.time()
+                    counter = model_check_random(rnn, dfa_spec, width=0.0005, confidence=0.0005)
+                    if counter is None:
+                        counter = "NAN"
+                    benchmark.update({"mistake_time_rand": "{:.3}".format(time.time() - start_time),
+                                      "mistake_rand": counter,
+                                      "rand_num_queries": rnn.num_of_membership_queries})
+
+                    print(benchmark)
+
+                    if first_entry:
+                        write_csv_header(summary_csv, benchmark.keys())
+                        first_entry = False
+                    write_line_csv(summary_csv, benchmark, benchmark.keys())
+
 
 
 def flawed_flow_search(counter, dfa, flawed_flow, rnn, dfa_spec):

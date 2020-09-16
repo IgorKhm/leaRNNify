@@ -223,6 +223,8 @@ def run_extraction_on_dir(dir):
             name = folder[0].split('/')[-1]
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
             dfa = load_dfa_dot(folder[0]+"/dfa.dot")
+            if name in ["7","9","2","3","5","6"]:
+                continue
             benchmark = {"name": name}
             extract(dfa, benchmark,rnn, folder[0])
             if first_entry:

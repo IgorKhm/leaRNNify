@@ -226,6 +226,7 @@ def run_extraction_on_dir(dir):
             if name in ["7","9","2","3","5","6"]:
                 print("not doing "+ name)
                 continue
+            print("now doing "+ name)    
             benchmark = {"name": name}
             extract(dfa, benchmark,rnn, folder[0])
             if first_entry:

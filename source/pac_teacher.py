@@ -9,7 +9,7 @@ from dfa_check import DFAChecker
 from modelPadding import RNNLanguageClasifier
 from random_words import random_word, confidence_interval_many, confidence_interval_many_for_reuse
 from teacher import Teacher
-
+from randwords import random_words, is_words_in_dfa,compare_list_of_bool
 
 class PACTeacher(Teacher):
 
@@ -46,8 +46,9 @@ class PACTeacher(Teacher):
         if self.is_counter_example_in_batches:
             batch_size = 200
             for i in range(int(number_of_rounds / batch_size) + 1):
-                batch = [random_word(self.model.alphabet) for _ in range(batch_size)]
-                for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, [dfa.is_word_in(w) for w in batch],
+                batch = random_words(batch_size,self.alphabet)
+                # batch = [random_word(self.model.alphabet) for _ in range(batch_size)]
+                for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, is_words_in_dfa(lang,batch),
                                    batch):
                     if x != y:
                         return w

@@ -78,7 +78,10 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
     torch.cuda.empty_cache()
     for lang in languages:
         if not isinstance(lang, RNNLanguageClasifier):
+            print("checking dfa list")
+            print(lang)
             in_langs_lists.append(is_words_in_dfa(lang,samples))
+            print("done dfa list")
             # in_langs_lists.append([lang.is_word_in(w) for w in samples])
         else:
             rnn_bool_list = []
@@ -99,11 +102,13 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
     for i in range(num_of_lan):
         output.append([1] * num_of_lan)
 
+    print("comparing btween lang")
     for lang1 in range(num_of_lan):
         for lang2 in range(num_of_lan):
             if lang1 == lang2:
                 output[lang1][lang2] = 0
             elif output[lang1][lang2] == 1:
+                print("comparing 2 specific  lang")
                 output[lang1][lang2] = compare_list_of_bool(in_langs_lists[lang1],in_langs_lists[lang2],int(num_of_samples))
                 # output[lang1][lang2] = ([(in_langs_lists[lang1])[i] == (in_langs_lists[lang2])[i] for i in
                 #                          range(len(samples))].count(False)) / num_of_samples
@@ -242,9 +247,7 @@ def confidence_interval_many_for_reuse(languages, sampler, previous_answers=None
     if previous_answers is None:
         for lang in languages:
             if isinstance(lang, DFA):
-                print("checking dfa")
                 in_langs_lists.append([lang.is_word_in(w) for w in samples])
-                print("done checking dfa")
             else:
                 rnn_bool_list = []
                 batch_size = 1000

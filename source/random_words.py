@@ -104,7 +104,7 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
             if lang1 == lang2:
                 output[lang1][lang2] = 0
             elif output[lang1][lang2] == 1:
-                output[lang1][lang2] = compare_list_of_bool(in_langs_lists[lang1],in_langs_lists[lang2],num_of_samples)
+                output[lang1][lang2] = compare_list_of_bool(in_langs_lists[lang1],in_langs_lists[lang2],int(num_of_samples))
                 # output[lang1][lang2] = ([(in_langs_lists[lang1])[i] == (in_langs_lists[lang2])[i] for i in
                 #                          range(len(samples))].count(False)) / num_of_samples
 

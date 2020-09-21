@@ -98,7 +98,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
         return
 
 
-    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=900)
+    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=300)
     if dir_name is not None:
         save_dfa_as_part_of_model(dir_name, dfa, name="dfa")
         dfa.draw_nicely(name="dfa", save_dir=dir_name)
@@ -111,7 +111,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
     compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
 
 
-def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
+def extract_dfa_from_rnn(rnn, benchmark, timeout=300):
     teacher_pac = PACTeacher(rnn)
 
     ###################################################
@@ -120,9 +120,10 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=900):
     print("Starting DFA extraction w/o model checking")
     start_time = time.time()
     student = DecisionTreeLearner(teacher_pac)
-    teacher_pac.is_counter_example_in_batches = False
+    teacher_pac.is_counter_example_in_batches = True
     teacher_pac.teach(student, timeout=timeout)
-    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time)})
+    benchmark.update({"extraction_time": "{:.3}".format(time.time() - start_time),
+                      "Timeout":timeout})
 
     dfa_extract = minimize_dfa(student.dfa)
     print(student.dfa)
@@ -203,7 +204,7 @@ def run_rand_benchmarks_wo_model_checking(num_of_bench=30, save_dir=None):
 
 def extract(dfa: DFA, benchmark,rnn, dir_name=None):
 
-    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=900)
+    extracted_dfas = extract_dfa_from_rnn(rnn, benchmark, timeout=300)
     if dir_name is not None:
         for extracted_dfa, name in extracted_dfas:
             if isinstance(extracted_dfa, DFA):
@@ -217,16 +218,12 @@ def extract(dfa: DFA, benchmark,rnn, dir_name=None):
 def run_extraction_on_dir(dir):
     # print(" "+ str(num_of_bench) +" number of benchmarks")
     first_entry = True
-    summary_csv = dir + "/extraxtion2.csv"
+    summary_csv = dir + "/extraxtion3.csv"
     for folder in os.walk(dir):
         if os.path.isfile(folder[0] + "/meta"):
             name = folder[0].split('/')[-1]
             rnn = RNNLanguageClasifier().load_lstm(folder[0])
             dfa = load_dfa_dot(folder[0]+"/dfa.dot")
-            if name in ["7","9","2","3","5","6"]:
-                print("not doing "+ name)
-                continue
-            print("now doing "+ name)    
             benchmark = {"name": name}
             extract(dfa, benchmark,rnn, folder[0])
             if first_entry:

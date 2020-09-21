@@ -162,8 +162,8 @@ print("Begin")
 # complition("../models/random_bench_21-May-2020_22-02-16/good_ones")
 
 
-# run_extraction_on_dir("../models/random_bench_10-Jun-2020_06-00-28")
-# run_extraction_on_dir("../models/random_bench_03-Jun-2020_05-50-42")
+run_extraction_on_dir("../models/random_bench_10-Jun-2020_06-00-28")
+run_extraction_on_dir("../models/random_bench_03-Jun-2020_05-50-42")
 run_extraction_on_dir("../models/random_bench_21-May-2020_14-40-38")
-# run_extraction_on_dir("../models/random_bench_21-May-2020_22-02-16/good_ones")
-# run_extraction_on_dir("../models/random_bench_23-Jul-2020_07-41-25")
+run_extraction_on_dir("../models/random_bench_21-May-2020_22-02-16/good_ones")
+run_extraction_on_dir("../models/random_bench_23-Jul-2020_07-41-25")

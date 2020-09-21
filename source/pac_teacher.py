@@ -48,7 +48,7 @@ class PACTeacher(Teacher):
             for i in range(int(number_of_rounds / batch_size) + 1):
                 batch = random_words(batch_size,self.alphabet)
                 # batch = [random_word(self.model.alphabet) for _ in range(batch_size)]
-                for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, is_words_in_dfa(lang,batch),
+                for x, y, w in zip(self.model.is_words_in_batch(batch) > 0.5, is_words_in_dfa(dfa,batch),
                                    batch):
                     if x != y:
                         return w

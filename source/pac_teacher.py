@@ -105,7 +105,7 @@ class PACTeacher(Teacher):
         start_time = time.time()
         t100 = start_time
         while True:
-            if self._num_equivalence_asked > 600:
+            if self._num_equivalence_asked > timeout:
                 print(time.time() - start_time)
                 return
             # print(i)

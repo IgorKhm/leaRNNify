@@ -3,7 +3,7 @@ from libc.stdlib cimport rand, RAND_MAX
 
 @cython.boundscheck(False)
 #
-def random_words(int num_of_words,tuple alphabet, double one_div_p=100.0):
+def random_words(int num_of_words,alphabet, double one_div_p=100.0):
     words = []
     cdef int nums_of_letters = len(alphabet)
     # cdef int one_div_p = int(1/p)

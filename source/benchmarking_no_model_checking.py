@@ -12,7 +12,7 @@ from learner_decison_tree import DecisionTreeLearner
 from lstar.Extraction import extract as extract_iclm
 from modelPadding import RNNLanguageClasifier
 from pac_teacher import PACTeacher
-from random_words import confidence_interval_many, random_word, confidence_interval_subset
+from random_words import confidence_interval_many, random_word, confidence_interval_subset,confidence_interval_many_cython
 
 FIELD_NAMES = ["alph_len",
 
@@ -108,7 +108,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
 
     models = [dfa, rnn, extracted_dfas[0][0], extracted_dfas[1][0]]
-    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.005)
+    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.001)
 
 
 def extract_dfa_from_rnn(rnn, benchmark, timeout=300):
@@ -149,7 +149,7 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=300):
 
 def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
-    output, samples = confidence_interval_many(models, random_word, width=epsilon, confidence=delta)
+    output, samples = confidence_interval_many_cython(models, random_word, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
     print(output)
 

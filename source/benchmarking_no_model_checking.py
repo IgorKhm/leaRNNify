@@ -211,7 +211,7 @@ def extract(dfa: DFA, benchmark,rnn, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name+"-extracted_3")
 
     models = [dfa, rnn, extracted_dfas[0][0]]
-    compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001)
+    compute_distances_no_model_checking(models, benchmark, epsilon=0.001, delta=0.005)
 
 
 

@@ -242,7 +242,9 @@ def confidence_interval_many_for_reuse(languages, sampler, previous_answers=None
     if previous_answers is None:
         for lang in languages:
             if isinstance(lang, DFA):
+                print("checking dfa")
                 in_langs_lists.append([lang.is_word_in(w) for w in samples])
+                print("done checking dfa")
             else:
                 rnn_bool_list = []
                 batch_size = 1000

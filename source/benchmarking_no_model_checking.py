@@ -149,7 +149,7 @@ def extract_dfa_from_rnn(rnn, benchmark, timeout=300):
 
 def compute_distances_no_model_checking(models, benchmark, epsilon=0.005, delta=0.001):
     print("Starting distance measuring")
-    output, samples = confidence_interval_many_cython(models, random_word, width=epsilon, confidence=delta)
+    output, samples = confidence_interval_many_cython(models, width=epsilon, confidence=delta)
     print("The confidence interval for epsilon = {} , delta = {}".format(delta, epsilon))
     print(output)
 

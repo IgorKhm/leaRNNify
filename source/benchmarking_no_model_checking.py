@@ -230,3 +230,23 @@ def run_extraction_on_dir(dir):
                 write_csv_header(summary_csv, benchmark.keys())
                 first_entry = False
             write_line_csv(summary_csv, benchmark, benchmark.keys())
+
+def remasure_extraction_on_dir(dir):
+    # print(" "+ str(num_of_bench) +" number of benchmarks")
+    first_entry = True
+    summary_csv = dir + "/extraxtion3-eps0002.csv"
+    for folder in os.walk(dir):
+        if os.path.isfile(folder[0] + "/meta"):
+            start_time = time.time()
+            name = folder[0].split('/')[-1]
+            rnn = RNNLanguageClasifier().load_lstm(folder[0])
+            dfa = load_dfa_dot(folder[0]+"/dfa.dot")
+            dfa_extracted = load_dfa_dot(folder[0]+"/dfa_extract-extracted_3.dot")
+            benchmark = {"name": name}
+            compute_distances_no_model_checking([dfa,rnn,dfa_extracted], benchmark, epsilon= 0.0002, delta=0.005)
+            print("masured in {}s".format(time.time()-start_time))
+            # extract(dfa, benchmark,rnn, folder[0])
+            if first_entry:
+                write_csv_header(summary_csv, benchmark.keys())
+                first_entry = False
+            write_line_csv(summary_csv, benchmark, benchmark.keys())

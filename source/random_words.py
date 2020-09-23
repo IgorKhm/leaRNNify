@@ -137,7 +137,7 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
         raise Exception("Need at least 2 languages to compare")
 
     full_num_of_samples = np.log(2 / confidence) / (2 * width * width)
-    max_samples = 1000000
+    max_samples = 1000001
     output = []
     # num_of_lan = 3
     for i in range(num_of_lan):

@@ -48,6 +48,76 @@ def confidence_interval(language1, language2, sampler, delta=0.001, epsilon=0.00
     return mistakes / n, samples
 
 
+# def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, samples=None):
+#     """
+#     Produce the probabilistic distance of the given languages. Using the Chernoff-Hoeffding bound we get that
+#     in order to have:
+#         P(S - E[S]>width)< confidence
+#         S = 1/n(n empirical examples)
+#
+#     the number of examples that one needs to use is:
+#         #examples = log(2 / confidence) / (2 * width * width)
+#
+#     For more details:
+#     https://en.wikipedia.org/wiki/Hoeffding%27s_inequality
+#
+#     """
+#     num_of_lan = len(languages)
+#     if num_of_lan < 2:
+#         raise Exception("Need at least 2 languages to compare")
+#
+#     num_of_samples = np.log(2 / confidence) / (2 * width * width)
+#     print("size of sample:" + str(int(num_of_samples)))
+#     if samples is None:
+#         samples = random_words(num_of_samples,languages[0].alphabet)
+#         # samples = [sampler(languages[0].alphabet) for _ in range(int(num_of_samples))]
+#
+#     in_langs_lists = []
+#     i = 0
+#     sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
+#     torch.cuda.empty_cache()
+#     for lang in languages:
+#         if not isinstance(lang, RNNLanguageClasifier):
+#             print("checking dfa list")
+#             print(lang)
+#             in_langs_lists.append(is_words_in_dfa(lang,samples))
+#             print("done dfa list")
+#             # in_langs_lists.append([lang.is_word_in(w) for w in samples])
+#         else:
+#             rnn_bool_list = []
+#             batch_size = 1000
+#             num_of_batches = int((len(samples) / batch_size))
+#             for i in range(num_of_batches):
+#                 if i % 50 == 0:
+#                     print("done {}/{}".format(i, num_of_batches))
+#                 batch = samples[i * batch_size:(i + 1) * batch_size]
+#                 batch_out = (lang.is_words_in_batch(batch) > 0.5)
+#                 rnn_bool_list.extend(batch_out)
+#             batch = samples[num_of_batches * batch_size:len(samples)]
+#             batch_out = (lang.is_words_in_batch(batch) > 0.5)
+#             rnn_bool_list.extend(batch_out)
+#             in_langs_lists.append(rnn_bool_list)
+#
+#     output = []
+#     for i in range(num_of_lan):
+#         output.append([1] * num_of_lan)
+#
+#     print("comparing btween lang")
+#     for lang1 in range(num_of_lan):
+#         for lang2 in range(num_of_lan):
+#             if lang1 == lang2:
+#                 output[lang1][lang2] = 0
+#             elif output[lang1][lang2] == 1:
+#                 print("comparing 2 specific  lang")
+#                 # output[lang1][lang2] = compare_list_of_bool(in_langs_lists[lang1],in_langs_lists[lang2],int(num_of_samples))
+#                 output[lang1][lang2] = ([(in_langs_lists[lang1])[i] == (in_langs_lists[lang2])[i] for i in
+#                                          range(len(samples))].count(False)) / num_of_samples
+#                 output[lang2][lang1] = output[lang1][lang2]
+#
+#
+#     print("done with confidence interval")
+#     return output, samples
+#
 def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, samples=None, word_prob=0.01):
     """
     Produce the probabilistic distance of the given languages. Using the Chernoff-Hoeffding bound we get that
@@ -97,13 +167,13 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
         for lang in languages:
             print(lang)
             if not isinstance(lang, RNNLanguageClasifier):
-                if isinstance(lang, DFANoisy):
-                    # print("noisy DFA")
-                    in_langs_lists.append([lang.is_word_in(w) for w in samples])
-                elif isinstance(lang, CounterDFA):
-                    in_langs_lists.append(is_words_in_counterDfa(lang, samples))
-                    # in_langs_lists.append([lang.is_word_in(w) for w in samples])
-                else:
+                # if isinstance(lang, DFANoisy):
+                #     # print("noisy DFA")
+                #     in_langs_lists.append([lang.is_word_in(w) for w in samples])
+                # elif isinstance(lang, CounterDFA):
+                #     in_langs_lists.append(is_words_in_counterDfa(lang, samples))
+                #     # in_langs_lists.append([lang.is_word_in(w) for w in samples])
+                # else:
                     # print("")
                     in_langs_lists.append(is_words_in_dfa(lang, samples))
                 # in_langs_lists.append([lang.is_word_in(w) for w in samples])
@@ -139,11 +209,6 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
             output[lang1][lang2]=output[lang1][lang2]/ full_num_of_samples
     print("done with confidence interval")
     return output, samples
-
-
-    print("done with confidence interval")
-    return output, samples
-
 
 
 def confidence_interval_many(languages, sampler, confidence=0.001, width=0.005, samples=None):

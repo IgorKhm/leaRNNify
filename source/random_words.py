@@ -190,7 +190,7 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
                     batch_out = (lang.is_words_in_batch(batch) > 0.5)
                     rnn_bool_list.extend(batch_out)
                 batch = samples[num_of_batches * batch_size:len(samples)]
-                batch_out = (lang.is_words_in_batch(batch) > 0.5)
+                batch_out = (lang.is_words_in_batch(batch) > 0.5).numpy()
                 rnn_bool_list.extend(batch_out)
                 in_langs_lists.append(rnn_bool_list)
 

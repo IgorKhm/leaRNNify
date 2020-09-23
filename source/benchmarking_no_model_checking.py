@@ -108,7 +108,7 @@ def learn_and_check(dfa: DFA, benchmark, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name)
 
     models = [dfa, rnn, extracted_dfas[0][0]]
-    compute_distances_no_model_checking(models, benchmark, delta=0.005, epsilon=0.001)
+    compute_distances_no_model_checking(models, benchmark, epsilon=0.0002, delta=0.005)
 
 
 def extract_dfa_from_rnn(rnn, benchmark, timeout=300):
@@ -192,13 +192,19 @@ def run_rand_benchmarks_wo_model_checking(num_of_bench=30, save_dir=None):
         save_dir = "../models/random_bench_{}".format(datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S"))
         os.makedirs(save_dir)
 
-    write_csv_header(save_dir + "/test.csv")
+    first = True
     for num in range(1, num_of_bench + 1):
         print("Running benchmark {}/{}:".format(num, num_of_bench))
         benchmark = rand_benchmark(save_dir + "/" + str(num))
         print("Summary for the {}th benchmark".format(num))
         print(benchmark)
-        write_line_csv(save_dir + "/test.csv", benchmark)
+        if float(benchmark["rnn_testing_acc"]) < 90:
+            continue
+
+        if first:
+            write_csv_header(save_dir + "/test.csv", benchmark.keys())
+            first = False
+        write_line_csv(save_dir + "/test.csv", benchmark, benchmark.keys())
 
 
 
@@ -211,7 +217,7 @@ def extract(dfa: DFA, benchmark,rnn, dir_name=None):
                 save_dfa_as_part_of_model(dir_name, extracted_dfa, name=name+"-extracted_3")
 
     models = [dfa, rnn, extracted_dfas[0][0]]
-    compute_distances_no_model_checking(models, benchmark, epsilon=0.001, delta=0.005)
+    compute_distances_no_model_checking(models, benchmark, epsilon=0.0002, delta=0.005)
 
 
 

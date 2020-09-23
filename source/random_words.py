@@ -164,6 +164,7 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
         i = 0
         sys.stdout.write('\r Creating bool lists for each lan:  {}/{} done'.format(i, num_of_lan))
         torch.cuda.empty_cache()
+        print()
         for lang in languages:
             print(lang)
             if not isinstance(lang, RNNLanguageClasifier):
@@ -175,7 +176,7 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
                 #     # in_langs_lists.append([lang.is_word_in(w) for w in samples])
                 # else:
                     # print("")
-                    in_langs_lists.append(is_words_in_dfa(lang, samples))
+                in_langs_lists.append(is_words_in_dfa(lang, samples))
                 # in_langs_lists.append([lang.is_word_in(w) for w in samples])
                 # print(in_langs_lists)
             else:
@@ -194,7 +195,7 @@ def confidence_interval_many_cython(languages, confidence=0.001, width=0.005, sa
                 in_langs_lists.append(rnn_bool_list)
 
 
-
+        print("compearing bool lists")
         for lang1 in range(num_of_lan):
             for lang2 in range(num_of_lan):
                 if lang1 == lang2:

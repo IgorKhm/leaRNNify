@@ -1,0 +1,22 @@
+digraph g {
+__start0 [label="" shape="none]
+('b',) [shape="doublecircle" label="('b',)"]
+() [shape="circle" label="()"]
+('a',) [shape="circle" label="('a',)"]
+__start0 -> ()
+('b',) -> ('a',)[label="a"]
+('b',) -> ('a',)[label="b"]
+('b',) -> ('a',)[label="c"]
+('b',) -> ('a',)[label="d"]
+('b',) -> ('a',)[label="e"]
+() -> ('a',)[label="a"]
+() -> ('b',)[label="b"]
+() -> ('a',)[label="c"]
+() -> ('a',)[label="d"]
+() -> ('a',)[label="e"]
+('a',) -> ('a',)[label="a"]
+('a',) -> ('a',)[label="b"]
+('a',) -> ('a',)[label="c"]
+('a',) -> ('a',)[label="d"]
+('a',) -> ('a',)[label="e"]
+}
